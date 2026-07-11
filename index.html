@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<!-- ═══════════════════════════════════════════════════════════════
+     Matthew Lehman Media — Production-Optimized Build
+     ──────────────────────────────────────────────────────────────
+     LIGHTHOUSE OPTIMIZATIONS APPLIED (May 2026)
+     ────────────────────────────────────────────
+     ✅ SEO 92 → 100  — All <a> tags now carry href="#section-id"
+        so Googlebot can crawl every nav link. The existing JS
+        e.preventDefault() + smooth-scroll still fires normally;
+        href is just a crawlable fallback.
+
+     ⚠️  BEST PRACTICES 77 — Third-party cookies
+        Root cause: hero and about images are served from
+        drive.google.com/thumbnail, which sets Google auth
+        cookies (__Secure-3PSID, NID, etc.) on every page load.
+        Cannot be fixed in HTML alone — you must move images
+        off Google Drive.
+
+        RECOMMENDED FIX — Cloudinary (you already have it connected):
+          1. Upload your hero image + about portrait to Cloudinary
+          2. Replace the two Google Drive src/preload URLs below:
+               Hero preload (line ~124):
+                 href="https://drive.google.com/thumbnail?id=18FSapZsA…"
+               Hero <img> src (hero section):
+                 src="https://drive.google.com/thumbnail?id=18FSapZsA…&sz=w1920"
+               About <img> src (about section):
+                 src="https://lh3.googleusercontent.com/pw/AP1GczN…"
+          3. Cloudinary URLs look like:
+               https://res.cloudinary.com/<cloud>/image/upload/w_1920,q_auto,f_auto/<public_id>
+          4. Remove or update the dns-prefetch hints for drive.google.com
+             and lh3.googleusercontent.com once images are migrated.
+
+        Note: og:image and twitter:image have already been switched
+        to the self-hosted /android-chrome-512x512.png logo below.
+        Swap those for a proper 1200×630 image when you have one.
+     ──────────────────────────────────────────────────────────────
+     Netlify deployment guide:
+       1. Drop this index.html in the root (or /public) of your repo
+       2. Add a netlify.toml in the repo root for headers & cache:
+          ──────────────────────────────────────────────
+          [[headers]]
+            for = "/*"
+            [headers.values]
+              X-Frame-Options          = "DENY"
+              X-Content-Type-Options   = "nosniff"
+              Referrer-Policy          = "strict-origin-when-cross-origin"
+              Permissions-Policy       = "camera=(), microphone=(), geolocation=()"
+          [[headers]]
+            for = "/favicon*"
+            [headers.values]
+              Cache-Control = "public, max-age=31536000, immutable"
+          [[headers]]
+            for = "/apple-touch-icon.png"
+            [headers.values]
+              Cache-Control = "public, max-age=31536000, immutable"
+          [[headers]]
+            for = "/site.webmanifest"
+            [headers.values]
+              Cache-Control = "public, max-age=86400"
+          ──────────────────────────────────────────────
+       3. Place favicon files in the repo root alongside index.html:
+              favicon.ico                   classic browsers
+              favicon-16x16.png             browser tabs
+              favicon-32x32.png             browser tabs (HiDPI / Retina)
+              apple-touch-icon.png          iOS & Safari home screen (180×180 px)
+              android-chrome-192x192.png    Android Chrome (192×192 px)
+              site.webmanifest              PWA/install manifest (see template below)
+          ──────────────────────────────────────────────
+          site.webmanifest template — copy to a file named site.webmanifest:
+          {
+            "name": "Matthew Lehman Media",
+            "short_name": "MLMedia",
+            "description": "Sports & Athletic Photography — Logan, Ohio",
+            "icons": [
+              { "src": "/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
+              { "src": "/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" }
+            ],
+            "theme_color": "#0e0a1a",
+            "background_color": "#0e0a1a",
+            "display": "browser",
+            "start_url": "/"
+          }
+          ──────────────────────────────────────────────
+          The uploaded purple "ML" logo is the ideal source art for all
+          favicon sizes. Export from Figma / Photoshop / GIMP to each size.
+════════════════════════════════════════════════════════════════ -->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- ── Browser / OS chrome hints ──────────────────────────────────── -->
+<meta name="color-scheme" content="dark" />
+<meta name="theme-color" content="#0e0a1a" />
+<meta name="msapplication-TileColor" content="#0e0a1a" />
+<meta name="format-detection" content="telephone=no" />
+<!-- ──────────────────────────────────────────────────────────────── -->
+
+<!-- Primary SEO -->
+<title>Matthew Lehman Media | Sports &amp; Athletic Photographer | Logan, Ohio</title>
+<meta name="description" content="Matthew Lehman Media offers professional sports and athletic photography in Logan, Ohio. Game day action shots, athlete portraits, and team shoots for Logan Hocking School District." />
+<meta name="keywords" content="Matthew Lehman Media, sports photographer Logan Ohio, athletic photography Logan Hocking, high school sports photography Ohio, game day photographer, athlete portraits Ohio, team photo shoots Hocking County, Logan Hocking Chiefs photographer, mlmedia_28" />
+<meta name="author" content="Matthew Lehman" />
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
+<link rel="canonical" href="https://www.matthewlehmanmedia.com/" />
+
+<!-- Open Graph -->
+<meta property="og:type"         content="website" />
+<meta property="og:url"          content="https://www.matthewlehmanmedia.com/" />
+<meta property="og:title"        content="Matthew Lehman Media | Sports &amp; Athletic Photographer | Logan, Ohio" />
+<meta property="og:description"  content="Professional sports and athletic photography in Logan, Ohio. Game day action, athlete portraits, and team shoots for Logan Hocking School District." />
+<meta property="og:image"        content="https://www.matthewlehmanmedia.com/android-chrome-512x512.png" />
+<meta property="og:image:width"  content="512" />
+<meta property="og:image:height" content="512" />
+<meta property="og:image:alt"    content="Matthew Lehman Media — Sports & Athletic Photography, Logan Ohio" />
+<meta property="og:locale"       content="en_US" />
+<meta property="og:site_name"    content="Matthew Lehman Media" />
+
+<!-- Twitter Card -->
+<meta name="twitter:card"        content="summary_large_image" />
+<meta name="twitter:site"        content="@mlmedia_28" />
+<meta name="twitter:creator"     content="@mlmedia_28" />
+<meta name="twitter:title"       content="Matthew Lehman Media | Sports &amp; Athletic Photographer" />
+<meta name="twitter:description" content="Game day action, athlete portraits, and team shoots for Logan Hocking School District, Logan Ohio." />
+<meta name="twitter:image"       content="https://www.matthewlehmanmedia.com/android-chrome-512x512.png" />
+<meta name="twitter:image:alt"   content="Matthew Lehman Media — Sports & Athletic Photography" />
+
+<!-- Geo / Local SEO -->
+<meta name="geo.region"    content="US-OH" />
+<meta name="geo.placename" content="Logan, Ohio" />
+<meta name="geo.position"  content="39.5403;-82.4074" />
+<meta name="ICBM"          content="39.5403, -82.4074" />
+
+<!-- ── FAVICON SYSTEM ────────────────────────────────────────────────
+     All paths resolve from the site root — works on Netlify as-is.
+     See the deployment guide at the top of this file for file specs.
+──────────────────────────────────────────────────────────────────── -->
+<link rel="icon" type="image/x-icon"   href="/favicon.ico" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+<!-- ──────────────────────────────────────────────────────────────── -->
+
+<!-- ── PERFORMANCE: resource hints ──────────────────────────────────
+     Preconnect eliminates DNS + TCP + TLS round-trips before the
+     browser fetches fonts or images. Placed early for max benefit.
+──────────────────────────────────────────────────────────────────── -->
+<!-- Google Fonts — two origins must be preconnected -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- Google Drive / Googleusercontent image CDN -->
+<link rel="dns-prefetch" href="https://drive.google.com" />
+<link rel="dns-prefetch" href="https://lh3.googleusercontent.com" />
+<!-- LCP candidate: hero background image — fetch starts immediately -->
+<link rel="preload" as="image"
+  href="https://drive.google.com/thumbnail?id=1HJsopvmRg0BxzFi7bi8p98xvH3RJNb56&sz=w1920"
+  fetchpriority="high" />
+<!-- ──────────────────────────────────────────────────────────────── -->
+
+<!-- ── FONTS: non-render-blocking ────────────────────────────────────
+     rel="preload" as="style" fetches the CSS without blocking render.
+     onload swaps it to rel="stylesheet" once the download completes.
+     The <noscript> fallback ensures fonts load for no-JS users.
+     font-display:swap (via &display=swap) prevents invisible text (FOIT)
+     during the network fetch by showing fallback fonts first.
+──────────────────────────────────────────────────────────────────── -->
+<link rel="preload" as="style"
+  href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+  onload="this.onload=null;this.rel='stylesheet'" />
+<noscript>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" />
+</noscript>
+<!-- ──────────────────────────────────────────────────────────────── -->
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "LocalBusiness",
+      "@id": "https://www.matthewlehmanmedia.com/#business",
+      "name": "Matthew Lehman Media",
+      "description": "Professional sports and athletic photography serving Logan Hocking School District and the greater Hocking County area of Ohio.",
+      "url": "https://www.matthewlehmanmedia.com/",
+      "email": "lehmanmatthew0@gmail.com",
+      "image": "https://drive.google.com/thumbnail?id=1HJsopvmRg0BxzFi7bi8p98xvH3RJNb56&sz=w1200",
+      "priceRange": "$",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Logan",
+        "addressRegion": "OH",
+        "addressCountry": "US"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 39.5403,
+        "longitude": -82.4074
+      },
+      "areaServed": { "@type": "Place", "name": "Logan Hocking School District, Ohio" },
+      "sameAs": ["https://www.instagram.com/mlmedia_28/"],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Photography Services",
+        "itemListElement": [
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Game Day Sports Photography" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Athlete Portrait Photography" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Team Photo Shoots" } }
+        ]
+      }
+    },
+    {
+      "@type": "Person",
+      "@id": "https://www.matthewlehmanmedia.com/#person",
+      "name": "Matthew Lehman",
+      "jobTitle": "Sports Photographer",
+      "worksFor": { "@id": "https://www.matthewlehmanmedia.com/#business" },
+      "url": "https://www.matthewlehmanmedia.com/",
+      "sameAs": ["https://www.instagram.com/mlmedia_28/"],
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Logan",
+        "addressRegion": "OH",
+        "addressCountry": "US"
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://www.matthewlehmanmedia.com/#website",
+      "url": "https://www.matthewlehmanmedia.com/",
+      "name": "Matthew Lehman Media",
+      "description": "Sports and athletic photography in Logan, Ohio.",
+      "publisher": { "@id": "https://www.matthewlehmanmedia.com/#business" }
+    }
+  ]
+}
+</script>
+
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --deep:#0e0a1a;--dark:#160d2e;--mid:#3b1f72;
+    --accent:#7c4ddb;--light:#b48ffc;--glow:#c9aaff;
+    --white:#f5f0ff;--muted:#9b8eb5;
+    /* Improved fallback stacks — reduce FOUT while webfonts load via font-display:swap */
+    --fd:'Bebas Neue','Arial Narrow',Arial,sans-serif;
+    --fs:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+    --fb:'DM Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  html{scroll-behavior:smooth}
+  body{background:var(--deep);color:var(--white);font-family:var(--fb);overflow-x:hidden}
+  a{color:inherit}
+
+  /* ── NAV ── */
+  .nav{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:1.2rem 2.5rem;
+    background:linear-gradient(to bottom,rgba(14,10,26,.92),rgba(14,10,26,0));
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  }
+  .nav-logo{
+    font-family:var(--fd);font-size:1.3rem;letter-spacing:.14em;
+    color:var(--glow);text-decoration:none;flex-shrink:0;z-index:51;position:relative;cursor:pointer;
+  }
+  .nav-links{display:flex;gap:2rem;align-items:center}
+  .nav-links a{
+    font-size:.7rem;letter-spacing:.25em;text-transform:uppercase;
+    color:var(--muted);text-decoration:none;transition:color .3s;cursor:pointer;
+  }
+  .nav-links a:hover{color:var(--glow)}
+  .nav-gallery-pill{
+    font-size:.7rem!important;letter-spacing:.25em;text-transform:uppercase;
+    color:var(--white)!important;background:var(--accent);
+    padding:.45rem 1.1rem;border-radius:2px;
+    transition:background .3s,color .3s!important;
+    text-decoration:none;
+  }
+  .nav-gallery-pill:hover{background:var(--light);color:var(--deep)!important}
+
+  /* ── HAMBURGER ── */
+  .nav-burger{
+    display:none;flex-direction:column;justify-content:center;gap:5px;
+    width:36px;height:36px;background:none;border:none;cursor:pointer;
+    z-index:51;position:relative;padding:4px;
+  }
+  .nav-burger span{
+    display:block;width:22px;height:1.5px;background:var(--glow);
+    transition:transform .3s ease,opacity .3s ease;transform-origin:center;
+  }
+  .nav-burger.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+  .nav-burger.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+  .nav-burger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+
+  /* ── MOBILE DRAWER ── */
+  .nav-drawer{
+    position:fixed;inset:0;z-index:40;
+    background:rgba(14,10,26,.97);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2.5rem;
+    opacity:0;pointer-events:none;transition:opacity .35s ease;
+  }
+  .nav-drawer.open{opacity:1;pointer-events:all}
+  .nav-drawer a{
+    font-family:var(--fd);font-size:3rem;letter-spacing:.12em;
+    color:var(--muted);text-decoration:none;cursor:pointer;
+    transform:translateY(20px);opacity:0;
+    transition:color .25s,transform .4s ease,opacity .4s ease;
+  }
+  .nav-drawer.open a{opacity:1;transform:translateY(0)}
+  .nav-drawer.open a:nth-child(1){transition-delay:.05s}
+  .nav-drawer.open a:nth-child(2){transition-delay:.12s}
+  .nav-drawer.open a:nth-child(3){transition-delay:.19s}
+  .nav-drawer.open a:nth-child(4){transition-delay:.26s}
+  .nav-drawer a:hover{color:var(--glow)}
+
+  @media(max-width:640px){
+    .nav{padding:1rem 1.2rem}
+    .nav-links{display:none}
+    .nav-burger{display:flex}
+  }
+  @media(min-width:641px){
+    .nav-drawer{display:none}
+    .nav-burger{display:none}
+  }
+
+  /* HERO */
+  .hero{position:relative;min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 4rem;overflow:visible}
+  .hero-bg{position:absolute;inset:0;z-index:0;overflow:hidden}
+  .hero-bg img{width:100%;height:100%;object-fit:cover;object-position:center;opacity:.18;animation:fadeIn 2s ease .2s both}
+  .hero-bg-ov{position:absolute;inset:0;background:linear-gradient(to right,rgba(14,10,26,.94) 40%,rgba(14,10,26,.5))}
+  .hero-orb{position:absolute;border-radius:50%;filter:blur(90px);animation:pulse 8s ease-in-out infinite;pointer-events:none}
+  .orb-1{width:600px;height:600px;top:-10%;right:-5%;background:radial-gradient(circle,rgba(124,77,219,.35),transparent 70%)}
+  .orb-2{width:400px;height:400px;bottom:5%;left:10%;background:radial-gradient(circle,rgba(180,143,252,.2),transparent 70%);animation-delay:4s}
+  .hero-content{position:relative;z-index:1;padding-top:5rem;padding-bottom:7rem}
+  .hero-tag{font-size:.72rem;font-weight:500;letter-spacing:.3em;text-transform:uppercase;color:var(--light);margin-bottom:1.4rem;display:flex;align-items:center;gap:10px;opacity:0;animation:fadeUp .8s ease .3s both}
+  .hero-tag::before{content:'';width:28px;height:1px;background:var(--accent);display:inline-block}
+  .hero-title{font-family:var(--fd);font-size:clamp(4rem,11vw,9.5rem);line-height:.96;letter-spacing:.02em;opacity:0;animation:fadeUp .9s ease .5s both}
+  .hero-title em{font-style:normal;-webkit-text-stroke:1.5px var(--accent);color:transparent}
+  .hero-sub{font-family:var(--fs);font-size:clamp(1.1rem,2vw,1.45rem);font-weight:300;font-style:italic;color:var(--muted);max-width:480px;margin-top:1.8rem;line-height:1.6;opacity:0;animation:fadeUp .9s ease .75s both}
+  .hero-cta{display:flex;gap:1.2rem;align-items:center;margin-top:2.8rem;opacity:0;animation:fadeUp .9s ease 1s both;flex-wrap:wrap}
+  .btn-primary{font-size:.78rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;text-decoration:none;padding:.95rem 2.4rem;background:var(--accent);color:var(--white);border-radius:2px;transition:background .3s,transform .2s;display:inline-block;cursor:pointer;border:none;font-family:var(--fb)}
+  .btn-primary:hover{background:var(--light);transform:translateY(-2px)}
+  .btn-ghost{font-size:.78rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;text-decoration:none;color:var(--muted);display:inline-flex;align-items:center;gap:8px;transition:color .3s;background:none;border:none;cursor:pointer;font-family:var(--fb)}
+  .btn-ghost::after{content:'→';transition:transform .3s}
+  .btn-ghost:hover{color:var(--glow)}
+  .btn-ghost:hover::after{transform:translateX(5px)}
+
+  /* Instagram link — sits ABOVE scroll indicator, clear of bottom */
+  .hero-ig{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:.72rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+    text-decoration:none;color:var(--muted);
+    border:1px solid rgba(124,77,219,.35);padding:.5rem 1.2rem;border-radius:2px;
+    transition:color .3s,border-color .3s;
+    opacity:0;animation:fadeUp .9s ease 1.15s both;
+    margin-top:1.4rem;
+    position:relative;z-index:1;
+  }
+  .hero-ig:hover{color:var(--glow);border-color:var(--light)}
+  .hero-ig svg{width:14px;height:14px;fill:currentColor;flex-shrink:0}
+
+  .hero-scroll{position:absolute;bottom:2.5rem;left:4rem;z-index:1;font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:var(--mid);display:flex;align-items:center;gap:12px;opacity:0;animation:fadeUp 1s ease 1.4s both}
+  .scroll-line{width:40px;height:1px;background:var(--mid);position:relative;overflow:hidden}
+  .scroll-line::after{content:'';position:absolute;inset:0;background:var(--light);transform:translateX(-100%);animation:scanline 2.5s ease 2s infinite}
+  .hero-year{position:absolute;right:4rem;bottom:2.5rem;z-index:1;font-family:var(--fd);font-size:7rem;line-height:1;color:rgba(59,31,114,.3);letter-spacing:.05em;user-select:none;opacity:0;animation:fadeIn 1.5s ease 1.2s both}
+
+  /* MARQUEE */
+  .mq-wrap{border-top:1px solid rgba(124,77,219,.2);border-bottom:1px solid rgba(124,77,219,.2);padding:1rem 0;background:rgba(22,13,46,.6);overflow:hidden}
+  .mq-track{display:flex;animation:marquee 18s linear infinite;width:max-content}
+  .mq-item{font-family:var(--fd);font-size:1rem;letter-spacing:.3em;color:var(--mid);padding:0 3rem;white-space:nowrap}
+  .mq-item strong{color:var(--accent)}
+
+  /* ABOUT */
+  .about{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center;padding:6rem 4rem}
+  .about-vis{position:relative;opacity:0;transform:translateX(-30px);transition:opacity .9s ease,transform .9s ease}
+  .about-vis.visible{opacity:1;transform:translateX(0)}
+  .about-frame{width:100%;aspect-ratio:4/5;border-radius:3px;overflow:hidden;border:1px solid rgba(124,77,219,.3);position:relative}
+  .about-frame img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s ease}
+  .about-frame:hover img{transform:scale(1.04)}
+  .ac{position:absolute;top:-1rem;left:-1rem;width:60px;height:60px;border-top:2px solid var(--accent);border-left:2px solid var(--accent)}
+  .acbr{position:absolute;bottom:-1rem;right:-1rem;width:60px;height:60px;border-bottom:2px solid var(--accent);border-right:2px solid var(--accent)}
+  .about-txt{opacity:0;transform:translateX(30px);transition:opacity .9s ease .2s,transform .9s ease .2s}
+  .about-txt.visible{opacity:1;transform:translateX(0)}
+  .sec-label{font-size:.7rem;font-weight:500;letter-spacing:.35em;text-transform:uppercase;color:var(--accent);margin-bottom:1.2rem;display:flex;align-items:center;gap:10px}
+  .sec-label::before{content:'';width:20px;height:1px;background:var(--accent);display:inline-block}
+  .about-h{font-family:var(--fd);font-size:clamp(2.8rem,5vw,4.2rem);line-height:1;letter-spacing:.04em;margin-bottom:1.8rem}
+  .about-h em{font-style:normal;color:var(--light)}
+  .about-p{font-family:var(--fs);font-size:1.15rem;font-weight:300;line-height:1.8;color:var(--muted);margin-bottom:2.5rem}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+  .stat{border-left:2px solid var(--mid);padding-left:1rem}
+  .stat-n{font-family:var(--fd);font-size:2.2rem;color:var(--light);line-height:1}
+  .stat-l{font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-top:.3rem}
+
+  /* SERVICES */
+  .services{padding:5rem 4rem 6rem;background:rgba(22,13,46,.5);border-top:1px solid rgba(59,31,114,.3)}
+  .svc-head{text-align:center;margin-bottom:3.5rem}
+  .svc-title{font-family:var(--fd);font-size:clamp(3rem,6vw,5rem);line-height:.95;letter-spacing:.04em}
+  .svc-title em{font-style:normal;-webkit-text-stroke:1px var(--accent);color:transparent}
+  .svc-desc{font-family:var(--fs);font-size:1.05rem;font-style:italic;color:var(--muted);margin-top:.8rem;line-height:1.6}
+  .svc-graphic{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s ease}
+  .svc-graphic.visible{opacity:1;transform:translateY(0)}
+  .g-card{background:linear-gradient(135deg,rgba(59,31,114,.35),rgba(14,10,26,.9));border:1px solid rgba(124,77,219,.3);border-radius:6px;padding:4rem 3rem;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;text-align:center}
+  .g-orb-l{position:absolute;width:500px;height:500px;border-radius:50%;left:-180px;top:50%;transform:translateY(-50%);background:radial-gradient(circle,rgba(124,77,219,.22),transparent 70%);filter:blur(60px);pointer-events:none}
+  .g-orb-r{position:absolute;width:400px;height:400px;border-radius:50%;right:-150px;top:50%;transform:translateY(-50%);background:radial-gradient(circle,rgba(180,143,252,.15),transparent 70%);filter:blur(60px);pointer-events:none}
+  .g-ring-wrap{position:relative;width:220px;height:220px;margin-bottom:2.5rem;flex-shrink:0}
+  .g-ring-wrap svg{width:100%;height:100%}
+  .g-title{font-family:var(--fd);font-size:clamp(2rem,4vw,3rem);letter-spacing:.06em;margin-bottom:.8rem;position:relative;z-index:1}
+  .g-title em{font-style:normal;color:var(--light)}
+  .g-body{font-family:var(--fs);font-size:1.1rem;font-style:italic;color:var(--muted);line-height:1.8;margin-bottom:2.2rem;max-width:520px;position:relative;z-index:1}
+  .g-btn{display:inline-flex;align-items:center;gap:10px;font-size:.8rem;font-weight:500;letter-spacing:.22em;text-transform:uppercase;text-decoration:none;color:var(--white);background:var(--accent);padding:1rem 2.6rem;border-radius:2px;transition:background .3s,transform .2s;position:relative;z-index:1;cursor:pointer;border:none;font-family:var(--fb)}
+  .g-btn::after{content:'→';transition:transform .3s}
+  .g-btn:hover{background:var(--light);transform:translateY(-2px)}
+  .g-btn:hover::after{transform:translateX(5px)}
+
+  /* ── GALLERY ── */
+  .gallery{padding:6rem 4rem;border-top:1px solid rgba(59,31,114,.3);position:relative}
+  .gal-head{text-align:center;margin-bottom:2.5rem}
+  .gal-title{font-family:var(--fd);font-size:clamp(3rem,6vw,5rem);line-height:.95;letter-spacing:.04em}
+  .gal-title em{font-style:normal;-webkit-text-stroke:1px var(--accent);color:transparent}
+  .gal-desc{font-family:var(--fs);font-size:1.05rem;font-style:italic;color:var(--muted);margin-top:.8rem}
+  .gal-link-wrap{text-align:center;margin-bottom:4rem}
+
+  .gal-cats{display:flex;flex-direction:column;gap:.6rem;margin-bottom:2rem}
+
+  @media(min-width:641px){
+    .gal-cats{flex-direction:row;flex-wrap:wrap;justify-content:center}
+    .gal-cat-btn{
+      font-family:var(--fb);font-size:.72rem;font-weight:500;letter-spacing:.22em;text-transform:uppercase;
+      color:var(--muted);background:rgba(124,77,219,.08);border:1px solid rgba(124,77,219,.25);
+      padding:.6rem 1.4rem;border-radius:2px;cursor:pointer;transition:all .25s;
+      display:flex;align-items:center;gap:.5rem;
+    }
+    .gal-cat-btn:hover{color:var(--glow);border-color:var(--light)}
+    .gal-cat-btn.active{background:var(--accent);color:var(--white);border-color:var(--accent)}
+    .gal-cat-btn .cat-chevron{display:none}
+    .gal-cat-panel{display:none}
+    .gal-cat-panel.active{display:block}
+    .gal-shared-grid-wrap{display:block}
+  }
+
+  @media(max-width:640px){
+    .gallery{padding:4rem 1rem}
+    .gal-shared-grid-wrap{display:none}
+    .gal-cat-btn{
+      width:100%;font-family:var(--fb);font-size:.78rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+      color:var(--muted);background:rgba(124,77,219,.08);border:1px solid rgba(124,77,219,.25);
+      padding:.9rem 1.2rem;border-radius:3px;cursor:pointer;transition:all .25s;
+      display:flex;align-items:center;justify-content:space-between;text-align:left;
+    }
+    .gal-cat-btn.active{background:rgba(124,77,219,.2);color:var(--glow);border-color:var(--light)}
+    .gal-cat-btn .cat-chevron{font-size:.8rem;transition:transform .3s;flex-shrink:0;color:var(--mid)}
+    .gal-cat-btn.active .cat-chevron{transform:rotate(180deg);color:var(--light)}
+    .gal-cat-panel{overflow:hidden;max-height:0;transition:max-height .45s cubic-bezier(.4,0,.2,1)}
+    .gal-cat-panel.open{max-height:9000px}
+    .gal-cat-panel .inner-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:.8rem 0 1rem}
+  }
+
+  .gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+  .gal-item{position:relative;aspect-ratio:1/1;overflow:hidden;border-radius:3px;border:1px solid rgba(124,77,219,.18);background:rgba(22,13,46,.5);cursor:zoom-in;group:true}
+  .gal-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease,opacity .4s ease;opacity:0}
+  .gal-item img.loaded{opacity:1}
+  .gal-item:hover img{transform:scale(1.06)}
+
+  /* Download overlay on hover */
+  .gal-item-overlay{
+    position:absolute;inset:0;background:rgba(14,10,26,.55);
+    display:flex;align-items:flex-end;justify-content:flex-end;
+    padding:.5rem;opacity:0;transition:opacity .3s;pointer-events:none;
+  }
+  .gal-item:hover .gal-item-overlay{opacity:1;pointer-events:all}
+  .gal-dl-btn{
+    display:flex;align-items:center;gap:5px;
+    font-family:var(--fb);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;
+    color:var(--white);background:rgba(124,77,219,.85);border:none;border-radius:2px;
+    padding:.35rem .7rem;cursor:pointer;text-decoration:none;transition:background .25s;
+  }
+  .gal-dl-btn:hover{background:var(--accent)}
+  .gal-dl-btn svg{width:11px;height:11px;fill:currentColor;flex-shrink:0}
+
+  .gal-more-wrap{text-align:center;margin-top:1.4rem}
+  .gal-more-btn{
+    font-family:var(--fb);font-size:.72rem;font-weight:500;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--muted);background:rgba(124,77,219,.08);border:1px solid rgba(124,77,219,.25);
+    padding:.7rem 2rem;border-radius:2px;cursor:pointer;transition:all .25s;display:inline-flex;align-items:center;gap:.6rem;
+  }
+  .gal-more-btn:hover{color:var(--glow);border-color:var(--light)}
+  .gal-more-btn .more-chevron{font-size:.7rem;transition:transform .3s}
+  .gal-more-btn.expanded .more-chevron{transform:rotate(180deg)}
+
+  .gal-status{text-align:center;padding:3rem 1rem;color:var(--muted);font-family:var(--fs);font-style:italic}
+
+  /* ── LIGHTBOX ── */
+  .lb{
+    position:fixed;inset:0;background:rgba(8,5,15,.96);
+    display:none;align-items:center;justify-content:center;
+    z-index:100;padding:2rem;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  }
+  .lb.show{display:flex}
+  .lb-inner{position:relative;display:flex;align-items:center;justify-content:center;max-width:95vw;max-height:90vh}
+  .lb img{
+    max-width:calc(95vw - 120px);max-height:90vh;
+    object-fit:contain;border:1px solid rgba(124,77,219,.3);
+    display:block;transition:opacity .2s;
+  }
+  .lb-close{
+    position:absolute;top:1.4rem;right:1.6rem;
+    font-family:var(--fd);font-size:1.4rem;color:var(--glow);
+    background:none;border:none;cursor:pointer;letter-spacing:.1em;z-index:102;
+  }
+  .lb-close:hover{color:var(--white)}
+
+  /* Prev / Next arrows */
+  .lb-arrow{
+    position:absolute;top:50%;transform:translateY(-50%);
+    background:rgba(124,77,219,.18);border:1px solid rgba(124,77,219,.4);
+    color:var(--glow);font-family:var(--fd);font-size:1.8rem;
+    width:48px;height:48px;border-radius:2px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;transition:background .25s,color .25s;z-index:102;
+    user-select:none;flex-shrink:0;
+  }
+  .lb-arrow:hover{background:var(--accent);color:var(--white)}
+  .lb-prev{left:-64px}
+  .lb-next{right:-64px}
+  @media(max-width:700px){
+    .lb-prev{left:4px}
+    .lb-next{right:4px}
+    .lb img{max-width:calc(95vw - 90px)}
+  }
+
+  /* Lightbox download + counter bar */
+  .lb-bar{
+    position:absolute;bottom:1.4rem;left:50%;transform:translateX(-50%);
+    display:flex;align-items:center;gap:1rem;z-index:102;
+  }
+  .lb-counter{
+    font-family:var(--fd);font-size:.9rem;letter-spacing:.2em;color:var(--muted);
+  }
+  .lb-dl{
+    display:flex;align-items:center;gap:6px;
+    font-family:var(--fb);font-size:.65rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--white);background:rgba(124,77,219,.5);border:1px solid rgba(124,77,219,.6);
+    padding:.4rem 1rem;border-radius:2px;text-decoration:none;cursor:pointer;
+    transition:background .25s;
+  }
+  .lb-dl:hover{background:var(--accent)}
+  .lb-dl svg{width:13px;height:13px;fill:currentColor;flex-shrink:0}
+
+  /* ── GALLERY CTA ── */
+  .gal-cta{
+    margin:3.5rem auto 0;max-width:640px;
+    border:1px solid rgba(124,77,219,.25);border-radius:4px;
+    background:linear-gradient(135deg,rgba(59,31,114,.2),rgba(14,10,26,.7));
+    padding:2.5rem 3rem;text-align:center;
+    position:relative;overflow:hidden;
+  }
+  .gal-cta::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(circle at 50% 0%,rgba(124,77,219,.15),transparent 70%);
+    pointer-events:none;
+  }
+  .gal-cta-label{font-size:.65rem;font-weight:500;letter-spacing:.35em;text-transform:uppercase;color:var(--accent);margin-bottom:.8rem}
+  .gal-cta-h{font-family:var(--fd);font-size:clamp(1.6rem,3vw,2.2rem);letter-spacing:.06em;margin-bottom:.8rem}
+  .gal-cta-h em{font-style:normal;color:var(--light)}
+  .gal-cta-p{font-family:var(--fs);font-size:1rem;font-style:italic;color:var(--muted);line-height:1.7;margin-bottom:1.6rem}
+  .gal-cta-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--fb);font-size:.75rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--white);background:var(--accent);text-decoration:none;
+    padding:.85rem 2.2rem;border-radius:2px;transition:background .3s,transform .2s;cursor:pointer;border:none;
+  }
+  .gal-cta-btn::after{content:'→';transition:transform .3s}
+  .gal-cta-btn:hover{background:var(--light);transform:translateY(-2px)}
+  .gal-cta-btn:hover::after{transform:translateX(5px)}
+
+  /* CONTACT */
+  .contact-pg{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;border-top:1px solid rgba(59,31,114,.3);min-height:90vh}
+  .c-left{display:flex;flex-direction:column;justify-content:center;padding:5rem 5rem;position:relative;border-right:1px solid rgba(124,77,219,.18)}
+  .c-left::after{content:'';position:absolute;top:0;right:-1px;width:1px;height:100%;background:linear-gradient(to bottom,transparent,rgba(180,143,252,.5) 40%,rgba(124,77,219,.3) 60%,transparent)}
+  .eyebrow{font-size:.68rem;font-weight:500;letter-spacing:.38em;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:10px;margin-bottom:1.2rem}
+  .eyebrow::before{content:'';width:22px;height:1px;background:var(--accent)}
+  .left-title{font-family:var(--fd);font-size:clamp(3rem,7vw,5.5rem);line-height:.9;letter-spacing:.03em;margin-bottom:2rem}
+  .left-title em{font-style:normal;-webkit-text-stroke:1.5px var(--accent);color:transparent}
+  .left-sub{font-family:var(--fs);font-size:1.15rem;font-weight:300;font-style:italic;color:var(--muted);line-height:1.75;max-width:380px;margin-bottom:3rem}
+  .contact-info{display:flex;flex-direction:column;gap:1.4rem}
+  .ci-row{display:flex;align-items:flex-start;gap:14px}
+  .ci-icon{width:36px;height:36px;border:1px solid rgba(124,77,219,.35);border-radius:2px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(124,77,219,.08)}
+  .ci-icon svg{width:16px;height:16px;fill:var(--light)}
+  .ci-text{display:flex;flex-direction:column;gap:2px}
+  .ci-label{font-size:.63rem;letter-spacing:.25em;text-transform:uppercase;color:var(--mid)}
+  .ci-val{font-size:.9rem;color:var(--muted);text-decoration:none;transition:color .25s}
+  .ci-val:hover{color:var(--glow)}
+  .c-right{display:flex;flex-direction:column;justify-content:center;padding:5rem}
+  .form-label-top{font-size:.68rem;font-weight:500;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);margin-bottom:2.5rem}
+  .form{display:flex;flex-direction:column;gap:0}
+  .field{position:relative;border-bottom:1px solid rgba(124,77,219,.2);transition:border-color .3s}
+  .field:focus-within{border-color:rgba(180,143,252,.6)}
+  .field:focus-within .field-label{color:var(--light);transform:translateY(-4px) scale(.85)}
+  .field.has-val .field-label{transform:translateY(-4px) scale(.85);color:var(--mid)}
+  .field-label{position:absolute;top:1.4rem;left:0;font-size:.75rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:rgba(155,142,181,.5);pointer-events:none;transform-origin:left top;transition:transform .25s ease,color .25s ease}
+  .field input,.field textarea{width:100%;background:transparent;border:none;outline:none;color:var(--white);font-family:var(--fs);font-size:1.05rem;font-weight:300;padding:2.2rem 0 .8rem;resize:none}
+  .field textarea{min-height:100px}
+  .field::after{content:'';position:absolute;bottom:-1px;left:0;width:0;height:1px;background:var(--light);transition:width .4s ease}
+  .field:focus-within::after{width:100%}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:0 2rem}
+  .submit-row{margin-top:2.8rem;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap}
+  .btn-send{font-family:var(--fb);font-size:.78rem;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:var(--white);background:var(--accent);border:none;padding:1rem 2.8rem;border-radius:2px;cursor:pointer;transition:background .3s,transform .2s}
+  .btn-send:hover{background:var(--light);transform:translateY(-2px)}
+  .btn-send:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .send-note{font-family:var(--fs);font-size:.9rem;font-style:italic;color:var(--mid)}
+  .status{margin-top:1.5rem;font-size:.82rem;letter-spacing:.1em;display:none;align-items:center;gap:8px}
+  .status.show{display:flex}
+  .status.success{color:#7fdbab}.status.error{color:#ff8fa3}
+  .status svg{width:16px;height:16px;flex-shrink:0}
+
+  /* FOOTER */
+  footer{padding:2.5rem 4rem;display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(59,31,114,.4);flex-wrap:wrap;gap:1rem}
+  .f-logo{font-family:var(--fd);font-size:1.2rem;letter-spacing:.12em;color:var(--mid)}
+  .f-copy{font-size:.72rem;letter-spacing:.1em;color:var(--mid)}
+  .f-soc a{font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--mid);text-decoration:none;transition:color .3s}
+  .f-soc a:hover{color:var(--light)}
+
+  /* KEYFRAMES */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes pulse{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.08);opacity:1}}
+  @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @keyframes scanline{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+  @media(max-width:900px){
+    .hero{padding:0 1.5rem}
+    .hero-year{display:none}
+    .hero-scroll{left:1.5rem}
+    .about{grid-template-columns:1fr;padding:4rem 1.5rem;gap:3rem}
+    .about-vis{order:2}.about-txt{order:1}
+    .services{padding:4rem 1.5rem}
+    .contact-pg{grid-template-columns:1fr}
+    .c-left{padding:4rem 1.5rem;border-right:none;border-bottom:1px solid rgba(124,77,219,.18)}
+    .c-left::after{display:none}
+    .c-right{padding:3rem 1.5rem 4rem}
+    .field-row{grid-template-columns:1fr}
+    footer{flex-direction:column;text-align:center;padding:2rem 1.5rem}
+    .gal-cta{padding:2rem 1.5rem;margin:2.5rem 0 0}
+    .lb-prev{left:4px}.lb-next{right:4px}
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" role="navigation" aria-label="Main navigation">
+  <a href="/" class="nav-logo" id="navLogoBtn">MLM</a>
+
+  <div class="nav-links">
+    <a href="#about"    data-target="about">About</a>
+    <a href="#services" data-target="services">Services</a>
+    <a href="#contact"  data-target="contact">Contact</a>
+    <a href="gallery.html" class="nav-gallery-pill">Gallery</a>
+  </div>
+
+  <button class="nav-burger" id="navBurger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Mobile Drawer -->
+<div class="nav-drawer" id="navDrawer">
+  <a href="#about"    data-target="about"    class="drawer-link">About</a>
+  <a href="#services" data-target="services" class="drawer-link">Services</a>
+  <a href="#contact"  data-target="contact"  class="drawer-link">Contact</a>
+  <a href="gallery.html" class="drawer-link">Gallery</a>
+</div>
+
+<span id="top"></span>
+
+<!-- HERO -->
+<section class="hero" id="hero-section" aria-label="Hero — Matthew Lehman Media">
+  <div class="hero-bg">
+    <!--
+      fetchpriority="high"  — marks this as the LCP element; browser fetches it
+                              immediately, ahead of lower-priority resources.
+      loading="eager"       — explicit override of lazy-loading for above-fold image.
+      The matching <link rel="preload"> in <head> also starts the fetch before
+      the parser reaches this <img>, cutting LCP time further.
+    -->
+    <img
+      src="https://drive.google.com/thumbnail?id=1HJsopvmRg0BxzFi7bi8p98xvH3RJNb56&sz=w1920"
+      alt="Matthew Lehman Media — Athletic Photography"
+      fetchpriority="high"
+      loading="eager"
+    />
+    <div class="hero-bg-ov"></div>
+  </div>
+  <div class="hero-orb orb-1"></div>
+  <div class="hero-orb orb-2"></div>
+  <div class="hero-content">
+    <p class="hero-tag">Sports &amp; Athletic Photography</p>
+    <h1 class="hero-title">Matthew<br><em>Lehman</em><br>Media</h1>
+    <p class="hero-sub">Capturing the power, passion, and precision of athletes — one frame at a time.</p>
+    <div class="hero-cta">
+      <button class="btn-primary" data-target="contact">Work With Me</button>
+      <a href="gallery.html" class="btn-ghost">View Gallery</a>
+    </div>
+    <a href="https://www.instagram.com/mlmedia_28/" class="hero-ig" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zm0 10.162a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+      Instagram
+    </a>
+  </div>
+  <div class="hero-scroll"><span class="scroll-line"></span>Scroll to explore</div>
+  <div class="hero-year">2026</div>
+</section>
+
+<!-- MARQUEE -->
+<div class="mq-wrap">
+  <div class="mq-track">
+    <span class="mq-item"><strong>Matthew Lehman</strong> Media</span><span class="mq-item">·</span>
+    <span class="mq-item"><strong>Logan Hocking</strong> School District</span><span class="mq-item">·</span>
+    <span class="mq-item">Promoting <strong>Athletes</strong></span><span class="mq-item">·</span>
+    <span class="mq-item">Sports <strong>Photography</strong></span><span class="mq-item">·</span>
+    <span class="mq-item">Est. <strong>2025</strong></span><span class="mq-item">·</span>
+    <span class="mq-item"><strong>Matthew Lehman</strong> Media</span><span class="mq-item">·</span>
+    <span class="mq-item"><strong>Logan Hocking</strong> School District</span><span class="mq-item">·</span>
+    <span class="mq-item">Promoting <strong>Athletes</strong></span><span class="mq-item">·</span>
+    <span class="mq-item">Sports <strong>Photography</strong></span><span class="mq-item">·</span>
+    <span class="mq-item">Est. <strong>2025</strong></span><span class="mq-item">·</span>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section class="about" id="about" aria-label="About Matthew Lehman Media" itemscope itemtype="https://schema.org/Person">
+  <div class="about-vis">
+    <div class="ac"></div>
+    <div class="about-frame">
+      <img src="https://lh3.googleusercontent.com/pw/AP1GczNCBI9Xt4SfwyHxCe2IRxrUQkYMHvDHwC1mSxoY-sQcwGOk3cb238apbxn7AFhJk1_HDH05ggu0_03qqqwqWbe8ZUoqlBxo4e-9U5-eWh7-Eqxtog=w1200-k-no" alt="Matthew Lehman, sports photographer based in Logan, Ohio" itemprop="image" loading="lazy" />
+    </div>
+    <div class="acbr"></div>
+  </div>
+  <div class="about-txt">
+    <p class="sec-label">About Me</p>
+    <h2 class="about-h">Built for<br><em>the Game</em></h2>
+    <p class="about-p" itemprop="description">I'm <span itemprop="name">Matthew Lehman</span> — the founder of Matthew Lehman Media, a self-employed photographer and student at <span itemprop="affiliation">Logan Hocking School District</span> with a passion for capturing athletes at their finest. Since launching in 2025, my mission has been simple: give athletes the spotlight they deserve through powerful, professional imagery.</p>
+    <div class="stats">
+      <div class="stat"><div class="stat-n">2025</div><div class="stat-l">Founded</div></div>
+      <div class="stat"><div class="stat-n">100%</div><div class="stat-l">Athlete Focus</div></div>
+      <div class="stat"><div class="stat-n">LH</div><div class="stat-l">Logan Hocking</div></div>
+      <div class="stat"><div class="stat-n">ML</div><div class="stat-l">Independent</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="services" id="services" aria-label="Photography services offered by Matthew Lehman Media">
+  <div class="svc-head">
+    <h2 class="svc-title">What I<br><em>Offer</em></h2>
+    <p class="svc-desc">Professional photography packages built for athletes, teams, and coaches.</p>
+  </div>
+  <div class="svc-graphic">
+    <div class="g-card">
+      <div class="g-orb-l"></div>
+      <div class="g-orb-r"></div>
+      <div class="g-ring-wrap">
+        <svg viewBox="0 0 220 220" fill="none" aria-hidden="true">
+          <circle cx="110" cy="110" r="100" stroke="rgba(124,77,219,0.12)" stroke-width="1"/>
+          <circle cx="110" cy="110" r="78" stroke="rgba(124,77,219,0.18)" stroke-width="1"/>
+          <circle cx="110" cy="110" r="54" stroke="rgba(124,77,219,0.26)" stroke-width="1"/>
+          <circle cx="110" cy="110" r="100" stroke="rgba(180,143,252,0.3)" stroke-width="1.2" stroke-dasharray="6 10" style="transform-origin:110px 110px;animation:spin 22s linear infinite"/>
+          <circle cx="110" cy="110" r="78" stroke="rgba(124,77,219,0.22)" stroke-width="1" stroke-dasharray="3 12" style="transform-origin:110px 110px;animation:spin 14s linear infinite reverse"/>
+          <rect x="76" y="92" width="68" height="46" rx="6" fill="rgba(59,31,114,0.6)" stroke="rgba(124,77,219,0.7)" stroke-width="1.5"/>
+          <rect x="92" y="83" width="22" height="10" rx="3" fill="rgba(59,31,114,0.75)" stroke="rgba(124,77,219,0.45)" stroke-width="1"/>
+          <circle cx="110" cy="115" r="16" fill="rgba(14,10,26,0.9)" stroke="rgba(124,77,219,0.65)" stroke-width="1.5"/>
+          <circle cx="110" cy="115" r="10" fill="rgba(14,10,26,0.95)" stroke="rgba(180,143,252,0.35)" stroke-width="1"/>
+          <circle cx="110" cy="115" r="5" fill="rgba(22,13,46,1)" stroke="rgba(124,77,219,0.5)" stroke-width="1"/>
+          <circle cx="131" cy="90" r="4" fill="rgba(124,77,219,0.8)" stroke="rgba(180,143,252,0.4)" stroke-width="1"/>
+        </svg>
+      </div>
+      <div class="g-title">Game Day. Portraits.<br><em>Team Shoots.</em></div>
+      <p class="g-body">Matthew Lehman Media is built to make every athlete look like a pro — whether it's live action, a recruiting portrait, or a full team session. Packages are being finalized — reach out and we'll figure out exactly what you need.</p>
+      <button class="g-btn" data-target="contact">Contact Me</button>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section class="gallery" id="gallery" aria-label="Matthew Lehman Media photo gallery">
+  <div class="gal-head">
+    <h2 class="gal-title">The<br><em>Gallery</em></h2>
+    <p class="gal-desc">A look at recent shoots — game day, portraits &amp; team sessions.</p>
+  </div>
+
+  <div class="gal-link-wrap">
+    <a href="gallery.html" class="btn-primary">View Full Gallery</a>
+  </div>
+
+  <!-- Gallery CTA -->
+  <div class="gal-cta">
+    <p class="gal-cta-label">Matthew Lehman Media</p>
+    <h3 class="gal-cta-h">Want Your Athlete<br><em>In The Spotlight?</em></h3>
+    <p class="gal-cta-p">Whether you're an athlete looking for recruiting shots, a coach building your program's presence, or a school wanting game-day coverage — Matthew Lehman Media has you covered. Get in touch and let's create something great.</p>
+    <button class="gal-cta-btn" data-target="contact">Book A Shoot</button>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact-pg" id="contact" aria-label="Contact Matthew Lehman Media" itemscope itemtype="https://schema.org/ContactPage">
+  <div class="c-left">
+    <p class="eyebrow">Get In Touch</p>
+    <h2 class="left-title">Let's<br>Make <em>Something</em><br>Great.</h2>
+    <p class="left-sub">Whether you're an athlete, a coach, or a program looking to elevate your image — Matthew Lehman Media would love to hear from you. Fill out the form and I'll get back to you as soon as possible.</p>
+    <div class="contact-info">
+      <div class="ci-row">
+        <div class="ci-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></div>
+        <div class="ci-text"><span class="ci-label">Email</span><a class="ci-val" href="mailto:lehmanmatthew0@gmail.com" itemprop="email">lehmanmatthew0@gmail.com</a></div>
+      </div>
+      <div class="ci-row">
+        <div class="ci-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/></svg></div>
+        <div class="ci-text"><span class="ci-label">Based In</span><span class="ci-val">Logan, Ohio — Logan Hocking School District</span></div>
+      </div>
+      <div class="ci-row">
+        <div class="ci-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07s-3.584-.012-4.849-.07c-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0 3.675a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zm0 10.162a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></div>
+        <div class="ci-text"><span class="ci-label">Instagram</span><a class="ci-val" href="https://www.instagram.com/mlmedia_28/" target="_blank" rel="noopener noreferrer">@mlmedia_28</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="c-right">
+    <p class="form-label-top">Send a Message</p>
+    <form class="form" id="contactForm" action="https://formspree.io/f/xzdkjlek" method="POST">
+      <div class="field-row">
+        <div class="field"><label class="field-label" for="name">Your Name</label><input type="text" id="name" name="name" required autocomplete="name" /></div>
+        <div class="field"><label class="field-label" for="email">Your Email</label><input type="email" id="email" name="email" required autocomplete="email" /></div>
+      </div>
+      <div class="field"><label class="field-label" for="sport">Sport / Type of Shoot</label><input type="text" id="sport" name="sport" /></div>
+      <div class="field"><label class="field-label" for="message">Tell me about your shoot</label><textarea id="message" name="message" rows="5" required></textarea></div>
+      <div class="submit-row">
+        <button class="btn-send" type="submit" id="submitBtn">Send Message</button>
+        <span class="send-note">I'll reply as soon as I can.</span>
+      </div>
+      <div class="status success" id="statusSuccess" role="alert"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Message sent — I'll be in touch soon!</div>
+      <div class="status error"   id="statusError"   role="alert"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>Something went wrong. Please email me directly.</div>
+    </form>
+  </div>
+</section>
+
+<footer role="contentinfo" itemscope itemtype="https://schema.org/WPFooter">
+  <span class="f-logo">Matthew Lehman Media</span>
+  <span class="f-copy">&copy; 2026 Matthew Lehman Media. All rights reserved.</span>
+  <nav class="f-soc" aria-label="Social links"><a href="https://www.instagram.com/mlmedia_28/" target="_blank" rel="noopener noreferrer">Instagram @mlmedia_28</a></nav>
+</footer>
+
+<!-- All JS is at end of <body> — already non-render-blocking. No changes needed. -->
+<script>
+/* ── Smooth scroll helper (NOT named scrollTo — that shadows window.scrollTo) ── */
+function navScrollTo(targetId) {
+  const target = document.getElementById(targetId);
+  if (!target) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+  const navH = document.querySelector('.nav').offsetHeight || 72;
+  const top  = target.getBoundingClientRect().top + window.scrollY - navH;
+  window.scrollTo({ top: top, behavior: 'smooth' });
+}
+
+/* ── Wire ALL data-target elements ── */
+document.querySelectorAll('[data-target]').forEach(function(el) {
+  el.addEventListener('click', function(e) {
+    e.preventDefault();
+    navScrollTo(el.getAttribute('data-target'));
+  });
+});
+
+/* ── Nav logo → top ── */
+document.getElementById('navLogoBtn').addEventListener('click', function(e) {
+  e.preventDefault();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+/* ── Reveal on scroll ── */
+const obs = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+}), { threshold: 0.12 });
+document.querySelectorAll('.about-vis,.about-txt,.svc-graphic').forEach(el => obs.observe(el));
+
+/* ── Mobile hamburger nav ── */
+const burger = document.getElementById('navBurger');
+const drawer = document.getElementById('navDrawer');
+burger.addEventListener('click', function() {
+  const isOpen = drawer.classList.toggle('open');
+  burger.classList.toggle('open', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+});
+document.querySelectorAll('.drawer-link').forEach(function(link) {
+  link.addEventListener('click', function() {
+    drawer.classList.remove('open');
+    burger.classList.remove('open');
+    document.body.style.overflow = '';
+    /* scroll is handled by the data-target listener above */
+  });
+});
+
+/* ── Contact form ── */
+document.querySelectorAll('.field input, .field textarea').forEach(input => {
+  const check = () => input.closest('.field').classList.toggle('has-val', input.value.trim() !== '');
+  input.addEventListener('input', check); input.addEventListener('change', check); check();
+});
+const form  = document.getElementById('contactForm');
+const sBtn  = document.getElementById('submitBtn');
+const okEl  = document.getElementById('statusSuccess');
+const errEl = document.getElementById('statusError');
+form.addEventListener('submit', async e => {
+  e.preventDefault(); sBtn.disabled = true; sBtn.textContent = 'Sending…';
+  okEl.classList.remove('show'); errEl.classList.remove('show');
+  try {
+    const r = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } });
+    if (!r.ok) throw 0;
+    okEl.classList.add('show'); form.reset();
+    document.querySelectorAll('.field').forEach(f => f.classList.remove('has-val'));
+    sBtn.textContent = 'Sent ✓';
+  } catch { errEl.classList.add('show'); sBtn.disabled = false; sBtn.textContent = 'Send Message'; }
+});
+
+</script>
+</body>
+</html>

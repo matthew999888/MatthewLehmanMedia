@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Matthew Lehman Media — Gallery Admin
+     admin.html  |  Private page for managing galleries + uploading photos
+     ─────────────────────────────────────────────────────────────────────
+     THIS PAGE IS NOT LINKED FROM THE PUBLIC SITE.
+     Bookmark it directly: https://www.matthewlehmanmedia.com/admin.html
+     Only people who sign in with the admin account you create in
+     Supabase can make changes. Everyone else just sees a login form.
+     ─────────────────────────────────────────────────────────────────────
+     SETUP: See supabase-setup.sql for the one-time database setup,
+     then paste your Project URL + anon key into the CONFIG block below.
+═══════════════════════════════════════════════════════════════════════ -->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<meta name="theme-color" content="#0e0a1a" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Admin | Matthew Lehman Media</title>
+
+<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preload" as="style"
+  href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+  onload="this.onload=null;this.rel='stylesheet'" />
+<noscript>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" />
+</noscript>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+/* ════════════════════════════════════════════════════════════
+   RESET + ROOT TOKENS (identical to gallery.html / index.html)
+════════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --deep:#0e0a1a;--dark:#160d2e;--mid:#3b1f72;
+  --accent:#7c4ddb;--light:#b48ffc;--glow:#c9aaff;
+  --white:#f5f0ff;--muted:#9b8eb5;
+  --bad:#e05a6b;--good:#5ac98f;
+  --fd:'Bebas Neue','Arial Narrow',Arial,sans-serif;
+  --fs:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+  --fb:'DM Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--deep);color:var(--white);font-family:var(--fb);min-height:100vh}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+button{cursor:pointer;border:none;background:none;font-family:inherit;color:inherit}
+input,textarea{font-family:inherit;color:inherit}
+
+/* ════════════════════════════════════════════════════════════
+   NAV (matches site)
+════════════════════════════════════════════════════════════ */
+.nav{
+  position:sticky;top:0;left:0;right:0;z-index:50;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:1.1rem 2.5rem;
+  background:rgba(14,10,26,.92);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border-bottom:1px solid rgba(124,77,219,.22);
+}
+.nav-logo{font-family:var(--fd);font-size:1.3rem;letter-spacing:.14em;color:var(--glow)}
+.nav-tag{font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);margin-left:.6rem}
+.nav-links{display:flex;gap:1.4rem;align-items:center}
+.nav-links a{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);transition:color .25s}
+.nav-links a:hover{color:var(--glow)}
+.btn-signout{
+  font-family:var(--fb);font-size:.68rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted);border:1px solid rgba(124,77,219,.3);padding:.5rem 1rem;border-radius:2px;transition:all .25s;
+}
+.btn-signout:hover{color:var(--glow);border-color:var(--light)}
+.nav-tab-btn{
+  font-family:var(--fb);font-size:.68rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted);padding:.5rem .3rem;transition:color .25s;border-bottom:2px solid transparent;
+}
+.nav-tab-btn:hover{color:var(--glow)}
+.nav-tab-btn.active{color:var(--glow);border-bottom-color:var(--accent)}
+@media(max-width:640px){.nav{padding:1rem 1.2rem}.nav-tag{display:none}}
+
+/* ════════════════════════════════════════════════════════════
+   LOGIN SCREEN
+════════════════════════════════════════════════════════════ */
+#loginScreen{
+  min-height:calc(100vh - 66px);display:flex;align-items:center;justify-content:center;
+  padding:2rem;position:relative;overflow:hidden;
+}
+.login-orb{
+  position:absolute;width:600px;height:600px;border-radius:50%;top:-20%;right:-10%;
+  background:radial-gradient(circle,rgba(124,77,219,.25),transparent 70%);
+  filter:blur(90px);pointer-events:none;
+}
+.login-card{
+  position:relative;z-index:1;width:100%;max-width:380px;
+  background:linear-gradient(160deg,rgba(59,31,114,.22),rgba(14,10,26,.94));
+  border:1px solid rgba(124,77,219,.28);border-radius:6px;padding:2.6rem 2.2rem;
+}
+.login-label{font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-bottom:.6rem;display:flex;align-items:center;gap:8px}
+.login-label::before{content:'';width:18px;height:1px;background:var(--accent)}
+.login-title{font-family:var(--fd);font-size:2.6rem;letter-spacing:.03em;margin-bottom:1.8rem;line-height:1}
+.field{margin-bottom:1.1rem}
+.field label{display:block;font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem}
+.field input{
+  width:100%;background:rgba(14,10,26,.6);border:1px solid rgba(124,77,219,.3);
+  border-radius:3px;padding:.75rem .9rem;font-size:.95rem;color:var(--white);transition:border-color .25s;
+}
+.field input:focus{outline:none;border-color:var(--light)}
+.btn-primary{
+  width:100%;font-family:var(--fb);font-size:.75rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--white);background:var(--accent);padding:.85rem;border-radius:3px;transition:background .25s,transform .2s;
+  margin-top:.6rem;
+}
+.btn-primary:hover{background:var(--light)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.form-msg{font-size:.85rem;margin-top:1rem;padding:.7rem .9rem;border-radius:3px;display:none}
+.form-msg.show{display:block}
+.form-msg.err{background:rgba(224,90,107,.12);border:1px solid rgba(224,90,107,.4);color:#ff9aa6}
+.form-msg.ok{background:rgba(90,201,143,.12);border:1px solid rgba(90,201,143,.4);color:#8fe8b8}
+.setup-note{
+  font-family:var(--fs);font-style:italic;color:var(--muted);font-size:.9rem;line-height:1.6;
+  margin-top:1.6rem;padding-top:1.4rem;border-top:1px solid rgba(59,31,114,.4);
+}
+.setup-note code{font-family:monospace;font-style:normal;background:rgba(124,77,219,.15);padding:.1rem .35rem;border-radius:2px;font-size:.82rem}
+
+/* ════════════════════════════════════════════════════════════
+   DASHBOARD SHELL
+════════════════════════════════════════════════════════════ */
+#dashboard{display:none}
+#dashboard.active{display:block}
+.dash-wrap{max-width:1200px;margin:0 auto;padding:3rem 2.5rem 5rem}
+@media(max-width:640px){.dash-wrap{padding:2rem 1.2rem 4rem}}
+
+.dash-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:2.4rem}
+.dash-title{font-family:var(--fd);font-size:2.8rem;letter-spacing:.03em;line-height:1}
+.dash-sub{font-family:var(--fs);font-style:italic;color:var(--muted);margin-top:.4rem}
+.btn-new{
+  font-family:var(--fb);font-size:.72rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--white);background:var(--accent);padding:.75rem 1.5rem;border-radius:3px;
+  display:inline-flex;align-items:center;gap:8px;transition:background .25s,transform .2s;
+}
+.btn-new:hover{background:var(--light);transform:translateY(-2px)}
+
+/* Gallery cards grid (dashboard list) */
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
+.dash-card{
+  border:1px solid rgba(124,77,219,.22);border-radius:5px;overflow:hidden;
+  background:linear-gradient(160deg,rgba(59,31,114,.18),rgba(14,10,26,.9));
+  display:flex;flex-direction:column;transition:border-color .3s;
+}
+.dash-card:hover{border-color:rgba(180,143,252,.4)}
+.dash-cover{aspect-ratio:3/2;background:linear-gradient(135deg,var(--dark),var(--deep));position:relative;overflow:hidden}
+.dash-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.dash-cover .ph-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:3rem;color:rgba(124,77,219,.25)}
+.dash-hidden-badge{
+  position:absolute;top:.6rem;left:.6rem;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;
+  background:rgba(224,90,107,.85);color:#fff;padding:.25rem .55rem;border-radius:2px;
+}
+.dash-body{padding:1.1rem 1.2rem 1.3rem;display:flex;flex-direction:column;gap:.6rem;flex:1}
+.dash-name{font-family:var(--fd);font-size:1.35rem;letter-spacing:.04em}
+.dash-meta{font-size:.75rem;color:var(--muted);letter-spacing:.05em}
+.dash-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:auto;padding-top:.8rem}
+.btn-sm{
+  font-family:var(--fb);font-size:.65rem;font-weight:500;letter-spacing:.15em;text-transform:uppercase;
+  padding:.5rem .8rem;border-radius:3px;border:1px solid rgba(124,77,219,.3);color:var(--muted);
+  transition:all .25s;
+}
+.btn-sm:hover{color:var(--glow);border-color:var(--light)}
+.btn-sm.danger:hover{color:#ff9aa6;border-color:rgba(224,90,107,.6)}
+.btn-sm.filled{background:var(--accent);color:var(--white);border-color:transparent}
+.btn-sm.filled:hover{background:var(--light);color:var(--deep)}
+
+.dash-empty{grid-column:1/-1;text-align:center;padding:4rem 2rem;font-family:var(--fs);font-style:italic;color:var(--muted)}
+
+/* ════════════════════════════════════════════════════════════
+   GALLERY MANAGE VIEW
+════════════════════════════════════════════════════════════ */
+#manageView{display:none}
+#manageView.active{display:block}
+#dashboard.hideList #galleryListView{display:none}
+
+.manage-head{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:2rem}
+.manage-title{font-family:var(--fd);font-size:2.4rem;letter-spacing:.03em}
+.manage-desc{font-family:var(--fs);font-style:italic;color:var(--muted);margin-top:.3rem}
+
+/* Dropzone */
+.dropzone{
+  border:2px dashed rgba(124,77,219,.4);border-radius:6px;
+  padding:3rem 1.5rem;text-align:center;cursor:pointer;
+  transition:border-color .25s,background .25s;margin-bottom:2rem;
+}
+.dropzone.dragover{border-color:var(--light);background:rgba(124,77,219,.08)}
+.dropzone svg{width:36px;height:36px;fill:var(--accent);margin:0 auto 1rem}
+.dropzone-text{font-family:var(--fb);font-size:.85rem;letter-spacing:.05em;color:var(--white);margin-bottom:.4rem}
+.dropzone-sub{font-size:.78rem;color:var(--muted)}
+.dropzone input[type=file]{display:none}
+
+/* Upload progress list */
+.upload-queue{display:flex;flex-direction:column;gap:.5rem;margin-bottom:2rem}
+.upload-row{
+  display:flex;align-items:center;gap:.8rem;font-size:.8rem;color:var(--muted);
+  background:rgba(59,31,114,.15);border:1px solid rgba(124,77,219,.2);border-radius:3px;padding:.6rem .9rem;
+}
+.upload-row .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--white)}
+.upload-bar{width:80px;height:4px;background:rgba(124,77,219,.2);border-radius:2px;overflow:hidden;flex-shrink:0}
+.upload-bar-fill{height:100%;background:var(--accent);width:0%;transition:width .2s}
+.upload-row.done .upload-bar-fill{background:var(--good)}
+.upload-row.error{color:#ff9aa6}
+.upload-status{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;flex-shrink:0;width:60px}
+
+/* Photo management grid */
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.photo-tile{
+  position:relative;aspect-ratio:1;border-radius:4px;overflow:hidden;
+  border:1px solid rgba(124,77,219,.2);background:rgba(22,13,46,.5);
+}
+.photo-tile img{width:100%;height:100%;object-fit:cover}
+.photo-tile .tile-ov{
+  position:absolute;inset:0;background:linear-gradient(to top,rgba(14,10,26,.9),transparent 55%);
+  display:flex;flex-direction:column;justify-content:flex-end;padding:.5rem;gap:.35rem;
+  opacity:0;transition:opacity .25s;
+}
+.photo-tile:hover .tile-ov{opacity:1}
+.tile-btn-row{display:flex;gap:.35rem;flex-wrap:wrap}
+.tile-btn{
+  font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;font-family:var(--fb);
+  background:rgba(14,10,26,.75);border:1px solid rgba(124,77,219,.5);color:var(--white);
+  padding:.28rem .5rem;border-radius:2px;transition:background .2s;
+}
+.tile-btn:hover{background:var(--accent)}
+.tile-btn.danger:hover{background:var(--bad);border-color:var(--bad)}
+.tile-cover-badge{
+  position:absolute;top:.4rem;left:.4rem;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;
+  background:var(--accent);color:#fff;padding:.22rem .45rem;border-radius:2px;
+}
+.photo-grid-empty{grid-column:1/-1;text-align:center;padding:3rem;font-family:var(--fs);font-style:italic;color:var(--muted)}
+
+/* ════════════════════════════════════════════════════════════
+   MODAL (new / edit gallery)
+════════════════════════════════════════════════════════════ */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(8,5,15,.8);backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;z-index:200;padding:1.5rem;
+}
+.modal-bg.show{display:flex}
+.modal{
+  width:100%;max-width:440px;background:linear-gradient(160deg,rgba(59,31,114,.3),var(--deep));
+  border:1px solid rgba(124,77,219,.35);border-radius:6px;padding:2rem;
+}
+.modal h3{font-family:var(--fd);font-size:1.7rem;letter-spacing:.03em;margin-bottom:1.4rem}
+.modal .field textarea{
+  width:100%;background:rgba(14,10,26,.6);border:1px solid rgba(124,77,219,.3);
+  border-radius:3px;padding:.75rem .9rem;font-size:.9rem;color:var(--white);resize:vertical;min-height:70px;
+}
+.modal .field textarea:focus{outline:none;border-color:var(--light)}
+.checkbox-row{display:flex;align-items:center;gap:.6rem;margin-bottom:1.1rem}
+.checkbox-row input{width:16px;height:16px;accent-color:var(--accent)}
+.checkbox-row label{font-size:.82rem;color:var(--muted)}
+.modal-actions{display:flex;gap:.7rem;margin-top:1.4rem}
+.modal-actions .btn-primary{margin-top:0}
+.btn-ghost{
+  flex:1;font-family:var(--fb);font-size:.72rem;font-weight:500;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--muted);border:1px solid rgba(124,77,219,.3);padding:.85rem;border-radius:3px;transition:all .25s;
+}
+.btn-ghost:hover{color:var(--glow);border-color:var(--light)}
+
+/* Toast */
+#toast{
+  position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--dark);border:1px solid rgba(124,77,219,.4);color:var(--white);
+  padding:.8rem 1.4rem;border-radius:4px;font-size:.85rem;z-index:300;
+  opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.spinner{
+  width:16px;height:16px;border:2px solid rgba(124,77,219,.3);border-top-color:var(--light);
+  border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.back-link{
+  display:inline-flex;align-items:center;gap:8px;font-family:var(--fb);font-size:.68rem;font-weight:500;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--muted);border:1px solid rgba(124,77,219,.28);
+  padding:.5rem 1rem;border-radius:3px;transition:all .25s;margin-bottom:1.4rem;
+}
+.back-link:hover{color:var(--glow);border-color:var(--light)}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════
+     NAV
+══════════════════════════════════════════════════════════════ -->
+<nav class="nav">
+  <div>
+    <span class="nav-logo">MLM</span><span class="nav-tag">Admin</span>
+  </div>
+  <div class="nav-links">
+    <a href="/" target="_blank" rel="noopener noreferrer">View Public Site ↗</a>
+    <button class="nav-tab-btn super-admin-only" id="navTabGalleries" style="display:none">Galleries</button>
+    <button class="nav-tab-btn super-admin-only" id="navTabUsers" style="display:none">Users</button>
+    <button class="btn-signout" id="signOutBtn" style="display:none">Sign Out</button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-orb"></div>
+  <div class="login-card">
+    <p class="login-label">Matthew Lehman Media</p>
+    <h1 class="login-title">Admin<br>Sign In</h1>
+    <form id="loginForm">
+      <div class="field">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" autocomplete="username" required />
+      </div>
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" autocomplete="current-password" required />
+      </div>
+      <button type="submit" class="btn-primary" id="loginBtn">Sign In</button>
+      <div class="form-msg" id="loginMsg"></div>
+    </form>
+    <div class="divider" style="display:flex;align-items:center;gap:.8rem;margin:1.2rem 0;color:var(--muted);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase"><span style="flex:1;height:1px;background:rgba(124,77,219,.25)"></span>or<span style="flex:1;height:1px;background:rgba(124,77,219,.25)"></span></div>
+    <button type="button" class="btn-ghost" id="googleLoginBtn" style="display:flex;align-items:center;justify-content:center;gap:.6rem">
+      <svg viewBox="0 0 48 48" width="16" height="16"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.6-5.2l-6.3-5.3C29.3 35.4 26.8 36 24 36c-5.2 0-9.6-3.1-11.3-7.6l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.5l6.3 5.3C40.5 36.4 44 30.8 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+      Continue with Google
+    </button>
+    <p class="setup-note" id="setupNote">
+      Not connected yet — paste your Supabase Project URL and anon key into the
+      <code>CONFIG</code> block near the top of this file's script, run
+      <code>supabase-setup.sql</code> in your Supabase project, then create your
+      admin login under Authentication → Users.
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     DASHBOARD
+══════════════════════════════════════════════════════════════ -->
+<div id="dashboard">
+  <div class="dash-wrap">
+
+    <!-- Gallery list -->
+    <div id="galleryListView">
+      <div class="dash-head">
+        <div>
+          <h1 class="dash-title">Galleries</h1>
+          <p class="dash-sub" id="dashSubtitle">Create galleries, then drag &amp; drop photos into each one.</p>
+        </div>
+        <button class="btn-new super-admin-only" id="newGalleryBtn" style="display:none">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          New Gallery
+        </button>
+      </div>
+      <div class="dash-grid" id="dashGrid"><!-- injected --></div>
+    </div>
+
+    <!-- Users view (super admin only) -->
+    <div id="usersView" style="display:none">
+      <div class="dash-head">
+        <div>
+          <h1 class="dash-title">Users</h1>
+          <p class="dash-sub">Everyone who has created an account. Toggle super admin here.</p>
+        </div>
+      </div>
+      <div class="dash-grid" id="usersGrid" style="grid-template-columns:1fr"><!-- injected --></div>
+    </div>
+
+    <!-- Manage single gallery -->
+    <div id="manageView">
+      <button class="back-link" id="backToListBtn">← All Galleries</button>
+      <div class="manage-head">
+        <div>
+          <h2 class="manage-title" id="manageTitle">Gallery</h2>
+          <p class="manage-desc" id="manageDesc"></p>
+          <span class="dash-meta" id="manageVisBadge"></span>
+        </div>
+        <div class="dash-actions super-admin-only" id="manageAdminActions" style="display:none">
+          <button class="btn-sm" id="editGalleryBtn">Edit Details</button>
+          <button class="btn-sm danger" id="deleteGalleryBtn">Delete Gallery</button>
+        </div>
+      </div>
+
+      <div class="dropzone super-admin-only" id="dropzone" style="display:none">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        <p class="dropzone-text">Drag &amp; drop photos here, or click to browse</p>
+        <p class="dropzone-sub">JPG, PNG, or WEBP — you can select multiple files at once</p>
+        <input type="file" id="fileInput" accept="image/*" multiple />
+      </div>
+
+      <div class="upload-queue" id="uploadQueue"></div>
+
+      <div class="photo-grid super-admin-only" id="photoGrid" style="display:none"><!-- injected --></div>
+
+      <!-- Access management -->
+      <div id="accessPanel" style="margin-top:2.4rem;padding-top:2rem;border-top:1px solid rgba(124,77,219,.22)">
+        <h3 style="font-family:var(--fd);font-size:1.5rem;letter-spacing:.03em;margin-bottom:.3rem">Who Can Access This Gallery</h3>
+        <p style="font-family:var(--fs);font-style:italic;color:var(--muted);margin-bottom:1.2rem" id="accessPanelSub">Only matters for private galleries — public galleries are visible to everyone.</p>
+
+        <form id="accessForm" style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.4rem">
+          <input type="email" id="accessEmail" placeholder="person@email.com" required
+            style="flex:1;min-width:200px;background:rgba(14,10,26,.6);border:1px solid rgba(124,77,219,.3);border-radius:3px;padding:.65rem .9rem;font-size:.85rem;color:var(--white)" />
+          <select id="accessRole" style="background:rgba(14,10,26,.6);border:1px solid rgba(124,77,219,.3);border-radius:3px;padding:.65rem .9rem;font-size:.85rem;color:var(--white)">
+            <option value="viewer">Viewer — can view</option>
+            <option value="manager" class="super-admin-only-option">Manager — can also grant access</option>
+          </select>
+          <button type="submit" class="btn-sm filled">Add Access</button>
+        </form>
+        <div class="form-msg" id="accessMsg"></div>
+
+        <div id="accessList" style="display:flex;flex-direction:column;gap:.5rem"><!-- injected --></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     MODAL — New / Edit Gallery
+══════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="galleryModalBg">
+  <div class="modal">
+    <h3 id="galleryModalTitle">New Gallery</h3>
+    <form id="galleryForm">
+      <div class="field">
+        <label for="galTitle">Title</label>
+        <input type="text" id="galTitle" required placeholder="e.g. Baseball 2026 Game 7" />
+      </div>
+      <div class="field">
+        <label for="galDesc">Description</label>
+        <textarea id="galDesc" placeholder="Short description shown under the title"></textarea>
+      </div>
+      <div class="field">
+        <label for="galVisibility">Visibility</label>
+        <select id="galVisibility" style="width:100%;background:rgba(14,10,26,.6);border:1px solid rgba(124,77,219,.3);border-radius:3px;padding:.75rem .9rem;font-size:.9rem;color:var(--white)">
+          <option value="public">Public — shows on the gallery page for everyone</option>
+          <option value="private">Private — only people you grant access to can see it</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="galCancelBtn">Cancel</button>
+        <button type="submit" class="btn-primary" id="galSaveBtn">Save Gallery</button>
+      </div>
+      <div class="form-msg" id="galModalMsg"></div>
+    </form>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════════
+     ALL JAVASCRIPT
+══════════════════════════════════════════════════════════════════════════════ -->
+<script>
+/* ============================================================
+   CONFIG — paste your Supabase details here
+   (Project Settings → API in your Supabase dashboard)
+   Must match the values in gallery.html.
+   ============================================================ */
+const SUPABASE_URL      = "https://hanxyzajkhkhdlzhnron.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhhbnh5emFqa2hraGRsemhucm9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzNzIxOTEsImV4cCI6MjA5MDk0ODE5MX0.ngu3mbSZqDR1IP0itndFWNLoX49U6dv8tDfIbest5TQ";
+const BUCKET_NAME        = "gallery-photos";
+
+const SUPABASE_CONNECTED = SUPABASE_URL !== "PASTE_SUPABASE_URL_HERE"
+  && SUPABASE_ANON_KEY !== "PASTE_SUPABASE_ANON_KEY_HERE"
+  && SUPABASE_URL && SUPABASE_ANON_KEY;
+
+let supa = null;
+if (SUPABASE_CONNECTED && typeof window.supabase !== 'undefined') {
+  supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  document.getElementById('setupNote').style.display = 'none';
+}
+
+/* ────────────────────────────────────────────────────────────
+   Helpers
+──────────────────────────────────────────────────────────── */
+function $(id) { return document.getElementById(id); }
+function showToast(msg, isError) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.style.borderColor = isError ? 'rgba(224,90,107,.6)' : 'rgba(124,77,219,.4)';
+  t.style.color = isError ? '#ff9aa6' : 'var(--white)';
+  t.classList.add('show');
+  clearTimeout(showToast._tm);
+  showToast._tm = setTimeout(function() { t.classList.remove('show'); }, 3200);
+}
+function slugify(str) {
+  return (str || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+function escapeHtml(str) {
+  return (str || '').replace(/[&<>"']/g, function(c) {
+    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+  });
+}
+
+/* ────────────────────────────────────────────────────────────
+   AUTH
+──────────────────────────────────────────────────────────── */
+const loginScreen = $('loginScreen');
+const dashboard   = $('dashboard');
+const signOutBtn  = $('signOutBtn');
+
+let myUserId = null;
+let myIsSuperAdmin = false;
+
+async function loadMyProfile() {
+  const { data: userData } = await supa.auth.getUser();
+  if (!userData || !userData.user) return false;
+  myUserId = userData.user.id;
+  const { data: profile, error } = await supa
+    .from('profiles')
+    .select('is_super_admin')
+    .eq('id', myUserId)
+    .single();
+  if (error) { console.error('Profile load error:', error.message); return false; }
+  myIsSuperAdmin = !!(profile && profile.is_super_admin);
+  return true;
+}
+
+function applyRoleUI() {
+  document.querySelectorAll('.super-admin-only').forEach(function(el) {
+    el.style.display = myIsSuperAdmin ? '' : 'none';
+  });
+  $('dashSubtitle').textContent = myIsSuperAdmin
+    ? 'Create galleries, then drag & drop photos into each one.'
+    : 'Manage who has access to your galleries.';
+  if (myIsSuperAdmin) {
+    $('navTabGalleries').classList.add('active');
+  }
+}
+
+$('navTabGalleries').addEventListener('click', function() { switchTab('galleries'); });
+$('navTabUsers').addEventListener('click', function() { switchTab('users'); });
+
+function switchTab(tab) {
+  $('navTabGalleries').classList.toggle('active', tab === 'galleries');
+  $('navTabUsers').classList.toggle('active', tab === 'users');
+  $('galleryListView').style.display = tab === 'galleries' ? '' : 'none';
+  $('manageView').classList.remove('active');
+  $('usersView').style.display = tab === 'users' ? '' : 'none';
+  if (tab === 'users') loadUsers();
+}
+
+let usersCache = [];
+async function loadUsers() {
+  const grid = $('usersGrid');
+  grid.innerHTML = '<div class="dash-empty">Loading…</div>';
+  const { data, error } = await supa
+    .from('profiles')
+    .select('id, email, display_name, is_super_admin, created_at')
+    .order('created_at', { ascending: false });
+  if (error) {
+    grid.innerHTML = '<div class="dash-empty">Couldn\'t load users: ' + escapeHtml(error.message) + '</div>';
+    return;
+  }
+  usersCache = data || [];
+  renderUsers();
+}
+
+function renderUsers() {
+  const grid = $('usersGrid');
+  grid.innerHTML = '';
+  if (!usersCache.length) {
+    grid.innerHTML = '<div class="dash-empty">No accounts yet.</div>';
+    return;
+  }
+  usersCache.forEach(function(u) {
+    const row = document.createElement('div');
+    row.className = 'dash-card';
+    row.style.cssText = 'flex-direction:row;align-items:center;padding:1rem 1.2rem;gap:1rem';
+    row.innerHTML =
+      '<div style="flex:1;min-width:0">' +
+        '<div class="dash-name" style="font-size:1.1rem">' + escapeHtml(u.display_name || u.email || 'Unknown') + '</div>' +
+        '<div class="dash-meta">' + escapeHtml(u.email || '') + '</div>' +
+      '</div>' +
+      '<button class="btn-sm' + (u.is_super_admin ? ' filled' : '') + '" data-toggle-admin="' + u.id + '">' +
+        (u.is_super_admin ? 'Super Admin ✓' : 'Make Super Admin') +
+      '</button>';
+    grid.appendChild(row);
+  });
+
+  grid.querySelectorAll('[data-toggle-admin]').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      const id = btn.getAttribute('data-toggle-admin');
+      const u = usersCache.find(function(x) { return x.id === id; });
+      if (!u) return;
+      if (u.id === myUserId && u.is_super_admin) {
+        if (!confirm('Remove your own super admin access? You\'ll need another admin to restore it.')) return;
+      }
+      const { error } = await supa.from('profiles').update({ is_super_admin: !u.is_super_admin }).eq('id', id);
+      if (error) { showToast(error.message, true); return; }
+      showToast('Updated.');
+      await loadUsers();
+    });
+  });
+}
+
+async function checkSession() {
+  if (!supa) return;
+  const { data } = await supa.auth.getSession();
+  if (data && data.session) {
+    enterDashboard();
+  }
+}
+
+async function enterDashboard() {
+  loginScreen.style.display = 'none';
+  dashboard.classList.add('active');
+  signOutBtn.style.display = '';
+  await loadMyProfile();
+  applyRoleUI();
+  loadGalleries();
+}
+
+function exitDashboard() {
+  dashboard.classList.remove('active');
+  loginScreen.style.display = 'flex';
+  signOutBtn.style.display = 'none';
+}
+
+$('loginForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const msg = $('loginMsg');
+  msg.classList.remove('show', 'ok', 'err');
+
+  if (!supa) {
+    msg.textContent = 'Not connected to Supabase yet — see the note below.';
+    msg.classList.add('show', 'err');
+    return;
+  }
+
+  const btn = $('loginBtn');
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+
+  const { error } = await supa.auth.signInWithPassword({
+    email: $('loginEmail').value.trim(),
+    password: $('loginPassword').value
+  });
+
+  btn.disabled = false;
+  btn.textContent = 'Sign In';
+
+  if (error) {
+    msg.textContent = error.message;
+    msg.classList.add('show', 'err');
+    return;
+  }
+  enterDashboard();
+});
+
+const googleLoginBtn = $('googleLoginBtn');
+if (googleLoginBtn) {
+  googleLoginBtn.addEventListener('click', async function() {
+    if (!supa) return;
+    await supa.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + '/admin.html' }
+    });
+  });
+}
+
+signOutBtn.addEventListener('click', async function() {
+  if (supa) await supa.auth.signOut();
+  exitDashboard();
+});
+
+/* ────────────────────────────────────────────────────────────
+   GALLERY LIST
+──────────────────────────────────────────────────────────── */
+let galleriesCache = [];
+
+async function getSignedUrlMap(paths) {
+  const unique = Array.from(new Set(paths.filter(Boolean)));
+  if (!unique.length) return {};
+  try {
+    const { data, error } = await supa.storage.from(BUCKET_NAME).createSignedUrls(unique, 3600);
+    const map = {};
+    if (!error && data) {
+      data.forEach(function(item, i) { if (item && item.signedUrl) map[unique[i]] = item.signedUrl; });
+    }
+    return map;
+  } catch (err) {
+    console.error('Signed URL error:', err);
+    return {};
+  }
+}
+
+async function loadGalleries() {
+  const grid = $('dashGrid');
+  grid.innerHTML = '<div class="dash-empty">Loading…</div>';
+  const { data, error } = await supa
+    .from('galleries')
+    .select('id, title, description, cover_url, cover_path, visibility, owner_id, sort_order, gallery_photos(id, url, sort_order)')
+    .order('sort_order', { ascending: true });
+
+  if (error) {
+    grid.innerHTML = '<div class="dash-empty">Couldn\'t load galleries: ' + escapeHtml(error.message) + '</div>';
+    return;
+  }
+  galleriesCache = data || [];
+
+  const coverPaths = galleriesCache.map(function(g) { return g.cover_path; }).filter(Boolean);
+  const signedMap = await getSignedUrlMap(coverPaths);
+  galleriesCache.forEach(function(g) {
+    g._coverDisplay = (g.cover_path && signedMap[g.cover_path]) || g.cover_url || '';
+  });
+
+  renderGalleryList();
+}
+
+function renderGalleryList() {
+  const grid = $('dashGrid');
+  grid.innerHTML = '';
+  if (!galleriesCache.length) {
+    grid.innerHTML = '<div class="dash-empty">' +
+      (myIsSuperAdmin ? 'No galleries yet — click "New Gallery" to create your first one.' : 'You don\'t manage any galleries yet.') +
+      '</div>';
+    return;
+  }
+  galleriesCache.forEach(function(g) {
+    const photoCount = (g.gallery_photos || []).length;
+    const isPrivate = g.visibility === 'private';
+    const card = document.createElement('div');
+    card.className = 'dash-card';
+    card.innerHTML =
+      '<div class="dash-cover">' +
+        (isPrivate ? '<span class="dash-hidden-badge">Private</span>' : '') +
+        (g._coverDisplay ? '<img src="' + g._coverDisplay + '" alt="">' : '<div class="ph-empty">' + (g.title ? g.title.charAt(0).toUpperCase() : 'G') + '</div>') +
+      '</div>' +
+      '<div class="dash-body">' +
+        '<div class="dash-name">' + escapeHtml(g.title) + '</div>' +
+        '<div class="dash-meta">' + photoCount + ' photo' + (photoCount !== 1 ? 's' : '') + ' &middot; ' + (isPrivate ? 'Private' : 'Public') + '</div>' +
+        '<div class="dash-actions">' +
+          (myIsSuperAdmin
+            ? '<button class="btn-sm filled" data-manage="' + g.id + '">Manage Photos</button>' +
+              '<button class="btn-sm" data-edit="' + g.id + '">Edit</button>' +
+              '<button class="btn-sm danger" data-delete="' + g.id + '">Delete</button>'
+            : '<button class="btn-sm filled" data-manage="' + g.id + '">Manage Access</button>') +
+        '</div>' +
+      '</div>';
+    grid.appendChild(card);
+  });
+
+  grid.querySelectorAll('[data-manage]').forEach(function(btn) {
+    btn.addEventListener('click', function() { openManage(btn.getAttribute('data-manage')); });
+  });
+  grid.querySelectorAll('[data-edit]').forEach(function(btn) {
+    btn.addEventListener('click', function() { openGalleryModal(btn.getAttribute('data-edit')); });
+  });
+  grid.querySelectorAll('[data-delete]').forEach(function(btn) {
+    btn.addEventListener('click', function() { deleteGallery(btn.getAttribute('data-delete')); });
+  });
+}
+
+/* ────────────────────────────────────────────────────────────
+   NEW / EDIT GALLERY MODAL
+──────────────────────────────────────────────────────────── */
+let editingGalleryId = null;
+const galleryModalBg = $('galleryModalBg');
+
+$('newGalleryBtn').addEventListener('click', function() { openGalleryModal(null); });
+$('galCancelBtn').addEventListener('click', closeGalleryModal);
+galleryModalBg.addEventListener('click', function(e) { if (e.target === galleryModalBg) closeGalleryModal(); });
+
+function openGalleryModal(id) {
+  editingGalleryId = id;
+  const g = id ? galleriesCache.find(function(x) { return x.id === id; }) : null;
+  $('galleryModalTitle').textContent = g ? 'Edit Gallery' : 'New Gallery';
+  $('galTitle').value   = g ? g.title : '';
+  $('galDesc').value    = g ? (g.description || '') : '';
+  $('galVisibility').value = g ? (g.visibility || 'public') : 'public';
+  $('galModalMsg').classList.remove('show', 'ok', 'err');
+  galleryModalBg.classList.add('show');
+}
+function closeGalleryModal() { galleryModalBg.classList.remove('show'); }
+
+$('galleryForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const msg = $('galModalMsg');
+  msg.classList.remove('show', 'ok', 'err');
+  const title = $('galTitle').value.trim();
+  if (!title) return;
+
+  const payload = {
+    title: title,
+    description: $('galDesc').value.trim(),
+    visibility: $('galVisibility').value
+  };
+
+  const btn = $('galSaveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  let error;
+  if (editingGalleryId) {
+    ({ error } = await supa.from('galleries').update(payload).eq('id', editingGalleryId));
+  } else {
+    payload.sort_order = galleriesCache.length;
+    payload.owner_id = myUserId;
+    ({ error } = await supa.from('galleries').insert(payload));
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Save Gallery';
+
+  if (error) {
+    msg.textContent = error.message;
+    msg.classList.add('show', 'err');
+    return;
+  }
+  closeGalleryModal();
+  showToast(editingGalleryId ? 'Gallery updated.' : 'Gallery created.');
+  await loadGalleries();
+});
+
+async function deleteGallery(id) {
+  const g = galleriesCache.find(function(x) { return x.id === id; });
+  if (!g) return;
+  if (!confirm('Delete "' + g.title + '" and all its photos? This can\'t be undone.')) return;
+
+  // Best-effort: remove uploaded files from storage first (frees up storage space)
+  const { data: photoRows } = await supa
+    .from('gallery_photos')
+    .select('storage_path')
+    .eq('gallery_id', id);
+  const paths = (photoRows || []).map(function(p) { return p.storage_path; }).filter(Boolean);
+  if (paths.length) await supa.storage.from(BUCKET_NAME).remove(paths);
+
+  const { error } = await supa.from('galleries').delete().eq('id', id);
+  if (error) { showToast(error.message, true); return; }
+  showToast('Gallery deleted.');
+  await loadGalleries();
+}
+
+/* ────────────────────────────────────────────────────────────
+   MANAGE GALLERY VIEW (photos + access)
+──────────────────────────────────────────────────────────── */
+let currentGalleryId = null;
+let currentPhotos = [];
+let currentGalleryData = null;
+let iCanManageAccess = false;
+
+$('backToListBtn').addEventListener('click', function() {
+  $('manageView').classList.remove('active');
+  $('galleryListView').style.display = '';
+  loadGalleries();
+});
+
+async function openManage(id) {
+  currentGalleryId = id;
+  $('galleryListView').style.display = 'none';
+  $('manageView').classList.add('active');
+  $('uploadQueue').innerHTML = '';
+  await refreshManageView();
+}
+
+async function refreshManageView() {
+  const { data: g, error } = await supa
+    .from('galleries')
+    .select('id, title, description, cover_url, cover_path, visibility, owner_id')
+    .eq('id', currentGalleryId)
+    .single();
+  if (error) { showToast(error.message, true); return; }
+  currentGalleryData = g;
+
+  $('manageTitle').textContent = g.title;
+  $('manageDesc').textContent = g.description || '';
+  $('manageVisBadge').textContent = g.visibility === 'private' ? 'Private gallery' : 'Public gallery';
+
+  // Am I allowed to manage access here? (super admin, owner, or explicit manager)
+  iCanManageAccess = myIsSuperAdmin || g.owner_id === myUserId;
+  if (!iCanManageAccess) {
+    const { data: myAccess } = await supa
+      .from('gallery_access')
+      .select('role')
+      .eq('gallery_id', currentGalleryId)
+      .eq('user_id', myUserId)
+      .maybeSingle();
+    iCanManageAccess = !!(myAccess && myAccess.role === 'manager');
+  }
+
+  document.querySelectorAll('.super-admin-only-option').forEach(function(opt) {
+    opt.hidden = !myIsSuperAdmin;
+  });
+  $('accessForm').style.display = iCanManageAccess ? '' : 'none';
+  $('accessPanelSub').textContent = g.visibility === 'private'
+    ? 'People listed below can view this private gallery.'
+    : 'This gallery is public — everyone can already see it. Access below only matters if you switch it to private.';
+
+  if (myIsSuperAdmin) {
+    $('manageAdminActions').style.display = '';
+    $('dropzone').style.display = '';
+    $('photoGrid').style.display = '';
+
+    const { data: photos, error: pErr } = await supa
+      .from('gallery_photos')
+      .select('id, url, storage_path, sort_order')
+      .eq('gallery_id', currentGalleryId)
+      .order('sort_order', { ascending: true });
+    if (pErr) { showToast(pErr.message, true); return; }
+
+    const paths = (photos || []).map(function(p) { return p.storage_path; }).filter(Boolean);
+    if (g.cover_path) paths.push(g.cover_path);
+    const signedMap = await getSignedUrlMap(paths);
+
+    currentPhotos = (photos || []).map(function(p) {
+      return Object.assign({}, p, { _display: (p.storage_path && signedMap[p.storage_path]) || p.url });
+    });
+    const coverDisplay = (g.cover_path && signedMap[g.cover_path]) || g.cover_url;
+    renderPhotoGrid(coverDisplay);
+  } else {
+    currentPhotos = [];
+  }
+
+  await renderAccessList();
+}
+
+function renderPhotoGrid(coverDisplay) {
+  const grid = $('photoGrid');
+  grid.innerHTML = '';
+  if (!currentPhotos.length) {
+    grid.innerHTML = '<div class="photo-grid-empty">No photos yet — drag some into the box above.</div>';
+    return;
+  }
+  currentPhotos.forEach(function(p) {
+    const tile = document.createElement('div');
+    tile.className = 'photo-tile';
+    const isCover = p._display === coverDisplay && !!coverDisplay;
+    tile.innerHTML =
+      '<img src="' + p._display + '" loading="lazy" alt="">' +
+      (isCover ? '<span class="tile-cover-badge">Cover</span>' : '') +
+      '<div class="tile-ov"><div class="tile-btn-row">' +
+        (isCover ? '' : '<button class="tile-btn" data-cover="' + p.id + '">Set Cover</button>') +
+        '<button class="tile-btn danger" data-del="' + p.id + '">Delete</button>' +
+      '</div></div>';
+    grid.appendChild(tile);
+  });
+
+  grid.querySelectorAll('[data-cover]').forEach(function(btn) {
+    btn.addEventListener('click', function() { setCover(btn.getAttribute('data-cover')); });
+  });
+  grid.querySelectorAll('[data-del]').forEach(function(btn) {
+    btn.addEventListener('click', function() { deletePhoto(btn.getAttribute('data-del')); });
+  });
+}
+
+async function setCover(photoId) {
+  const p = currentPhotos.find(function(x) { return x.id === photoId; });
+  if (!p) return;
+  const { error } = await supa.from('galleries')
+    .update({ cover_url: null, cover_path: p.storage_path })
+    .eq('id', currentGalleryId);
+  if (error) { showToast(error.message, true); return; }
+  showToast('Cover photo updated.');
+  await refreshManageView();
+}
+
+async function deletePhoto(photoId) {
+  const p = currentPhotos.find(function(x) { return x.id === photoId; });
+  if (!p) return;
+  if (!confirm('Delete this photo?')) return;
+
+  if (p.storage_path) {
+    await supa.storage.from(BUCKET_NAME).remove([p.storage_path]);
+  }
+  const { error } = await supa.from('gallery_photos').delete().eq('id', photoId);
+  if (error) { showToast(error.message, true); return; }
+  showToast('Photo deleted.');
+  await refreshManageView();
+}
+
+$('editGalleryBtn').addEventListener('click', function() { openGalleryModal(currentGalleryId); });
+$('deleteGalleryBtn').addEventListener('click', async function() {
+  await deleteGallery(currentGalleryId);
+  $('manageView').classList.remove('active');
+  $('galleryListView').style.display = '';
+});
+
+/* ────────────────────────────────────────────────────────────
+   ACCESS PANEL — grant/revoke access to a private gallery
+──────────────────────────────────────────────────────────── */
+async function renderAccessList() {
+  const list = $('accessList');
+  if (!iCanManageAccess) {
+    list.innerHTML = '';
+    return;
+  }
+  list.innerHTML = '<div class="dash-empty" style="padding:1rem">Loading…</div>';
+
+  const { data, error } = await supa
+    .from('gallery_access')
+    .select('id, role, user_id, profiles(email, display_name)')
+    .eq('gallery_id', currentGalleryId);
+
+  if (error) {
+    list.innerHTML = '<div class="dash-empty" style="padding:1rem">Couldn\'t load access list: ' + escapeHtml(error.message) + '</div>';
+    return;
+  }
+
+  if (!data || !data.length) {
+    list.innerHTML = '<div class="dash-empty" style="padding:1rem">No one has been granted access yet.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  data.forEach(function(row) {
+    const email = row.profiles ? row.profiles.email : row.user_id;
+    const item = document.createElement('div');
+    item.style.cssText = 'display:flex;align-items:center;gap:.7rem;background:rgba(59,31,114,.15);border:1px solid rgba(124,77,219,.2);border-radius:3px;padding:.6rem .9rem;font-size:.85rem';
+    item.innerHTML =
+      '<span style="flex:1">' + escapeHtml(email || 'Unknown') + '</span>' +
+      '<span style="font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border:1px solid rgba(124,77,219,.3);padding:.2rem .5rem;border-radius:2px">' + row.role + '</span>' +
+      (myIsSuperAdmin || iCanManageAccess ? '<button class="tile-btn danger" data-remove-access="' + row.id + '" style="background:rgba(14,10,26,.6);border-color:rgba(224,90,107,.4)">Remove</button>' : '');
+    list.appendChild(item);
+  });
+
+  list.querySelectorAll('[data-remove-access]').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      const { error: delErr } = await supa.from('gallery_access').delete().eq('id', btn.getAttribute('data-remove-access'));
+      if (delErr) { showToast(delErr.message, true); return; }
+      showToast('Access removed.');
+      await renderAccessList();
+    });
+  });
+}
+
+$('accessForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const msg = $('accessMsg');
+  msg.classList.remove('show', 'ok', 'err');
+
+  const email = $('accessEmail').value.trim().toLowerCase();
+  const role = $('accessRole').value;
+
+  const { data: profile, error: pErr } = await supa
+    .from('profiles')
+    .select('id')
+    .ilike('email', email)
+    .maybeSingle();
+
+  if (pErr || !profile) {
+    msg.textContent = 'No account found with that email — they need to create an account at login.html first.';
+    msg.classList.add('show', 'err');
+    return;
+  }
+
+  const { error } = await supa.from('gallery_access').insert({
+    gallery_id: currentGalleryId,
+    user_id: profile.id,
+    role: role
+  });
+
+  if (error) {
+    msg.textContent = error.message;
+    msg.classList.add('show', 'err');
+    return;
+  }
+
+  $('accessEmail').value = '';
+  msg.textContent = 'Access granted.';
+  msg.classList.add('show', 'ok');
+  await renderAccessList();
+});
+
+/* ────────────────────────────────────────────────────────────
+   DRAG & DROP UPLOAD
+──────────────────────────────────────────────────────────── */
+const dropzone   = $('dropzone');
+const fileInput  = $('fileInput');
+const uploadQueue = $('uploadQueue');
+
+dropzone.addEventListener('click', function() { fileInput.click(); });
+fileInput.addEventListener('change', function() { handleFiles(fileInput.files); fileInput.value = ''; });
+
+['dragenter', 'dragover'].forEach(function(evt) {
+  dropzone.addEventListener(evt, function(e) {
+    e.preventDefault(); e.stopPropagation();
+    dropzone.classList.add('dragover');
+  });
+});
+['dragleave', 'drop'].forEach(function(evt) {
+  dropzone.addEventListener(evt, function(e) {
+    e.preventDefault(); e.stopPropagation();
+    dropzone.classList.remove('dragover');
+  });
+});
+dropzone.addEventListener('drop', function(e) {
+  const files = e.dataTransfer.files;
+  if (files && files.length) handleFiles(files);
+});
+
+function handleFiles(fileList) {
+  const files = Array.from(fileList).filter(function(f) { return f.type.startsWith('image/'); });
+  if (!files.length) return;
+  files.forEach(uploadOneFile);
+}
+
+async function uploadOneFile(file) {
+  const rowId = 'up-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+  const row = document.createElement('div');
+  row.className = 'upload-row';
+  row.id = rowId;
+  row.innerHTML =
+    '<div class="spinner"></div>' +
+    '<span class="name">' + escapeHtml(file.name) + '</span>' +
+    '<div class="upload-bar"><div class="upload-bar-fill" style="width:15%"></div></div>' +
+    '<span class="upload-status">Uploading</span>';
+  uploadQueue.appendChild(row);
+
+  try {
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+    const safeName = crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(36).slice(2));
+    const path = currentGalleryId + '/' + safeName + '.' + ext;
+
+    const { error: upErr } = await supa.storage.from(BUCKET_NAME).upload(path, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type
+    });
+    if (upErr) throw upErr;
+
+    row.querySelector('.upload-bar-fill').style.width = '70%';
+
+    const nextOrder = currentPhotos.length
+      ? Math.max.apply(null, currentPhotos.map(function(p) { return p.sort_order || 0; })) + 1
+      : 0;
+
+    const { error: insErr } = await supa.from('gallery_photos').insert({
+      gallery_id: currentGalleryId,
+      storage_path: path,
+      sort_order: nextOrder
+    });
+    if (insErr) throw insErr;
+
+    row.classList.add('done');
+    row.querySelector('.spinner').outerHTML = '✓';
+    row.querySelector('.upload-bar-fill').style.width = '100%';
+    row.querySelector('.upload-status').textContent = 'Done';
+
+    setTimeout(function() { row.remove(); }, 2200);
+    await refreshManageView();
+  } catch (err) {
+    row.classList.add('error');
+    row.querySelector('.upload-status').textContent = 'Failed';
+    row.querySelector('.spinner').remove();
+    showToast('Upload failed: ' + (err.message || err), true);
+  }
+}
+
+/* ────────────────────────────────────────────────────────────
+   INIT
+──────────────────────────────────────────────────────────── */
+checkSession();
+</script>
+</body>
+</html>

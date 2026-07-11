@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Matthew Lehman Media — Photo Gallery System
+     gallery.html  |  Matches index.html design exactly
+     ─────────────────────────────────────────────────────────────────────
+     DEPLOYMENT:
+       Place this file alongside index.html in the same root directory.
+       All paths in the EASY EDIT SETTINGS below are relative to this file.
+       Example folder structure:
+         /
+         ├── index.html          (main site)
+         ├── gallery.html        (this file)
+         ├── images/
+         │   ├── senior-cover.jpg
+         │   ├── football-cover.jpg
+         │   └── ... your photos ...
+         └── favicon.ico / favicon-32x32.png / etc.
+     ─────────────────────────────────────────────────────────────────────
+     Favicon files (same as index.html — shared from site root):
+       favicon.ico  |  favicon-16x16.png  |  favicon-32x32.png
+       apple-touch-icon.png  |  android-chrome-192x192.png  |  site.webmanifest
+     ─────────────────────────────────────────────────────────────────────
+     CONNECTING THE UPLOAD/ADMIN SYSTEM:
+       See admin.html and supabase-setup.sql. Once you've created a
+       Supabase project, run supabase-setup.sql, and pasted your
+       Project URL + anon key into the CONFIG section below (and in
+       admin.html), galleries/photos uploaded via admin.html will
+       appear here automatically. Until then this page just shows
+       the FALLBACK_GALLERIES data further down, same as before.
+═══════════════════════════════════════════════════════════════════════ -->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<meta name="theme-color" content="#0e0a1a" />
+<meta name="msapplication-TileColor" content="#0e0a1a" />
+<meta name="format-detection" content="telephone=no" />
+
+<!-- Primary SEO -->
+<title>Photo Galleries | Matthew Lehman Media — Sports Photographer Logan, Ohio</title>
+<meta name="description" content="Browse all photo galleries from Matthew Lehman Media — senior sessions, sports photography, football, basketball, and more. Professional sports photographer in Logan, Ohio." />
+<meta name="keywords" content="Matthew Lehman Media galleries, sports photography gallery, Logan Ohio photographer, senior photos, football photography, basketball photography, athlete portraits, Logan Hocking" />
+<meta name="author" content="Matthew Lehman" />
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
+<link rel="canonical" href="https://www.matthewlehmanmedia.com/gallery.html" />
+
+<!-- Open Graph -->
+<meta property="og:type"         content="website" />
+<meta property="og:url"          content="https://www.matthewlehmanmedia.com/gallery.html" />
+<meta property="og:title"        content="Photo Galleries | Matthew Lehman Media" />
+<meta property="og:description"  content="Browse all photo galleries from Matthew Lehman Media. Sports, seniors, portraits and more — Logan, Ohio." />
+<meta property="og:image"        content="https://www.matthewlehmanmedia.com/android-chrome-512x512.png" />
+<meta property="og:image:width"  content="512" />
+<meta property="og:image:height" content="512" />
+<meta property="og:image:alt"    content="Matthew Lehman Media — Photo Galleries" />
+<meta property="og:locale"       content="en_US" />
+<meta property="og:site_name"    content="Matthew Lehman Media" />
+
+<!-- Twitter Card -->
+<meta name="twitter:card"        content="summary_large_image" />
+<meta name="twitter:site"        content="@mlmedia_28" />
+<meta name="twitter:creator"     content="@mlmedia_28" />
+<meta name="twitter:title"       content="Photo Galleries | Matthew Lehman Media" />
+<meta name="twitter:description" content="Browse all photo galleries from Matthew Lehman Media. Sports, seniors, portraits and more." />
+<meta name="twitter:image"       content="https://www.matthewlehmanmedia.com/android-chrome-512x512.png" />
+<meta name="twitter:image:alt"   content="Matthew Lehman Media — Photo Galleries" />
+
+<!-- Geo / Local SEO -->
+<meta name="geo.region"    content="US-OH" />
+<meta name="geo.placename" content="Logan, Ohio" />
+<meta name="geo.position"  content="39.5403;-82.4074" />
+<meta name="ICBM"          content="39.5403, -82.4074" />
+
+<!-- Favicons -->
+<link rel="icon" type="image/x-icon"   href="/favicon.ico" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+
+<!-- Performance: preconnect fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+<!-- Supabase client (used to load galleries/photos dynamically once connected — see admin.html) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Fonts: non-render-blocking (same stack as index.html) -->
+<link rel="preload" as="style"
+  href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+  onload="this.onload=null;this.rel='stylesheet'" />
+<noscript>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" />
+</noscript>
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "ImageGallery",
+      "@id": "https://www.matthewlehmanmedia.com/gallery.html#gallery",
+      "name": "Matthew Lehman Media — Photo Galleries",
+      "description": "Professional sports and athletic photography galleries from Matthew Lehman Media in Logan, Ohio.",
+      "url": "https://www.matthewlehmanmedia.com/gallery.html",
+      "author": {
+        "@type": "Person",
+        "name": "Matthew Lehman",
+        "jobTitle": "Sports Photographer",
+        "url": "https://www.matthewlehmanmedia.com/",
+        "sameAs": ["https://www.instagram.com/mlmedia_28/"]
+      },
+      "publisher": {
+        "@type": "LocalBusiness",
+        "name": "Matthew Lehman Media",
+        "url": "https://www.matthewlehmanmedia.com/",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Logan",
+          "addressRegion": "OH",
+          "addressCountry": "US"
+        }
+      }
+    }
+  ]
+}
+</script>
+
+<style>
+/* ════════════════════════════════════════════════════════════
+   RESET + ROOT TOKENS (identical to index.html)
+════════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --deep:#0e0a1a;--dark:#160d2e;--mid:#3b1f72;
+  --accent:#7c4ddb;--light:#b48ffc;--glow:#c9aaff;
+  --white:#f5f0ff;--muted:#9b8eb5;
+  --fd:'Bebas Neue','Arial Narrow',Arial,sans-serif;
+  --fs:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+  --fb:'DM Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--deep);color:var(--white);font-family:var(--fb);overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+button{cursor:pointer;border:none;background:none;font-family:inherit}
+
+/* ════════════════════════════════════════════════════════════
+   NAV (exact match to index.html)
+════════════════════════════════════════════════════════════ */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:1.2rem 2.5rem;
+  background:linear-gradient(to bottom,rgba(14,10,26,.92),rgba(14,10,26,0));
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.nav-logo{
+  font-family:var(--fd);font-size:1.3rem;letter-spacing:.14em;
+  color:var(--glow);text-decoration:none;flex-shrink:0;z-index:51;position:relative;
+}
+.nav-links{display:flex;gap:2rem;align-items:center}
+.nav-links a{
+  font-size:.7rem;letter-spacing:.25em;text-transform:uppercase;
+  color:var(--muted);text-decoration:none;transition:color .3s;
+}
+.nav-links a:hover,.nav-links a.active{color:var(--glow)}
+.nav-home-link{
+  color:var(--muted)!important;transition:color .3s;
+}
+.nav-home-link:hover{color:var(--glow)!important}
+.nav-gallery-pill{
+  color:var(--white)!important;background:var(--accent);
+  padding:.45rem 1.1rem;border-radius:2px;
+  transition:background .3s,color .3s!important;
+}
+.nav-gallery-pill:hover{background:var(--light);color:var(--deep)!important}
+
+/* Hamburger */
+.nav-burger{
+  display:none;flex-direction:column;justify-content:center;gap:5px;
+  width:36px;height:36px;background:none;border:none;
+  z-index:51;position:relative;padding:4px;
+}
+.nav-burger span{
+  display:block;width:22px;height:1.5px;background:var(--glow);
+  transition:transform .3s ease,opacity .3s ease;transform-origin:center;
+}
+.nav-burger.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+.nav-burger.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.nav-burger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+
+/* Mobile Drawer */
+.nav-drawer{
+  position:fixed;inset:0;z-index:40;
+  background:rgba(14,10,26,.97);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2.5rem;
+  opacity:0;pointer-events:none;transition:opacity .35s ease;
+}
+.nav-drawer.open{opacity:1;pointer-events:all}
+.nav-drawer a{
+  font-family:var(--fd);font-size:3rem;letter-spacing:.12em;
+  color:var(--muted);text-decoration:none;
+  transform:translateY(20px);opacity:0;
+  transition:color .25s,transform .4s ease,opacity .4s ease;
+}
+.nav-drawer.open a{opacity:1;transform:translateY(0)}
+.nav-drawer.open a:nth-child(1){transition-delay:.05s}
+.nav-drawer.open a:nth-child(2){transition-delay:.12s}
+.nav-drawer.open a:nth-child(3){transition-delay:.19s}
+.nav-drawer.open a:nth-child(4){transition-delay:.26s}
+.nav-drawer.open a:nth-child(5){transition-delay:.33s}
+.nav-drawer a:hover{color:var(--glow)}
+
+@media(max-width:640px){
+  .nav{padding:1rem 1.2rem}
+  .nav-links{display:none}
+  .nav-burger{display:flex}
+}
+@media(min-width:641px){
+  .nav-drawer{display:none}
+  .nav-burger{display:none}
+}
+
+/* ════════════════════════════════════════════════════════════
+   PAGE HEADER (gallery directory hero)
+════════════════════════════════════════════════════════════ */
+.page-header{
+  position:relative;padding:9rem 4rem 5rem;
+  overflow:hidden;
+  border-bottom:1px solid rgba(59,31,114,.3);
+}
+.ph-bg{position:absolute;inset:0;z-index:0;overflow:hidden}
+.ph-bg img{width:100%;height:100%;object-fit:cover;object-position:center;opacity:.18;animation:fadeIn 2s ease .2s both}
+.ph-bg-ov{position:absolute;inset:0;background:linear-gradient(to right,rgba(14,10,26,.94) 40%,rgba(14,10,26,.5))}
+.ph-orb-1{
+  position:absolute;width:700px;height:700px;border-radius:50%;
+  top:-30%;right:-10%;pointer-events:none;
+  background:radial-gradient(circle,rgba(124,77,219,.3),transparent 70%);
+  filter:blur(90px);animation:pulse 8s ease-in-out infinite;
+}
+.ph-orb-2{
+  position:absolute;width:400px;height:400px;border-radius:50%;
+  bottom:-10%;left:5%;pointer-events:none;
+  background:radial-gradient(circle,rgba(180,143,252,.18),transparent 70%);
+  filter:blur(80px);animation:pulse 8s ease-in-out 4s infinite;
+}
+.ph-inner{position:relative;z-index:1}
+.ph-label{
+  font-size:.72rem;font-weight:500;letter-spacing:.35em;text-transform:uppercase;
+  color:var(--accent);display:flex;align-items:center;gap:10px;margin-bottom:1.2rem;
+  opacity:0;animation:fadeUp .8s ease .2s both;
+}
+.ph-label::before{content:'';width:22px;height:1px;background:var(--accent);display:inline-block}
+.ph-home-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--fb);font-size:.68rem;font-weight:500;letter-spacing:.25em;
+  text-transform:uppercase;color:var(--muted);text-decoration:none;
+  border:1px solid rgba(124,77,219,.28);
+  padding:.5rem 1.1rem;border-radius:2px;
+  transition:all .3s;margin-bottom:2rem;
+  opacity:0;animation:fadeUp .7s ease .1s both;
+}
+.ph-home-btn:hover{color:var(--glow);border-color:var(--light)}
+.ph-title{
+  font-family:var(--fd);font-size:clamp(4rem,9vw,8rem);
+  line-height:.95;letter-spacing:.03em;margin-bottom:1.4rem;
+  opacity:0;animation:fadeUp .9s ease .4s both;
+}
+.ph-title em{font-style:normal;-webkit-text-stroke:1.5px var(--accent);color:transparent}
+.ph-sub{
+  font-family:var(--fs);font-size:clamp(1.05rem,2vw,1.35rem);
+  font-weight:300;font-style:italic;color:var(--muted);
+  line-height:1.65;max-width:520px;
+  opacity:0;animation:fadeUp .9s ease .6s both;
+}
+
+/* ════════════════════════════════════════════════════════════
+   GALLERY LANDING — CARD GRID
+════════════════════════════════════════════════════════════ */
+.landing-section{padding:4rem 4rem 6rem}
+.gallery-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:24px;
+}
+@media(max-width:1024px){.gallery-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){
+  .landing-section{padding:3rem 1.2rem 4rem}
+  .gallery-grid{grid-template-columns:1fr;gap:16px}
+}
+
+/* Individual card */
+.gal-card{
+  position:relative;border-radius:4px;overflow:hidden;
+  border:1px solid rgba(124,77,219,.22);
+  background:linear-gradient(160deg,rgba(59,31,114,.2),rgba(14,10,26,.9));
+  transition:border-color .35s,transform .35s;
+  display:flex;flex-direction:column;
+  opacity:0;transform:translateY(20px);
+}
+.gal-card.visible{opacity:1;transform:translateY(0)}
+.gal-card:hover{border-color:rgba(180,143,252,.45);transform:translateY(-4px)}
+.gal-card{cursor:pointer}
+.gal-card:focus-visible{outline:2px solid var(--light);outline-offset:2px}
+
+/* Cover image */
+.card-cover{
+  position:relative;width:100%;aspect-ratio:3/2;overflow:hidden;
+  background:linear-gradient(135deg,var(--dark),var(--deep));
+  flex-shrink:0;
+}
+.card-cover img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  transition:transform .55s ease,opacity .4s ease;opacity:0;
+}
+.card-cover img.loaded{opacity:1}
+.card-cover:hover img{transform:scale(1.05)}
+/* Gradient overlay on cover */
+.card-cover-ov{
+  position:absolute;inset:0;z-index:1;
+  background:linear-gradient(to bottom,transparent 40%,rgba(14,10,26,.75) 100%);
+  pointer-events:none;
+}
+/* Placeholder when no image / loading */
+.card-cover-placeholder{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  z-index:0;
+}
+.card-cover-placeholder span{
+  font-family:var(--fd);font-size:5rem;letter-spacing:.1em;
+  color:rgba(124,77,219,.2);user-select:none;line-height:1;
+}
+/* Photo count badge */
+.card-badge{
+  position:absolute;top:.8rem;right:.8rem;z-index:2;
+  font-size:.62rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--white);background:rgba(14,10,26,.75);
+  border:1px solid rgba(124,77,219,.4);
+  padding:.3rem .7rem;border-radius:2px;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+}
+
+/* Card info panel */
+.card-info{
+  padding:1.5rem 1.6rem 1.7rem;flex:1;display:flex;flex-direction:column;
+  border-top:1px solid rgba(59,31,114,.4);
+}
+.card-name{
+  font-family:var(--fd);font-size:clamp(1.5rem,3vw,2rem);
+  letter-spacing:.05em;line-height:1.05;margin-bottom:.5rem;color:var(--white);
+}
+.card-desc{
+  font-family:var(--fs);font-size:.98rem;font-style:italic;
+  color:var(--muted);line-height:1.5;margin-bottom:auto;padding-bottom:1.4rem;
+}
+.card-actions{
+  display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;padding-top:1rem;
+  border-top:1px solid rgba(59,31,114,.3);
+}
+.btn-view{
+  font-family:var(--fb);font-size:.72rem;font-weight:500;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--white);background:var(--accent);
+  padding:.7rem 1.6rem;border-radius:2px;transition:background .3s,transform .2s;
+  display:inline-flex;align-items:center;gap:7px;flex-shrink:0;
+}
+.btn-view::after{content:'→';transition:transform .3s}
+.btn-view:hover{background:var(--light);transform:translateY(-2px)}
+.btn-view:hover::after{transform:translateX(4px)}
+
+.btn-shop{
+  font-family:var(--fb);font-size:.72rem;font-weight:500;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--muted);
+  border:1px solid rgba(124,77,219,.3);
+  padding:.7rem 1.3rem;border-radius:2px;transition:all .3s;
+  display:inline-flex;align-items:center;gap:6px;flex-shrink:0;
+}
+.btn-shop svg{width:12px;height:12px;fill:currentColor;flex-shrink:0}
+.btn-shop:hover{color:var(--glow);border-color:var(--light)}
+
+/* Empty state */
+.empty-state{
+  grid-column:1/-1;text-align:center;padding:5rem 2rem;
+  font-family:var(--fs);font-style:italic;color:var(--muted);font-size:1.1rem;
+}
+
+/* ════════════════════════════════════════════════════════════
+   GALLERY VIEW (individual gallery)
+════════════════════════════════════════════════════════════ */
+#page-gallery-view{display:none}
+#page-gallery-view.active{display:block}
+#page-landing{display:block}
+#page-landing.hidden{display:none}
+
+/* View header */
+.view-header{
+  position:relative;padding:8.5rem 4rem 3.5rem;
+  border-bottom:1px solid rgba(59,31,114,.3);overflow:hidden;
+}
+.vh-orb{
+  position:absolute;width:600px;height:600px;border-radius:50%;
+  top:-20%;right:-5%;pointer-events:none;
+  background:radial-gradient(circle,rgba(124,77,219,.25),transparent 70%);
+  filter:blur(80px);animation:pulse 8s ease-in-out infinite;
+}
+.view-header-inner{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1.5rem}
+.vh-left{}
+.back-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--fb);font-size:.68rem;font-weight:500;letter-spacing:.25em;
+  text-transform:uppercase;color:var(--muted);
+  border:1px solid rgba(124,77,219,.28);
+  padding:.5rem 1.1rem;border-radius:2px;
+  transition:all .3s;margin-bottom:1.8rem;
+}
+.back-btn::before{content:'←';transition:transform .3s}
+.back-btn:hover{color:var(--glow);border-color:var(--light)}
+.back-btn:hover::before{transform:translateX(-4px)}
+
+.vh-label{
+  font-size:.7rem;font-weight:500;letter-spacing:.35em;text-transform:uppercase;
+  color:var(--accent);display:flex;align-items:center;gap:10px;margin-bottom:1rem;
+}
+.vh-label::before{content:'';width:20px;height:1px;background:var(--accent);display:inline-block}
+.vh-title{
+  font-family:var(--fd);font-size:clamp(3rem,7vw,6rem);
+  letter-spacing:.03em;line-height:.95;margin-bottom:.6rem;
+}
+.vh-title em{font-style:normal;-webkit-text-stroke:1.5px var(--accent);color:transparent}
+.vh-desc{
+  font-family:var(--fs);font-size:1.1rem;font-style:italic;
+  color:var(--muted);line-height:1.6;margin-top:.5rem;
+}
+.vh-right{display:flex;flex-direction:column;align-items:flex-end;gap:.8rem;flex-shrink:0}
+.vh-count{
+  font-family:var(--fd);font-size:1.1rem;letter-spacing:.15em;color:var(--mid);
+}
+.btn-shop-lg{
+  font-family:var(--fb);font-size:.75rem;font-weight:500;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--white);background:var(--accent);
+  padding:.85rem 2rem;border-radius:2px;transition:background .3s,transform .2s;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.btn-shop-lg svg{width:14px;height:14px;fill:currentColor;flex-shrink:0}
+.btn-shop-lg:hover{background:var(--light);transform:translateY(-2px)}
+
+/* ---- Masonry photo grid ---- */
+.masonry-wrap{padding:3rem 4rem 5rem}
+.masonry-grid{
+  column-count:3;column-gap:12px;
+}
+.masonry-item{
+  break-inside:avoid;margin-bottom:12px;position:relative;
+  border:1px solid rgba(124,77,219,.15);border-radius:2px;overflow:hidden;
+  background:rgba(22,13,46,.5);cursor:zoom-in;
+}
+.masonry-item img{
+  width:100%;display:block;
+  transition:transform .5s ease,opacity .4s ease;opacity:0;
+}
+.masonry-item img.loaded{opacity:1}
+.masonry-item:hover img{transform:scale(1.04)}
+/* hover overlay on masonry item */
+.mi-overlay{
+  position:absolute;inset:0;background:rgba(14,10,26,.5);
+  display:flex;align-items:flex-end;justify-content:flex-end;
+  padding:.5rem;opacity:0;transition:opacity .3s;pointer-events:none;
+}
+.masonry-item:hover .mi-overlay{opacity:1;pointer-events:all}
+
+/* Centered "View" label on hover */
+.mi-view{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.9);
+  display:flex;align-items:center;gap:.45rem;
+  font-family:var(--fb);font-size:.68rem;font-weight:500;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--white);pointer-events:none;opacity:0;transition:opacity .3s,transform .3s;
+}
+.masonry-item:hover .mi-view{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.mi-view svg{width:15px;height:15px;fill:currentColor;flex-shrink:0}
+
+@media(max-width:900px){
+  .masonry-wrap{padding:2rem 1.5rem 4rem}
+  .masonry-grid{column-count:2}
+}
+@media(max-width:480px){
+  .masonry-grid{column-count:1}
+}
+
+/* Download button on masonry item */
+.mi-dl{
+  display:flex;align-items:center;gap:5px;
+  font-family:var(--fb);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--white);background:rgba(124,77,219,.85);border:none;border-radius:2px;
+  padding:.35rem .7rem;cursor:pointer;text-decoration:none;transition:background .25s;
+}
+.mi-dl:hover{background:var(--accent)}
+.mi-dl svg{width:11px;height:11px;fill:currentColor;flex-shrink:0}
+
+/* Gallery view responsive header */
+@media(max-width:640px){
+  .view-header{padding:7rem 1.2rem 2.5rem}
+  .view-header-inner{flex-direction:column;align-items:flex-start}
+  .vh-right{align-items:flex-start}
+}
+
+/* ════════════════════════════════════════════════════════════
+   LIGHTBOX (exact match to index.html)
+════════════════════════════════════════════════════════════ */
+.lb{
+  position:fixed;inset:0;background:rgba(8,5,15,.96);
+  display:none;align-items:center;justify-content:center;
+  z-index:100;padding:2rem;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.lb.show{display:flex}
+.lb-inner{position:relative;display:flex;align-items:center;justify-content:center;max-width:95vw;max-height:90vh}
+.lb img{
+  max-width:calc(95vw - 120px);max-height:90vh;
+  object-fit:contain;border:1px solid rgba(124,77,219,.3);
+  display:block;transition:opacity .2s;
+}
+.lb-close{
+  position:absolute;top:1.4rem;right:1.6rem;
+  font-family:var(--fd);font-size:1.4rem;color:var(--glow);
+  background:none;border:none;cursor:pointer;letter-spacing:.1em;z-index:102;
+}
+.lb-close:hover{color:var(--white)}
+.lb-arrow{
+  position:absolute;top:50%;transform:translateY(-50%);
+  background:rgba(124,77,219,.18);border:1px solid rgba(124,77,219,.4);
+  color:var(--glow);font-family:var(--fd);font-size:1.8rem;
+  width:48px;height:48px;border-radius:2px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .25s,color .25s;z-index:102;
+  user-select:none;flex-shrink:0;
+}
+.lb-arrow:hover{background:var(--accent);color:var(--white)}
+.lb-prev{left:-64px}
+.lb-next{right:-64px}
+@media(max-width:700px){
+  .lb-prev{left:4px}
+  .lb-next{right:4px}
+  .lb img{max-width:calc(95vw - 90px)}
+}
+.lb-bar{
+  position:absolute;bottom:1.4rem;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:1rem;z-index:102;
+}
+.lb-counter{font-family:var(--fd);font-size:.9rem;letter-spacing:.2em;color:var(--muted)}
+.lb-dl{
+  display:flex;align-items:center;gap:6px;
+  font-family:var(--fb);font-size:.65rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--white);background:rgba(124,77,219,.5);border:1px solid rgba(124,77,219,.6);
+  padding:.4rem 1rem;border-radius:2px;text-decoration:none;cursor:pointer;
+  transition:background .25s;
+}
+.lb-dl:hover{background:var(--accent)}
+.lb-dl svg{width:13px;height:13px;fill:currentColor;flex-shrink:0}
+
+/* ════════════════════════════════════════════════════════════
+   FOOTER (exact match to index.html + Instagram icon)
+════════════════════════════════════════════════════════════ */
+footer{
+  padding:2.5rem 4rem;display:flex;justify-content:space-between;align-items:center;
+  border-top:1px solid rgba(59,31,114,.4);flex-wrap:wrap;gap:1rem;
+}
+.f-logo{font-family:var(--fd);font-size:1.2rem;letter-spacing:.12em;color:var(--mid)}
+.f-copy{font-size:.72rem;letter-spacing:.1em;color:var(--mid)}
+.f-soc a{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--mid);text-decoration:none;transition:color .3s;
+}
+.f-soc a:hover{color:var(--light)}
+.f-soc svg{width:15px;height:15px;fill:currentColor;flex-shrink:0}
+@media(max-width:900px){
+  footer{flex-direction:column;text-align:center;padding:2rem 1.5rem}
+}
+
+/* ════════════════════════════════════════════════════════════
+   KEYFRAME ANIMATIONS (identical to index.html)
+════════════════════════════════════════════════════════════ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.08);opacity:1}}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes scanline{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+@keyframes pageSlideIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* Page transition */
+.page-enter{animation:pageSlideIn .45s ease both}
+
+/* Card stagger animation delays */
+.gal-card:nth-child(1){transition-delay:.05s}
+.gal-card:nth-child(2){transition-delay:.12s}
+.gal-card:nth-child(3){transition-delay:.19s}
+.gal-card:nth-child(4){transition-delay:.26s}
+.gal-card:nth-child(5){transition-delay:.33s}
+.gal-card:nth-child(6){transition-delay:.40s}
+.gal-card:nth-child(7){transition-delay:.47s}
+.gal-card:nth-child(8){transition-delay:.54s}
+.gal-card:nth-child(9){transition-delay:.61s}
+
+/* ════════════════════════════════════════════════════════════
+   RESPONSIVE ADJUSTMENTS
+════════════════════════════════════════════════════════════ */
+@media(max-width:900px){
+  .page-header{padding:8rem 1.5rem 4rem}
+}
+@media(max-width:640px){
+  .page-header{padding:7rem 1.2rem 3rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════
+     NAV (simplified — gallery page only)
+══════════════════════════════════════════════════════════════ -->
+<nav class="nav" role="navigation" aria-label="Main navigation">
+  <a href="/" class="nav-logo" id="navLogoBtn" aria-label="Matthew Lehman Media — home">MLM</a>
+  <div class="nav-links">
+    <a href="/" class="nav-home-link">← Home</a>
+    <a href="https://www.instagram.com/mlmedia_28/" target="_blank" rel="noopener noreferrer">Instagram</a>
+    <a href="gallery.html" class="active nav-gallery-pill">Gallery</a>
+    <a href="login.html" id="navAccountLink">Sign In</a>
+  </div>
+  <button class="nav-burger" id="navBurger" aria-label="Open navigation menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Mobile Drawer -->
+<div class="nav-drawer" id="navDrawer" role="dialog" aria-label="Mobile navigation">
+  <a href="/">← Home</a>
+  <a href="gallery.html">Gallery</a>
+  <a href="https://www.instagram.com/mlmedia_28/" target="_blank" rel="noopener noreferrer">Instagram</a>
+  <a href="login.html" id="navAccountLinkMobile">Sign In</a>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE: GALLERY LANDING (directory of all galleries)
+══════════════════════════════════════════════════════════════ -->
+<div id="page-landing">
+
+  <!-- Page Header -->
+  <header class="page-header" aria-label="Photo galleries header">
+    <div class="ph-bg">
+      <img
+        src="https://drive.google.com/thumbnail?id=1HJsopvmRg0BxzFi7bi8p98xvH3RJNb56&sz=w1920"
+        alt="Matthew Lehman Media — Athletic Photography"
+        loading="eager"
+      />
+      <div class="ph-bg-ov"></div>
+    </div>
+    <div class="ph-orb-1"></div>
+    <div class="ph-orb-2"></div>
+    <div class="ph-inner">
+      <a href="/" class="ph-home-btn" aria-label="Back to home">← Back to Home</a>
+      <p class="ph-label">Matthew Lehman Media</p>
+      <h1 class="ph-title">The<br><em>Galleries</em></h1>
+      <p class="ph-sub" id="gallerySubtitle">Browse all sessions below — select any gallery to view the full collection.</p>
+    </div>
+  </header>
+
+  <!-- Gallery Card Grid -->
+  <section class="landing-section" aria-label="Photo gallery directory">
+    <div class="gallery-grid" id="galleryGrid">
+      <!-- Cards injected by JS -->
+    </div>
+  </section>
+
+</div><!-- /#page-landing -->
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE: INDIVIDUAL GALLERY VIEW
+══════════════════════════════════════════════════════════════ -->
+<div id="page-gallery-view" aria-label="Gallery view" role="main">
+
+  <!-- Gallery Header -->
+  <header class="view-header">
+    <div class="vh-orb"></div>
+    <div class="view-header-inner">
+      <div class="vh-left">
+        <button class="back-btn" id="backBtn" aria-label="Back to all galleries">All Galleries</button>
+        <p class="vh-label" id="vhLabel">Matthew Lehman Media</p>
+        <h2 class="vh-title" id="vhTitle">Gallery</h2>
+        <p class="vh-desc" id="vhDesc"></p>
+      </div>
+      <div class="vh-right">
+        <span class="vh-count" id="vhCount"></span>
+        <a class="btn-shop-lg" id="shopBtn" href="#" target="_blank" rel="noopener noreferrer" aria-label="Shop prints in new tab">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h-2L3 2H1v2h2l3.6 7.59L5.25 14A2 2 0 007 17h12v-2H7.42a.25.25 0 01-.25-.25l.03-.12.9-1.63H19a2 2 0 001.76-1.06L23 6H5.21l-.94-2zm0 13a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z"/></svg>
+          Shop Prints
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Masonry Photo Grid -->
+  <div class="masonry-wrap">
+    <div class="masonry-grid" id="masonryGrid">
+      <!-- Photos injected by JS -->
+    </div>
+  </div>
+
+</div><!-- /#page-gallery-view -->
+
+<!-- ══════════════════════════════════════════════════════════════
+     LIGHTBOX (matches index.html exactly)
+══════════════════════════════════════════════════════════════ -->
+<div class="lb" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <button class="lb-close" id="lbClose" aria-label="Close photo viewer">CLOSE ✕</button>
+  <div class="lb-inner">
+    <button class="lb-arrow lb-prev" id="lbPrev" aria-label="Previous photo">‹</button>
+    <img id="lbImg" alt="Matthew Lehman Media gallery photo" />
+    <button class="lb-arrow lb-next" id="lbNext" aria-label="Next photo">›</button>
+  </div>
+  <div class="lb-bar">
+    <span class="lb-counter" id="lbCounter">1 / 1</span>
+    <a class="lb-dl" id="lbDownload" download="mlmedia-photo.jpg" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      Save
+    </a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════════════════════════ -->
+<footer role="contentinfo">
+  <span class="f-logo" id="footerLogo">Matthew Lehman Media</span>
+  <span class="f-copy" id="footerCopy">© 2026 Matthew Lehman Media. All rights reserved.</span>
+  <nav class="f-soc" aria-label="Social links">
+    <a href="https://www.instagram.com/mlmedia_28/" target="_blank" rel="noopener noreferrer" id="footerIg">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zm0 10.162a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+      </svg>
+      @mlmedia_28
+    </a>
+  </nav>
+</footer>
+
+<!-- ══════════════════════════════════════════════════════════════════════════════
+     ALL JAVASCRIPT
+══════════════════════════════════════════════════════════════════════════════ -->
+<script>
+/* ============================================================
+   ======================================
+   EASY EDIT SETTINGS
+   ======================================
+
+   Everything on this page is controlled from this section.
+   You never need to edit any HTML or CSS below this block.
+   ============================================================ */
+
+// ──────────────────────────────────────────────
+// BACKEND CONNECTION (Supabase)
+// Paste your Project URL + anon public key from
+// Supabase → Project Settings → API.
+// Until these are filled in, the page uses the
+// FALLBACK_GALLERIES data below instead — the site
+// keeps working normally either way.
+// Manage galleries/photos from admin.html once connected.
+// ──────────────────────────────────────────────
+const SUPABASE_URL      = "https://hanxyzajkhkhdlzhnron.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhhbnh5emFqa2hraGRsemhucm9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzNzIxOTEsImV4cCI6MjA5MDk0ODE5MX0.ngu3mbSZqDR1IP0itndFWNLoX49U6dv8tDfIbest5TQ";
+const BUCKET_NAME = "gallery-photos";
+const SUPABASE_CONNECTED = SUPABASE_URL !== "PASTE_SUPABASE_URL_HERE"
+  && SUPABASE_ANON_KEY !== "PASTE_SUPABASE_ANON_KEY_HERE"
+  && SUPABASE_URL && SUPABASE_ANON_KEY;
+
+// ──────────────────────────────────────────────
+// SITE INFO
+// Change these to update text across the page.
+// ──────────────────────────────────────────────
+const SITE_TITLE        = "Matthew Lehman Media";
+const PHOTOGRAPHER_NAME = "Matthew Lehman";
+const BUSINESS_NAME     = "Matthew Lehman Media";
+const LOGO_TEXT         = "MLM";
+const FOOTER_TEXT       = "Matthew Lehman Media";
+const COPYRIGHT_TEXT    = "© 2026 Matthew Lehman Media. All rights reserved.";
+
+// ──────────────────────────────────────────────
+// INSTAGRAM
+// Replace with your Instagram URL and handle.
+// ──────────────────────────────────────────────
+const INSTAGRAM_URL    = "https://www.instagram.com/mlmedia_28/";
+const INSTAGRAM_HANDLE = "@mlmedia_28";
+
+// ──────────────────────────────────────────────
+// SHOP LINK (Pixieset)
+// Paste your full Pixieset shop URL below.
+// Example: "https://matthewlehman.pixieset.com/"
+// The Shop button on every gallery opens this in a new tab.
+// ──────────────────────────────────────────────
+const SHOP_LINK = "PASTE_PIXIESET_SHOP_LINK_HERE";
+
+// ──────────────────────────────────────────────
+// GALLERY DIRECTORY SUBTITLE
+// The sentence that appears under the main header.
+// ──────────────────────────────────────────────
+const GALLERY_SUBTITLE = "Browse all sessions below — select any gallery to view the full collection.";
+
+// ──────────────────────────────────────────────
+// GALLERIES
+// ──────────────────────────────────────────────
+// HOW TO ADD A NEW GALLERY:
+//   1. Copy one of the objects below (everything between { and }).
+//   2. Paste it inside the [ ] array, separated by a comma.
+//   3. Fill in the title, description, cover, and photos array.
+//   4. Save the file — the gallery card will appear automatically.
+//
+// HOW TO HIDE A GALLERY (keep it but remove it from the public grid):
+//   Set  visible: false  on the gallery.
+//   The card will disappear from the landing page but the gallery
+//   is still fully accessible to anyone who has the direct link:
+//     gallery.html#gallery-your-gallery-title
+//   (replace spaces with hyphens and use all lowercase)
+//   Example link for "Senior Session" → gallery.html#gallery-senior-session
+//   To show it again, change false back to true (or just delete the line).
+//
+// HOW TO DELETE A GALLERY:
+//   1. Find the gallery object you want to remove in the array below.
+//   2. Delete the entire { ... } block, including the trailing comma.
+//   3. Save the file — the card disappears automatically.
+//
+// HOW TO ADD PHOTOS TO A GALLERY:
+//   1. Find the gallery in the array below.
+//   2. Add photo paths inside the photos: [ ] array, separated by commas.
+//   3. Paths can be:
+//      - Relative: "images/football/photo1.jpg"
+//      - Google Drive: "https://drive.google.com/thumbnail?id=YOUR_FILE_ID&sz=w1200"
+//      - Any public URL: "https://example.com/photo.jpg"
+//
+// HOW TO REPLACE THE COVER PHOTO:
+//   1. Find the gallery object below.
+//   2. Change the value of cover: "..." to your new image path.
+//   3. Same path formats apply (relative, Google Drive, or URL).
+//
+// HOW TO USE GOOGLE DRIVE PHOTOS:
+//   1. Upload photo to Google Drive and set sharing to "Anyone with link".
+//   2. Copy the file ID from the share URL:
+//      https://drive.google.com/file/d/  FILE_ID_IS_HERE  /view
+//   3. Use this format in your photos array:
+//      "https://drive.google.com/thumbnail?id=FILE_ID_HERE&sz=w1200"
+//
+// ──────────────────────────────────────────────
+const FALLBACK_GALLERIES = [
+
+  // ─────────────────────────────
+  // GAME 1
+  // ─────────────────────────────
+  {
+    title: "Baseball 2026 Game 1",
+    description: "2026 baseball",
+    cover: "https://drive.google.com/thumbnail?id=1xWT9-DpGniKjnfl1lPA8A4-aiNvJDejL&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1kiVKuzyQj1gsILlhczQrgCpi43m5c1Ko&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1KPXd-1DjO60bNsRTRWSAW82BMWXssPYp&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1hkGzn2qzXtxJghopmZrZAKnG14GzaVAI&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1489k7FHQvD8hPhHC3GKL-ExB0FALylSK&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1nYZguXJYgY9DSSRB12jKJcjMHb7rp7_Y&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1i5I_ORnI_jkYLbAVfKBLAGnSSkGxNtU7&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1iw_jJO1nWLtqt-vVvKhKr6S6sqoFaQHf&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1LQopYB6xlmVwSzSQYDwlLi_0SyvvOg4f&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1FZDWjZcWm99oYVJHcbWXk3vkdEwyVqMJ&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1PBZVm2TjLzbVk0wKHLLD_gkF_-NeVYHl&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1sbevmThmkHwtGM8alnE_dbgh4i3zWYyD&sz=w1000",
+      "https://drive.google.com/thumbnail?id=10h3strQr2KxznOlf52rnlaWNWowIMVPu&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1bIczFeEKAaibS33pj2ZVyYI5QYbRjMoG&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1i24hZo_PJwSZsszJvz7f1ECmlQ1n8o0-",
+      "https://drive.google.com/thumbnail?id=1BIOznkJbyBZg7pHsnn6Aog3KYSrgvKWI&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // GAME 2
+  // ─────────────────────────────
+  {
+    title: "Baseball 2026 Game 2",
+    description: "2026 baseball",
+    cover: "https://drive.google.com/thumbnail?id=1HJsopvmRg0BxzFi7bi8p98xvH3RJNb56&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1NEEivJvpBti17rBFDVyOUiVtYw1tGiuC&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1BTZES8vL8nY_WWAAHUh1hq6yzWosY_bc&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Al39Kxt9z3SUWJ9s9U3RZ5dMFvgqWjGe&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1lFyYBEtpKO8G8-Z9vhWNkJrXWyf1m-Vd&sz=w1000",
+      "https://drive.google.com/thumbnail?id=17QDeaS-RlRApNge0KwA-d6pordQVe7AG&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1U8VFoWtbiU0GySnT6rXAjmFEd_90K2hz&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1FQCGUBMspuGvcFG7E3RdhBWi9s9ELG2p&sz=w1000",
+      "https://drive.google.com/thumbnail?id=14Ay0xN3B0Cbsri7YnmY49DyE5o6EfUva&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1CIyXoaOrh_rhJ8rlPo_Q9jQ1ek_3gWiW&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1mC-Oj76AlovN5b4X-l9IEfGulIHdRRHC&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // GAME 3
+  // ─────────────────────────────
+  {
+    title: "Baseball 2026 Game 3",
+    description: "2026 baseball",
+    cover: "https://drive.google.com/thumbnail?id=1yEakSyd8vNLlG-VUQl2YKqX6hjKEa3Au&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=18C3CE6xjdacpVe7-C_vIOIxPIKjm59I9&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1c_b89goUYcVESA1ewQIa8u-AuJ-V2hw4&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1fQiJvqy5Yn-JAT3fcX-AEccCiOYvYSIi&sz=w1000",
+      "https://drive.google.com/thumbnail?id=121u_nZcO6Ph_x2z3ftFB9LEqwNWIcSVB&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1nID7TlbBSwor-FHVoFtmt2UKAD8HJkyu&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1_pGudBeRetM1cnfR2hFsZm7cqrf_MZIZ&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1oo9dl-dp9VtMd3MhMP-yGRuPguR4Tv0u&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1IJY4dZDoUNdgmhiMUMZPu7tli4CJiIAH&sz=w1000",
+      "https://drive.google.com/thumbnail?id=16jAI633ItECtvzED_du3akORsIh-q7Pa&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1qvTp_F5NPM8AVj-PsPHftD5ULzlD60WE&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1gYbRkZ0ZWNyZnNV8bWyrluH30K-wvYOC&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // GAME 4
+  // ─────────────────────────────
+  {
+    title: "Baseball 2026 Game 4",
+    description: "2026 baseball",
+    cover: "https://drive.google.com/thumbnail?id=1W2JXr765JocIDiD3v4qOn2Qwridjr9uw&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1Eb3F6fYsdOhAK65oZggFpu6PHRRqg96-&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1g8DbXiNpAUBeIvPx1k_zXKsfzsjV_EKa&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1jcoi93_6Y28PR7DjgZp8DOmBAJwLf6yo&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1UPwtdzNQ7geF1QhbRcJ_QxE3rTBEi59O&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1yifw_Z-njkmjUIJWNOaeWesga3QW6OOu&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1AkVZNvaR6RabVjuWCTE2d77mlloCqzWs&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1oThZd9mNPptU5bsLv_Xu8rSTZYGNDo0J&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Wje1tj3H8aDaC2VjOibnFJSbVqgAJrU4&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1k925MCzo7DCmcJp8nB02p-G-fGrSGFw1&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1yeB5ZrURxlUQ-CyxcFor-3A6j2-Wb6kP&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // GAME 5
+  // ─────────────────────────────
+  {
+    title: "Baseball 2026 Game 5",
+    description: "2026 baseball",
+    cover: "https://drive.google.com/thumbnail?id=1QegK_ZGyjrxED7Ui7nDPkrMJLvUc-Gsl&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1UCeaSLbXPf0doigQiTwmAWzHTlQAqg8o&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1bEVkJf7-8wCp23fEs2ocJZWuebYr_xex&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1wEIIMMp2xZx2sxO_IkgsuZQDS8sTO1lR&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1YpYOrG1sBMMLwNOMzCHx8j42gbQIKmlq&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1WeYYtB5YZpfMbh9Pug2_9FNs84uTEVib&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Q8ljWw3cXywd0PrX-vgNnebHmENJmAd8&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1eK84lomQ7NRtJ367qAG-IMEwOl2k9wUZ&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Q7YcvVdd_Nm55270dfCNkGE42rJdH3TB&sz=w1000",
+      "https://drive.google.com/thumbnail?id=10aPpQfDj7fzrLV21Ad4F3glFxi4VWjQZ&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // GAME 6
+  // ─────────────────────────────
+  {
+    title: "Baseball 2026 Game 6",
+    description: "2026 baseball",
+    cover: "https://drive.google.com/thumbnail?id=1O-XNhZfzJ1AxiLZ_vII7JoYnBEAO-ETy&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1rRwvbnGrw8K0sFEy3ST5w_xWapWjHlam&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1-WvflieiUgmvHtpAam7DhC4HL1z6CNN6&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1FOn3ePB-m54ntK0QH3GXMErS-Q6GUS4b&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1QP2V4DQPf3q2IaQxM00nNmq5eFQZ4R9H&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1T8LxXJx59vPzQLTebRKFUAT-J42-AISZ&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1GJL8Nv986v8g2omwzlj0csUuO0tV7VfR&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1eIp5egcqBYJNJfyVerbmUuqQ2Xvt7PJ7&sz=w1000",
+      "https://drive.google.com/thumbnail?id=10oz0078Wor8asQpIfgVTXbpDKQ0iBvut&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1cScCXfoWSRICJFTDl3GPWmr5Hka7H_8N&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1jytitTMXd5bwzfzEc3aDo9LX6U355Luy&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1rG3vpBweGe1DY7BryVWa1opsMIwFvywk&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Jp7cmGnp2f61hO2Z7chVsdULbJtSJLSe&sz=w1000",
+      "https://drive.google.com/thumbnail?id=18HUx8YdooSIMUoKW9o5rlingbqB_rpar&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1DMUK_W3UlnBhWZQfCHKqZ0u-y3B6pxFR&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1MtKKAEB8X55msOpInO1x28wRv-FX2BVJ&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1UuPHWOfsRbyaiTamhzrD231-Ap42QhH2&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // LIVE OAKS RAIDER MEET 2025
+  // ─────────────────────────────
+  {
+    title: "Live Oaks Raider Meet 2025",
+    description: "OH-20221 At live Oaks Raider meet",
+    cover: "https://drive.google.com/thumbnail?id=1I3xV_mlhfGmxx9jNPIB61gOUz9UuL8oU&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1JBJ2X9K9N_7tixxuuuqvPZMo9P-ow2n0&sz=w1000",
+      "https://drive.google.com/thumbnail?id=18uBRBgjuMcyNxrw1pwWRRWzh5c1GB3az&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1I3xV_mlhfGmxx9jNPIB61gOUz9UuL8oU&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1E7LkCYZ6eZjP8ZHSe6Rb6BXV087paabe&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1-0DURdjHS3lfxEa_dcPQcSZnvkGDEMUV&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1f_Jl8C6ar1Jcc9T8I2tdStyv9UeXnzIb&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1V3vTguWtlivrB2zDDVUW8LT5vwmpKx5W&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1U84Mjrj4-aDQ3IcUaMZ_j1DftKHLJll4&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1UdKy0lpNAjIEArykzP8Eku68FDE9ugwn&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1I3tzGlBJkQ9SQeqZFhXnpmAfvCsUBMLB&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1IkIV85InODCLqY4h3BGDkvKKxrdNPzH9&sz=w1000",
+      "https://drive.google.com/thumbnail?id=18y2yEo2SNs5QZOVTQgQRV__uMI22cqDu&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1178cTzmQviYP_OFitIdEO4ZVFEphOc8e&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1-4q0l_TDyKpY48EW7XpCL4-1YdM0EEJh&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1oZhdxcYj3Rh3vnHFk_IkankheYa5dyxY&sz=w1000",
+      "https://drive.google.com/thumbnail?id=17MMiFYG1TxMpDV7b-EvzwXXdal9001o2&sz=w1000",
+      "https://drive.google.com/thumbnail?id=16SZqQQejx1qk4M5OH0kMdAHPLg0EdI-0&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1L6y1FD7VxjoLAMnqcWoD8xPMCSotTwR0&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // HOME RAIDER MEET 2025
+  // ─────────────────────────────
+  {
+    title: "Home Raider Meet 2025",
+    description: "The Logan home raider meet",
+    cover: "https://drive.google.com/thumbnail?id=1KFLCTt9-IpCPlINTRFqrPY5GDhn0brDW&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1R5WT7ke_NxMcHhpH6IUqzO2QyDeByWtH&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1KFLCTt9-IpCPlINTRFqrPY5GDhn0brDW&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Jx3cLXnz67Tl29eo9QN21c0ibU86PhkX&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1fRDCX3eiNcl7pehrKcpQrCBbnbDk6th3&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1WyEVC2h_5y4UZ6I0Bs2xXGwXSIIcypjx&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1ac1qDTN63kG5EdNydUCdGJ4Nlon-gD0x&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1aZ2BkUrWgMM57wjGuDnQcW1t_QzC617o&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1MHeI3SmLVmChUwQhtIoaq-2GxL4HTkN1&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1pS9J66oGG9ANTfnfbxGJnzHY4etEXdu6&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1HAh43TWvsg_BJ0WzcqFnSk3Gn3A7yRWD&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1x_uZw6YzrGp3hAwyBsGhoySCWodQ74WD&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1JUh60ykOr8RvalwRgM6Eb4wg_MIJQ2BI&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1i7kG10VoxBHpt7t5HYRE0FrwnUGe60ga&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1GYs_2z6HAZCsBOjUpgiaZdKwpAXee3RY&sz=w1000",
+      "https://drive.google.com/thumbnail?id=17omDGBC_bhz2htkOQwd2zIckrv1x7fl3&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1F3x6jDe7HwybeAM7WMmqNBpp8AW0XjT9&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1h5OHSc2OSxVxrwLLpuQWXW8LMnywGoGI&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1SEchYCCJkiur_fwMrIG2-XKMqWJt-wHd&sz=w1000",
+      "https://drive.google.com/thumbnail?id=14-n1YEG9Yt-8tXbmIRMJFv-hIr_TPOAe&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1hUoqwburE7MDLVSE1n4_UjqoBvH8GEx2&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1xyoiRdNRQzA3KZ4GhRyr8d5mosqMMaBz&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1kGUlbwIz6BUaXWrdONJPHwciuVJ4d015&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // RAIDER PRACTICE 2025
+  // ─────────────────────────────
+  {
+    title: "Raider Practice 2025",
+    description: "All pictures from Raider practice 2025",
+    cover: "https://drive.google.com/thumbnail?id=1j8chrXjf5gSsyqo_JuORVv7qdq0UJZ11&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=15QB5IOvJy1TVMgO6TVXke43Pyk3TnGUR&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1rYEFgRUPEXAxPL6IDHHD9dajiiM8eAmG&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1f_KEweRicFqrruGFwBe2rSuaH5bXRF0a&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1NvHB3NlvuqndxfNJXkUY1UKlE7ROZOf5&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1_TJemYN322kOk_FSnRdEOvPVCRGdV45A&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1oPiYTlboWnZy5ggiFWXt8MaIc-oluEfU&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1xX7ikXXlwcKU60IAzhfWwHRxJpbUWp67&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1PZe-SSz5AzjvZWgi08feA8Ls5MZHcNe-&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1A5aDw78amGP0bPkq38cpAUAsSM80ADbv&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1j8chrXjf5gSsyqo_JuORVv7qdq0UJZ11&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1mIFYP72PW9R05LY9SvXe5Ixj_pUuu_M9&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1vqqI5Ad3egLsKDSTMyWHcO11J_vsUY8C&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1DlKDWGo4d9KjibfpghQk_XNRY6KPMUdq&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1ByomuPJD-anJTZ7WiBcct-b33ouw2-xe&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1i6eDMfGCqdgIrL3rXDAdMoa33J4k9xv9&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1bQDcPWXGYeyei8PQdA0cqqU1TzT4hCsi&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1hO3d5JQDnke8B_gGF8KnGKM_OA144CV9&sz=w1000",
+      "https://drive.google.com/thumbnail?id=13ZtgVT2UBeFuudevW083MFucdytKX8Em&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1SxxHntRQ1TG9-IEYRezSssItPW0QjDvC&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1-ApCRtr2LXFXUz_Nh7Zt0IrfgtrTFDfb&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1fS704vu2tcEmE-lECjDsZ0ewF2y_-9bU&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1aTVNb6mLvqZfqrpaVv_exvKs0AXVRoSg&sz=w1000",
+      "https://drive.google.com/thumbnail?id=17irlTiYGhugYzBZxjEAbp54VsJOb_12z&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Zn58ws2Fm6sntJC7-LnQXSHeWkHWl6l9&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1rmoD9W_cHCkfHtw5HHRb0kE6c7GKkFkq&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1VMV0YA20PmTpuSDEz3zQwXfU7fjQ2h_6&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1DhOk3ejqaYR22ThFaEa4G2FK6QM_lV9q&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Si_dekrEOEUfX2jMp552TU1aUHpzs_9V&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1h4_EZxBNN1d6vO0_7M9F_4wtN9ULnJSG&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // EXTRAS
+  // ─────────────────────────────
+  {
+    title: "Extras 2026",
+    description: "extra media",
+    cover: "https://drive.google.com/thumbnail?id=1mhecpH2BghXLeGh4qXMtF8Oa5Eb4LARt&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1DTA9kCLDYnlFsQ6VX_KevUzBzGYuH5Iv&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1-lVlMo8BKRxZEvr-tfJbNlY7YSvrnAzR&sz=w1000",
+      "https://drive.google.com/thumbnail?id=17XSPyKlADJtpPdqamEyI_I2kcPtGXtuO&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1mhecpH2BghXLeGh4qXMtF8Oa5Eb4LARt&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1vByxM0dAJ27FJZXRXLkBMR0qEPiyXuYc&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // TENNIS
+  // ─────────────────────────────
+  {
+    title: "Tennis Pictures 2026",
+    description: "All Tennis pictures from 2026 season",
+    cover: "https://drive.google.com/thumbnail?id=1Q7Ywx16Fsrz-gLo9VlDCAr8M_XePZ6Nw&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1NNFvqhCwu7iLQAnQSpby0urD97hIgVXb&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Su0W0-hWnvM7ifwwR5igjNmfWZZd8n4k&sz=w1000",
+      "https://drive.google.com/thumbnail?id=19ucXyD77JtecCJ2aHa_uU5oYbbDPA6-R&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1ew-2s3c5W-wfAsrRgVg_N2D1yVZYAdoS&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1hLPMR7oayPLnZQBZlXlj10f4QHi2tg-1&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // AFJROTC COLUMBUS CREW GAME
+  // ─────────────────────────────
+  {
+    title: "AFJROTC Columbus Crew Game",
+    description: "crew game 2025",
+    cover: "https://drive.google.com/thumbnail?id=1miiuDhiY69q3SyCR4m-6UKyJS42aUxHv&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1zpffe-xCc5YUAOC_hok6XpiwIPVqYMFc&sz=w1000",
+      "https://drive.google.com/thumbnail?id=14WObNrOB2SzYK9kft91ZJaVY-KqPTqnG&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1JiW6b5Mw4ZawKBbtGp-TyLQ8fipLVeuV&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1qNF7qP0XMhPdPe1gmiDNgMsxGQqpeToX&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1miiuDhiY69q3SyCR4m-6UKyJS42aUxHv&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1JFfGAbEC2GQAmqE2wzr0IScPt7r382TB&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1WhdaULEUWC1icAopX0LyqQDp6ZZ4qD4V&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1C5D5N65LlaVCn5P4736bnV2rIZ8cyBfK&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // FORT KNOX
+  // ─────────────────────────────
+  {
+    title: "Fort Knox Photos 2025/2026",
+    description: "Fort Knox Photos from 2025/2026 comp",
+    cover: "https://drive.google.com/thumbnail?id=1etjM9wsan-DJYQ_ekxw1e4orGjH2VORC&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=15CYnWpP4bAv465qL-H4pQgp3B9IHUXU_&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1WtR5ZGl51Cn66N4vpDzBoP0d3mehIdYD&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1aW2MJor1BHo21WOdRnJeFtxsZJ_-N7I9&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1vWdI7tBJ-W7g5Exf2BIAnwFQvBbsRRhu&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1etjM9wsan-DJYQ_ekxw1e4orGjH2VORC&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1-8NPL4L21YLXksD3dzfE_NBq21Wj0MPS&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1-Ycc2avwdXxoBfTL9uaJ6JKU2tPHLBrJ&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1dZ-spEMN-jw4ovFftuVmk1zykB62ReZb&sz=w1000"
+    ]
+  }
+
+  // ─────────────────────────────────────────
+  // ADD MORE GALLERIES HERE — copy the block above
+  // ─────────────────────────────────────────
+];
+/* ============================================================
+   END OF EASY EDIT SETTINGS
+   ============================================================ */
+
+/* ────────────────────────────────────────────────────────────
+   DATA SOURCE
+   `galleries` starts out as the fallback array above so the
+   site always has something to show. If Supabase is connected,
+   loadGalleriesFromSupabase() replaces it with live data —
+   RLS on the database means signed-out visitors only ever get
+   public galleries back, and signed-in users additionally get
+   any private galleries they've been granted access to.
+──────────────────────────────────────────────────────────── */
+let galleries = FALLBACK_GALLERIES;
+
+let supa = null;
+if (SUPABASE_CONNECTED && typeof window.supabase !== 'undefined') {
+  supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+let currentUser = null;
+
+function updateAccountNav() {
+  const link = document.getElementById('navAccountLink');
+  const linkMobile = document.getElementById('navAccountLinkMobile');
+  [link, linkMobile].forEach(function(el) {
+    if (!el) return;
+    if (currentUser) {
+      el.textContent = 'Sign Out';
+      el.href = '#';
+      el.onclick = async function(e) {
+        e.preventDefault();
+        if (supa) await supa.auth.signOut();
+        window.location.reload();
+      };
+    } else {
+      el.textContent = 'Sign In';
+      el.href = 'login.html';
+      el.onclick = null;
+    }
+  });
+}
+
+// Turns storage paths into short-lived signed URLs (bucket is private —
+// this is what actually keeps private-gallery photos from being guessable).
+async function getSignedUrlMap(paths) {
+  const unique = Array.from(new Set(paths.filter(Boolean)));
+  if (!supa || !unique.length) return {};
+  try {
+    const { data, error } = await supa.storage.from(BUCKET_NAME).createSignedUrls(unique, 3600);
+    const map = {};
+    if (!error && data) {
+      data.forEach(function(item, i) {
+        if (item && item.signedUrl) map[unique[i]] = item.signedUrl;
+      });
+    }
+    return map;
+  } catch (err) {
+    console.error('Signed URL generation failed:', err);
+    return {};
+  }
+}
+
+async function loadGalleriesFromSupabase() {
+  if (!supa) return false;
+  try {
+    const { data: sessionData } = await supa.auth.getSession();
+    currentUser = sessionData && sessionData.session ? sessionData.session.user : null;
+    updateAccountNav();
+
+    const { data, error } = await supa
+      .from('galleries')
+      .select('id, title, description, cover_url, cover_path, visibility, sort_order, gallery_photos(id, url, storage_path, sort_order)')
+      .order('sort_order', { ascending: true });
+
+    if (error) { console.error('Supabase load error:', error.message); return false; }
+    if (!data) return false;
+
+    const allPaths = [];
+    data.forEach(function(g) {
+      if (g.cover_path) allPaths.push(g.cover_path);
+      (g.gallery_photos || []).forEach(function(p) { if (p.storage_path) allPaths.push(p.storage_path); });
+    });
+    const signedMap = await getSignedUrlMap(allPaths);
+
+    galleries = data.map(function(g) {
+      const photos = (g.gallery_photos || [])
+        .slice()
+        .sort(function(a, b) { return (a.sort_order || 0) - (b.sort_order || 0); })
+        .map(function(p) { return (p.storage_path && signedMap[p.storage_path]) || p.url || ''; })
+        .filter(Boolean);
+      const cover = (g.cover_path && signedMap[g.cover_path]) || g.cover_url || (photos.length ? photos[0] : '');
+      return {
+        id: g.id,
+        title: g.title,
+        description: g.description || '',
+        cover: cover,
+        visible: true, // RLS already excludes anything this viewer shouldn't see
+        private: g.visibility === 'private',
+        photos: photos
+      };
+    });
+    return true;
+  } catch (err) {
+    console.error('Supabase load failed:', err);
+    return false;
+  }
+}
+
+
+/* ────────────────────────────────────────────────────────────
+   APPLY SETTINGS TO STATIC ELEMENTS
+──────────────────────────────────────────────────────────── */
+document.querySelector('.nav-logo').textContent   = LOGO_TEXT;
+document.getElementById('footerLogo').textContent = FOOTER_TEXT;
+document.getElementById('footerCopy').textContent = COPYRIGHT_TEXT;
+document.getElementById('gallerySubtitle').textContent = GALLERY_SUBTITLE;
+document.getElementById('footerIg').querySelector('svg').insertAdjacentText('afterend', ' ' + INSTAGRAM_HANDLE);
+document.getElementById('footerIg').href = INSTAGRAM_URL;
+// Fix: update footer Instagram text properly
+(function(){
+  const a = document.getElementById('footerIg');
+  // clear and rebuild
+  const svg = a.querySelector('svg').cloneNode(true);
+  a.innerHTML = '';
+  a.appendChild(svg);
+  a.appendChild(document.createTextNode(' ' + INSTAGRAM_HANDLE));
+})();
+
+// Update document title
+document.title = 'Photo Galleries | ' + BUSINESS_NAME;
+
+// Shop link
+const shopEl = document.getElementById('shopBtn');
+if (SHOP_LINK && SHOP_LINK !== 'PASTE_PIXIESET_SHOP_LINK_HERE') {
+  shopEl.href = SHOP_LINK;
+} else {
+  shopEl.style.display = 'none';
+}
+
+/* ────────────────────────────────────────────────────────────
+   NAV — hamburger
+──────────────────────────────────────────────────────────── */
+const burger = document.getElementById('navBurger');
+const drawer = document.getElementById('navDrawer');
+burger.addEventListener('click', function() {
+  const isOpen = drawer.classList.toggle('open');
+  burger.classList.toggle('open', isOpen);
+  burger.setAttribute('aria-expanded', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+});
+drawer.querySelectorAll('a').forEach(function(link) {
+  link.addEventListener('click', function() {
+    drawer.classList.remove('open');
+    burger.classList.remove('open');
+    burger.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  });
+});
+document.getElementById('navLogoBtn').addEventListener('click', function(e) {
+  // Goes to main site
+});
+
+
+/* ════════════════════════════════════════════════════════════
+   ROUTER — landing ↔ gallery view
+   Uses history.pushState so browser back/forward button works.
+════════════════════════════════════════════════════════════ */
+const pageLanding     = document.getElementById('page-landing');
+const pageGalleryView = document.getElementById('page-gallery-view');
+
+function showLanding() {
+  pageGalleryView.classList.remove('active');
+  pageGalleryView.style.display = 'none';
+  pageLanding.classList.remove('hidden');
+  pageLanding.style.display = '';
+  pageLanding.classList.add('page-enter');
+  setTimeout(() => pageLanding.classList.remove('page-enter'), 500);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.title = 'Photo Galleries | ' + BUSINESS_NAME;
+}
+
+function showGalleryView(idx) {
+  pageLanding.classList.add('hidden');
+  pageLanding.style.display = 'none';
+  pageGalleryView.style.display = 'block';
+  pageGalleryView.classList.add('active', 'page-enter');
+  setTimeout(() => pageGalleryView.classList.remove('page-enter'), 500);
+  buildGalleryView(idx);
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+// Handle back button
+window.addEventListener('popstate', function(e) {
+  if (e.state && typeof e.state.galleryIdx === 'number') {
+    showGalleryView(e.state.galleryIdx);
+  } else {
+    showLanding();
+  }
+});
+
+
+/* ════════════════════════════════════════════════════════════
+   GALLERY LANDING — build cards
+════════════════════════════════════════════════════════════ */
+function buildLanding() {
+  const grid = document.getElementById('galleryGrid');
+  grid.innerHTML = '';
+
+  // Only count galleries that are visible (visible: false hides from landing but not from links)
+  const visibleGalleries = galleries.filter(function(g) { return g.visible !== false; });
+
+  if (!visibleGalleries.length) {
+    grid.innerHTML = '<div class="empty-state">No galleries yet — add them in the EASY EDIT SETTINGS at the top of the script.</div>';
+    return;
+  }
+
+  // Iterate the FULL array so idx matches the real gallery index (needed for direct-link routing)
+  galleries.forEach(function(g, idx) {
+    // Skip hidden galleries — they're still accessible via direct link, just not shown here
+    if (g.visible === false) return;
+
+    const photoCount = g.photos ? g.photos.length : 0;
+
+    const card = document.createElement('article');
+    card.className = 'gal-card';
+    card.setAttribute('aria-label', g.title + ' gallery');
+    card.setAttribute('tabindex', '0');
+
+    // Cover section
+    const coverDiv = document.createElement('div');
+    coverDiv.className = 'card-cover';
+
+    // Placeholder text (first letter)
+    const ph = document.createElement('div');
+    ph.className = 'card-cover-placeholder';
+    ph.innerHTML = '<span>' + (g.title ? g.title.charAt(0).toUpperCase() : 'G') + '</span>';
+    coverDiv.appendChild(ph);
+
+    // Cover image (if provided)
+    if (g.cover) {
+      const img = document.createElement('img');
+      img.alt = g.title + ' cover photo — ' + BUSINESS_NAME;
+      img.loading = 'lazy';
+      img.src = g.cover;
+      img.onload  = function() { this.classList.add('loaded'); };
+      img.onerror = function() { this.style.display = 'none'; };
+      coverDiv.appendChild(img);
+    }
+
+    // Overlay gradient
+    const ov = document.createElement('div');
+    ov.className = 'card-cover-ov';
+
+    if (g.private) {
+      const badge = document.createElement('span');
+      badge.textContent = 'Private';
+      badge.style.cssText = 'position:absolute;top:.7rem;left:.7rem;z-index:2;font-family:var(--fb);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;background:rgba(124,77,219,.9);color:#fff;padding:.3rem .6rem;border-radius:2px;';
+      coverDiv.appendChild(badge);
+    }
+    coverDiv.appendChild(ov);
+
+    // Photo count badge
+    const badge = document.createElement('span');
+    badge.className = 'card-badge';
+    badge.textContent = photoCount + ' Photo' + (photoCount !== 1 ? 's' : '');
+    coverDiv.appendChild(badge);
+
+    // Card info
+    const info = document.createElement('div');
+    info.className = 'card-info';
+
+    const name = document.createElement('h2');
+    name.className = 'card-name';
+    name.textContent = g.title || 'Gallery';
+
+    const desc = document.createElement('p');
+    desc.className = 'card-desc';
+    desc.textContent = g.description || '';
+
+    // Actions row
+    const actions = document.createElement('div');
+    actions.className = 'card-actions';
+
+    const viewBtn = document.createElement('button');
+    viewBtn.className = 'btn-view';
+    viewBtn.textContent = 'View Gallery';
+    viewBtn.setAttribute('aria-label', 'View ' + g.title + ' gallery');
+    // Navigation is handled by the card-level click listener below;
+    // this button still works for click/keyboard since its click bubbles up.
+
+    actions.appendChild(viewBtn);
+
+    if (SHOP_LINK && SHOP_LINK !== 'PASTE_PIXIESET_SHOP_LINK_HERE') {
+      const shopCard = document.createElement('a');
+      shopCard.className = 'btn-shop';
+      shopCard.href = SHOP_LINK;
+      shopCard.target = '_blank';
+      shopCard.rel = 'noopener noreferrer';
+      shopCard.setAttribute('aria-label', 'Shop prints — opens in new tab');
+      shopCard.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h-2L3 2H1v2h2l3.6 7.59L5.25 14A2 2 0 007 17h12v-2H7.42a.25.25 0 01-.25-.25l.03-.12.9-1.63H19a2 2 0 001.76-1.06L23 6H5.21l-.94-2zm0 13a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z"/></svg>Shop';
+      // Don't let clicking "Shop" also trigger the card's gallery navigation
+      shopCard.addEventListener('click', function(e) { e.stopPropagation(); });
+      actions.appendChild(shopCard);
+    }
+
+    info.appendChild(name);
+    info.appendChild(desc);
+    info.appendChild(actions);
+
+    card.appendChild(coverDiv);
+    card.appendChild(info);
+
+    // Whole card is clickable to open the gallery
+    function openThisGallery() {
+      history.pushState({ galleryIdx: idx }, '', '#gallery-' + slugify(g.title));
+      showGalleryView(idx);
+    }
+    card.addEventListener('click', openThisGallery);
+    card.addEventListener('keydown', function(e) {
+      if (e.target !== card) return; // let buttons/links handle their own Enter/Space
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openThisGallery();
+      }
+    });
+
+    grid.appendChild(card);
+
+    // Stagger reveal
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        card.classList.add('visible');
+      });
+    });
+  });
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   GALLERY VIEW — build individual gallery
+════════════════════════════════════════════════════════════ */
+let currentPhotos  = [];
+let currentGalName = '';
+
+function buildGalleryView(idx) {
+  const g = galleries[idx];
+  if (!g) { showLanding(); return; }
+
+  currentPhotos  = g.photos || [];
+  currentGalName = g.title || 'Gallery';
+
+  // Update header
+  document.getElementById('vhTitle').innerHTML = g.title
+    ? g.title.replace(/(\S+)\s*$/, '<em>$1</em>')
+    : 'Gallery';
+  document.getElementById('vhDesc').textContent    = g.description || '';
+  document.getElementById('vhCount').textContent   = currentPhotos.length + ' Photo' + (currentPhotos.length !== 1 ? 's' : '');
+  document.title = g.title + ' | ' + BUSINESS_NAME;
+
+  // Update shop button
+  const sBtn = document.getElementById('shopBtn');
+  if (SHOP_LINK && SHOP_LINK !== 'PASTE_PIXIESET_SHOP_LINK_HERE') {
+    sBtn.href = SHOP_LINK;
+    sBtn.style.display = '';
+  } else {
+    sBtn.style.display = 'none';
+  }
+
+  // Build masonry
+  buildMasonry(currentPhotos, currentGalName);
+}
+
+function buildMasonry(photos, galName) {
+  const grid = document.getElementById('masonryGrid');
+  grid.innerHTML = '';
+
+  if (!photos.length) {
+    const empty = document.createElement('p');
+    empty.style.cssText = 'text-align:center;padding:4rem;font-family:var(--fs);font-style:italic;color:var(--muted);font-size:1.05rem;';
+    empty.textContent = 'Photos will appear here once you add them in the EASY EDIT SETTINGS.';
+    grid.appendChild(empty);
+    return;
+  }
+
+  photos.forEach(function(src, i) {
+    const item = document.createElement('div');
+    item.className = 'masonry-item';
+
+    const img = document.createElement('img');
+    img.loading = 'lazy';
+    img.alt = BUSINESS_NAME + ' — ' + galName + ' photo ' + (i + 1);
+    img.src = src;
+    img.onload  = function() { this.classList.add('loaded'); };
+    img.onerror = function() {
+      this.style.opacity = '.15';
+      this.classList.add('loaded');
+      // Set a placeholder height so item isn't invisible
+      this.style.height = '200px';
+      this.style.background = 'rgba(22,13,46,.5)';
+    };
+
+    // Hover overlay: centered "View" label + save button
+    const ov = document.createElement('div');
+    ov.className = 'mi-overlay';
+
+    const viewLabel = document.createElement('span');
+    viewLabel.className = 'mi-view';
+    viewLabel.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg>View';
+    ov.appendChild(viewLabel);
+
+    const dlBtn = document.createElement('a');
+    dlBtn.className = 'mi-dl';
+    dlBtn.href = src;
+    dlBtn.download = slugify(galName) + '-' + (i + 1) + '.jpg';
+    dlBtn.target = '_blank';
+    dlBtn.rel = 'noopener noreferrer';
+    dlBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>Save';
+    dlBtn.addEventListener('click', function(e) { e.stopPropagation(); });
+    ov.appendChild(dlBtn);
+
+    item.appendChild(img);
+    item.appendChild(ov);
+    item.addEventListener('click', function() { openLb(photos, i); });
+
+    grid.appendChild(item);
+  });
+}
+
+// Back button
+document.getElementById('backBtn').addEventListener('click', function() {
+  history.pushState(null, '', 'gallery.html');
+  showLanding();
+});
+
+
+/* ════════════════════════════════════════════════════════════
+   LIGHTBOX
+════════════════════════════════════════════════════════════ */
+let lbPhotos  = [];
+let lbIdx     = 0;
+const lb      = document.getElementById('lightbox');
+const lbImg   = document.getElementById('lbImg');
+const lbCount = document.getElementById('lbCounter');
+const lbDl    = document.getElementById('lbDownload');
+
+function openLb(photos, idx) {
+  lbPhotos = photos;
+  lbIdx    = idx;
+  lb.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  renderLb();
+}
+
+function closeLb() {
+  lb.classList.remove('show');
+  document.body.style.overflow = '';
+  lbImg.src = '';
+}
+
+function renderLb() {
+  const src = lbPhotos[lbIdx];
+  lbImg.style.opacity = '0';
+  lbImg.onload = function() { lbImg.style.opacity = '1'; };
+  lbImg.src = src;
+  lbImg.alt = BUSINESS_NAME + ' — ' + currentGalName + ' (' + (lbIdx + 1) + ' of ' + lbPhotos.length + ')';
+  lbCount.textContent = (lbIdx + 1) + ' / ' + lbPhotos.length;
+  lbDl.href     = src;
+  lbDl.download = slugify(currentGalName) + '-' + (lbIdx + 1) + '.jpg';
+}
+
+function lbGo(dir) {
+  lbIdx = (lbIdx + dir + lbPhotos.length) % lbPhotos.length;
+  renderLb();
+}
+
+document.getElementById('lbClose').addEventListener('click', closeLb);
+document.getElementById('lbPrev').addEventListener('click', function() { lbGo(-1); });
+document.getElementById('lbNext').addEventListener('click', function() { lbGo(1); });
+
+lb.addEventListener('click', function(e) {
+  if (e.target === lb) closeLb();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (!lb.classList.contains('show')) return;
+  if (e.key === 'Escape')     closeLb();
+  if (e.key === 'ArrowLeft')  lbGo(-1);
+  if (e.key === 'ArrowRight') lbGo(1);
+});
+
+// Touch / swipe
+let lbTouchX = null;
+lb.addEventListener('touchstart', function(e) { lbTouchX = e.touches[0].clientX; }, { passive: true });
+lb.addEventListener('touchend', function(e) {
+  if (lbTouchX === null) return;
+  const dx = e.changedTouches[0].clientX - lbTouchX;
+  if (Math.abs(dx) > 50) lbGo(dx < 0 ? 1 : -1);
+  lbTouchX = null;
+});
+
+
+/* ════════════════════════════════════════════════════════════
+   SCROLL REVEAL for gallery cards
+════════════════════════════════════════════════════════════ */
+const revealObs = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      revealObs.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.08 });
+
+function observeCards() {
+  document.querySelectorAll('.gal-card').forEach(function(card) {
+    revealObs.observe(card);
+  });
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   UTILITY
+════════════════════════════════════════════════════════════ */
+function slugify(str) {
+  return (str || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════════════ */
+(async function init() {
+  await loadGalleriesFromSupabase(); // no-op / falls back silently if not connected yet
+
+  buildLanding();
+  observeCards();
+
+  // Check if URL already has a gallery hash (e.g. if user bookmarked a gallery)
+  const hash = window.location.hash;
+  if (hash && hash.startsWith('#gallery-')) {
+    const slug  = hash.slice('#gallery-'.length);
+    const found = galleries.findIndex(function(g) { return slugify(g.title) === slug; });
+    if (found >= 0) {
+      showGalleryView(found);
+      return;
+    }
+  }
+  // Default: show landing
+  showLanding();
+})();
+</script>
+</body>
+</html>
