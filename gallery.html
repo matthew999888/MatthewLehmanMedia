@@ -284,6 +284,30 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
    GALLERY LANDING — CARD GRID
 ════════════════════════════════════════════════════════════ */
 .landing-section{padding:4rem 4rem 6rem}
+
+/* Search + category filters */
+.gal-search-bar{margin-bottom:2.6rem;display:flex;flex-direction:column;gap:1.1rem}
+.gal-search-input-wrap{position:relative;max-width:420px}
+.gal-search-input-wrap svg{position:absolute;left:1rem;top:50%;transform:translateY(-50%);width:18px;height:18px;fill:var(--muted);pointer-events:none}
+.gal-search-input-wrap input{
+  width:100%;background:rgba(59,31,114,.14);border:1px solid rgba(124,77,219,.3);border-radius:30px;
+  padding:.85rem 1.2rem .85rem 2.8rem;font-family:var(--fb);font-size:.9rem;color:var(--white);
+  transition:border-color .25s,background .25s;
+}
+.gal-search-input-wrap input::placeholder{color:var(--muted)}
+.gal-search-input-wrap input:focus{outline:none;border-color:var(--light);background:rgba(59,31,114,.24)}
+.gal-cat-filters{display:flex;flex-wrap:wrap;gap:.6rem}
+.cat-pill{
+  font-family:var(--fb);font-size:.68rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);background:transparent;border:1px solid rgba(124,77,219,.3);border-radius:20px;
+  padding:.5rem 1.1rem;cursor:pointer;transition:all .25s;
+}
+.cat-pill:hover{color:var(--white);border-color:rgba(180,143,252,.5)}
+.cat-pill.active{background:var(--accent);color:var(--white);border-color:transparent}
+.gal-no-results{
+  text-align:center;padding:3rem 1rem;font-family:var(--fs);font-style:italic;color:var(--muted);font-size:1.1rem;
+}
+
 .gallery-grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -293,6 +317,7 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 @media(max-width:640px){
   .landing-section{padding:3rem 1.2rem 4rem}
   .gallery-grid{grid-template-columns:1fr;gap:16px}
+  .gal-search-input-wrap{max-width:100%}
 }
 
 /* Individual card */
@@ -668,9 +693,17 @@ footer{
 
   <!-- Gallery Card Grid -->
   <section class="landing-section" aria-label="Photo gallery directory">
+    <div class="gal-search-bar">
+      <div class="gal-search-input-wrap">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 10-.7.7l.27.28v.79l5 5L20.49 19l-5-5zm-6 0a4.5 4.5 0 110-9 4.5 4.5 0 010 9z"/></svg>
+        <input type="text" id="gallerySearchInput" placeholder="Search galleries…" aria-label="Search galleries" autocomplete="off" />
+      </div>
+      <div class="gal-cat-filters" id="galCatFilters"><!-- category pills injected --></div>
+    </div>
     <div class="gallery-grid" id="galleryGrid">
       <!-- Cards injected by JS -->
     </div>
+    <p class="gal-no-results" id="galNoResults" style="display:none">No galleries match your search.</p>
   </section>
 
 </div><!-- /#page-landing -->
@@ -1229,17 +1262,34 @@ function mapGalleryRow(g) {
     cover: cover,
     visible: true,
     private: g.visibility === 'private',
+    categoryIds: (g.gallery_categories || []).map(function(gc) { return gc.category_id; }),
     photos: photos
   };
+}
+
+let allCategories = []; // [{id, name}] — used to render filter pills and resolve names
+
+async function loadCategoriesFromSupabase() {
+  if (!supa) return;
+  try {
+    const { data, error } = await supa
+      .from('categories')
+      .select('id, name, sort_order')
+      .order('sort_order', { ascending: true });
+    if (!error && data) allCategories = data;
+  } catch (err) {
+    console.error('Category load failed:', err);
+  }
 }
 
 // Loads only PUBLIC galleries for the landing grid.
 async function loadGalleriesFromSupabase() {
   if (!supa) return false;
   try {
+    await loadCategoriesFromSupabase();
     const { data, error } = await supa
       .from('galleries')
-      .select('id, title, description, cover_url, cover_path, visibility, sort_order, gallery_photos(id, url, storage_path, sort_order)')
+      .select('id, title, description, cover_url, cover_path, visibility, sort_order, gallery_photos(id, url, storage_path, sort_order), gallery_categories(category_id)')
       .eq('visibility', 'public')
       .order('sort_order', { ascending: true });
 
@@ -1404,6 +1454,8 @@ function buildLanding() {
     card.className = 'gal-card';
     card.setAttribute('aria-label', g.title + ' gallery');
     card.setAttribute('tabindex', '0');
+    card.dataset.searchText = ((g.title || '') + ' ' + (g.description || '')).toLowerCase();
+    card.dataset.categories = (g.categoryIds || []).join(',');
 
     // Cover section
     const coverDiv = document.createElement('div');
@@ -1512,6 +1564,83 @@ function buildLanding() {
       });
     });
   });
+
+  setupSearchAndFilters();
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   SEARCH + CATEGORY FILTER (client-side, over already-loaded cards)
+════════════════════════════════════════════════════════════ */
+let activeCategoryId = null; // null = "All"
+
+function setupSearchAndFilters() {
+  renderCategoryPills();
+  applyGalleryFilters();
+}
+
+function renderCategoryPills() {
+  const wrap = document.getElementById('galCatFilters');
+  if (!wrap) return;
+
+  // Only show categories actually used by a currently-visible gallery
+  const usedIds = new Set();
+  document.querySelectorAll('#galleryGrid .gal-card').forEach(function(card) {
+    (card.dataset.categories || '').split(',').filter(Boolean).forEach(function(id) { usedIds.add(id); });
+  });
+  const usedCategories = allCategories.filter(function(c) { return usedIds.has(c.id); });
+
+  if (!usedCategories.length) {
+    wrap.innerHTML = '';
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = '';
+
+  let html = '<button type="button" class="cat-pill' + (activeCategoryId === null ? ' active' : '') + '" data-cat="">All</button>';
+  html += usedCategories.map(function(c) {
+    return '<button type="button" class="cat-pill' + (activeCategoryId === c.id ? ' active' : '') + '" data-cat="' + c.id + '">' + escapeHtmlGal(c.name) + '</button>';
+  }).join('');
+  wrap.innerHTML = html;
+
+  wrap.querySelectorAll('.cat-pill').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      activeCategoryId = btn.getAttribute('data-cat') || null;
+      wrap.querySelectorAll('.cat-pill').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      applyGalleryFilters();
+    });
+  });
+}
+
+function escapeHtmlGal(str) {
+  return (str || '').replace(/[&<>"']/g, function(c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function applyGalleryFilters() {
+  const input = document.getElementById('gallerySearchInput');
+  const query = input ? input.value.trim().toLowerCase() : '';
+  const cards = document.querySelectorAll('#galleryGrid .gal-card');
+  let visibleCount = 0;
+
+  cards.forEach(function(card) {
+    const matchesSearch = !query || card.dataset.searchText.indexOf(query) !== -1;
+    const cats = (card.dataset.categories || '').split(',').filter(Boolean);
+    const matchesCategory = !activeCategoryId || cats.indexOf(activeCategoryId) !== -1;
+    const show = matchesSearch && matchesCategory;
+    card.style.display = show ? '' : 'none';
+    if (show) visibleCount++;
+  });
+
+  const noResults = document.getElementById('galNoResults');
+  if (noResults) noResults.style.display = visibleCount === 0 ? '' : 'none';
+}
+
+const gallerySearchInput = document.getElementById('gallerySearchInput');
+if (gallerySearchInput) {
+  gallerySearchInput.addEventListener('input', applyGalleryFilters);
 }
 
 
