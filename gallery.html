@@ -628,7 +628,6 @@ footer{
     <a href="/" class="nav-home-link">← Home</a>
     <a href="https://www.instagram.com/mlmedia_28/" target="_blank" rel="noopener noreferrer">Instagram</a>
     <a href="gallery.html" class="active nav-gallery-pill">Gallery</a>
-    <a href="login.html" id="navAccountLink">Sign In</a>
   </div>
   <button class="nav-burger" id="navBurger" aria-label="Open navigation menu" aria-expanded="false">
     <span></span><span></span><span></span>
@@ -640,7 +639,6 @@ footer{
   <a href="/">← Home</a>
   <a href="gallery.html">Gallery</a>
   <a href="https://www.instagram.com/mlmedia_28/" target="_blank" rel="noopener noreferrer">Instagram</a>
-  <a href="login.html" id="navAccountLinkMobile">Sign In</a>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════
@@ -1187,103 +1185,91 @@ const FALLBACK_GALLERIES = [
    DATA SOURCE
    `galleries` starts out as the fallback array above so the
    site always has something to show. If Supabase is connected,
-   loadGalleriesFromSupabase() replaces it with live data —
-   RLS on the database means signed-out visitors only ever get
-   public galleries back, and signed-in users additionally get
-   any private galleries they've been granted access to.
+   loadGalleriesFromSupabase() replaces it with live data.
+
+   There are no viewer accounts on this site at all — the only
+   sign-in anywhere is the admin dashboard (admin.html). Privacy
+   for a gallery works like an unlisted video:
+     - The landing grid only ever asks Supabase for galleries
+       where visibility = 'public', so private galleries never
+       show up there and are never even downloaded by a normal
+       visit to this page.
+     - A private gallery is still fully viewable by anyone who
+       has its direct link (gallery.html#g-<id>), which admins
+       can copy from admin.html. Knowing the link is what makes
+       it viewable — there's no login wall on top of that.
 ──────────────────────────────────────────────────────────── */
-let galleries = FALLBACK_GALLERIES;
+let galleries = FALLBACK_GALLERIES;      // public galleries shown on the landing grid
+let directGallery = null;                // set when a direct link (#g-<id>) is opened
 
 let supa = null;
 if (SUPABASE_CONNECTED && typeof window.supabase !== 'undefined') {
   supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
-let currentUser = null;
 
-function updateAccountNav() {
-  const link = document.getElementById('navAccountLink');
-  const linkMobile = document.getElementById('navAccountLinkMobile');
-  [link, linkMobile].forEach(function(el) {
-    if (!el) return;
-    if (currentUser) {
-      el.textContent = 'Sign Out';
-      el.href = '#';
-      el.onclick = async function(e) {
-        e.preventDefault();
-        if (supa) await supa.auth.signOut();
-        window.location.reload();
-      };
-    } else {
-      el.textContent = 'Sign In';
-      el.href = 'login.html';
-      el.onclick = null;
-    }
-  });
+// Turns a storage path into a public URL. The bucket is public, so this is
+// just URL construction — no network round-trip and no expiry.
+function publicUrlFor(path) {
+  if (!supa || !path) return '';
+  const { data } = supa.storage.from(BUCKET_NAME).getPublicUrl(path);
+  return (data && data.publicUrl) || '';
 }
 
-// Turns storage paths into short-lived signed URLs (bucket is private —
-// this is what actually keeps private-gallery photos from being guessable).
-async function getSignedUrlMap(paths) {
-  const unique = Array.from(new Set(paths.filter(Boolean)));
-  if (!supa || !unique.length) return {};
-  try {
-    const { data, error } = await supa.storage.from(BUCKET_NAME).createSignedUrls(unique, 3600);
-    const map = {};
-    if (!error && data) {
-      data.forEach(function(item, i) {
-        if (item && item.signedUrl) map[unique[i]] = item.signedUrl;
-      });
-    }
-    return map;
-  } catch (err) {
-    console.error('Signed URL generation failed:', err);
-    return {};
-  }
+function mapGalleryRow(g) {
+  const photos = (g.gallery_photos || [])
+    .slice()
+    .sort(function(a, b) { return (a.sort_order || 0) - (b.sort_order || 0); })
+    .map(function(p) { return (p.storage_path && publicUrlFor(p.storage_path)) || p.url || ''; })
+    .filter(Boolean);
+  const cover = (g.cover_path && publicUrlFor(g.cover_path)) || g.cover_url || (photos.length ? photos[0] : '');
+  return {
+    id: g.id,
+    title: g.title,
+    description: g.description || '',
+    cover: cover,
+    visible: true,
+    private: g.visibility === 'private',
+    photos: photos
+  };
 }
 
+// Loads only PUBLIC galleries for the landing grid.
 async function loadGalleriesFromSupabase() {
   if (!supa) return false;
   try {
-    const { data: sessionData } = await supa.auth.getSession();
-    currentUser = sessionData && sessionData.session ? sessionData.session.user : null;
-    updateAccountNav();
-
     const { data, error } = await supa
       .from('galleries')
       .select('id, title, description, cover_url, cover_path, visibility, sort_order, gallery_photos(id, url, storage_path, sort_order)')
+      .eq('visibility', 'public')
       .order('sort_order', { ascending: true });
 
     if (error) { console.error('Supabase load error:', error.message); return false; }
     if (!data) return false;
 
-    const allPaths = [];
-    data.forEach(function(g) {
-      if (g.cover_path) allPaths.push(g.cover_path);
-      (g.gallery_photos || []).forEach(function(p) { if (p.storage_path) allPaths.push(p.storage_path); });
-    });
-    const signedMap = await getSignedUrlMap(allPaths);
-
-    galleries = data.map(function(g) {
-      const photos = (g.gallery_photos || [])
-        .slice()
-        .sort(function(a, b) { return (a.sort_order || 0) - (b.sort_order || 0); })
-        .map(function(p) { return (p.storage_path && signedMap[p.storage_path]) || p.url || ''; })
-        .filter(Boolean);
-      const cover = (g.cover_path && signedMap[g.cover_path]) || g.cover_url || (photos.length ? photos[0] : '');
-      return {
-        id: g.id,
-        title: g.title,
-        description: g.description || '',
-        cover: cover,
-        visible: true, // RLS already excludes anything this viewer shouldn't see
-        private: g.visibility === 'private',
-        photos: photos
-      };
-    });
+    galleries = data.map(mapGalleryRow);
     return true;
   } catch (err) {
     console.error('Supabase load failed:', err);
     return false;
+  }
+}
+
+// Loads exactly ONE gallery by id, regardless of its visibility. This is
+// what powers direct links to private galleries — it only ever fetches
+// the single gallery whose id is already in the URL, never the full list.
+async function loadGalleryById(id) {
+  if (!supa || !id) return null;
+  try {
+    const { data, error } = await supa
+      .from('galleries')
+      .select('id, title, description, cover_url, cover_path, visibility, sort_order, gallery_photos(id, url, storage_path, sort_order)')
+      .eq('id', id)
+      .maybeSingle();
+    if (error || !data) return null;
+    return mapGalleryRow(data);
+  } catch (err) {
+    console.error('Direct gallery load failed:', err);
+    return null;
   }
 }
 
@@ -1374,10 +1360,22 @@ function showGalleryView(idx) {
 window.addEventListener('popstate', function(e) {
   if (e.state && typeof e.state.galleryIdx === 'number') {
     showGalleryView(e.state.galleryIdx);
+  } else if (e.state && e.state.directId) {
+    openDirectGallery(e.state.directId, false);
   } else {
     showLanding();
   }
 });
+
+// Loads and displays a single gallery by id (used for direct links to
+// private galleries, and for reloading one on back/forward navigation).
+async function openDirectGallery(id, pushHistory) {
+  const g = await loadGalleryById(id);
+  if (!g) { showLanding(); return; }
+  directGallery = g;
+  if (pushHistory) history.pushState({ directId: id }, '', '#g-' + id);
+  showGalleryView(g);
+}
 
 
 /* ════════════════════════════════════════════════════════════
@@ -1523,8 +1521,8 @@ function buildLanding() {
 let currentPhotos  = [];
 let currentGalName = '';
 
-function buildGalleryView(idx) {
-  const g = galleries[idx];
+function buildGalleryView(ref) {
+  const g = (typeof ref === 'number') ? galleries[ref] : ref;
   if (!g) { showLanding(); return; }
 
   currentPhotos  = g.photos || [];
@@ -1716,8 +1714,20 @@ function slugify(str) {
   buildLanding();
   observeCards();
 
-  // Check if URL already has a gallery hash (e.g. if user bookmarked a gallery)
   const hash = window.location.hash;
+
+  // Direct link to a specific gallery by id — works for public AND
+  // private galleries, since it's fetched individually by id rather
+  // than filtered from the public landing list. This is the link
+  // format admins copy from admin.html.
+  if (hash && hash.startsWith('#g-')) {
+    const id = hash.slice('#g-'.length);
+    await openDirectGallery(id, false);
+    return;
+  }
+
+  // Legacy/bookmark-friendly link by title slug — only ever matches
+  // against the public galleries already loaded above.
   if (hash && hash.startsWith('#gallery-')) {
     const slug  = hash.slice('#gallery-'.length);
     const found = galleries.findIndex(function(g) { return slugify(g.title) === slug; });

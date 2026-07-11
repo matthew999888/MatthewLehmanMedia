@@ -304,8 +304,6 @@ input,textarea{font-family:inherit;color:inherit}
   </div>
   <div class="nav-links">
     <a href="/" target="_blank" rel="noopener noreferrer">View Public Site ↗</a>
-    <button class="nav-tab-btn super-admin-only" id="navTabGalleries" style="display:none">Galleries</button>
-    <button class="nav-tab-btn super-admin-only" id="navTabUsers" style="display:none">Users</button>
     <button class="btn-signout" id="signOutBtn" style="display:none">Sign Out</button>
   </div>
 </nav>
@@ -357,23 +355,12 @@ input,textarea{font-family:inherit;color:inherit}
           <h1 class="dash-title">Galleries</h1>
           <p class="dash-sub" id="dashSubtitle">Create galleries, then drag &amp; drop photos into each one.</p>
         </div>
-        <button class="btn-new super-admin-only" id="newGalleryBtn" style="display:none">
+        <button class="btn-new" id="newGalleryBtn">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
           New Gallery
         </button>
       </div>
       <div class="dash-grid" id="dashGrid"><!-- injected --></div>
-    </div>
-
-    <!-- Users view (super admin only) -->
-    <div id="usersView" style="display:none">
-      <div class="dash-head">
-        <div>
-          <h1 class="dash-title">Users</h1>
-          <p class="dash-sub">Everyone who has created an account. Toggle super admin here.</p>
-        </div>
-      </div>
-      <div class="dash-grid" id="usersGrid" style="grid-template-columns:1fr"><!-- injected --></div>
     </div>
 
     <!-- Manage single gallery -->
@@ -385,13 +372,13 @@ input,textarea{font-family:inherit;color:inherit}
           <p class="manage-desc" id="manageDesc"></p>
           <span class="dash-meta" id="manageVisBadge"></span>
         </div>
-        <div class="dash-actions super-admin-only" id="manageAdminActions" style="display:none">
+        <div class="dash-actions" id="manageAdminActions">
           <button class="btn-sm" id="editGalleryBtn">Edit Details</button>
           <button class="btn-sm danger" id="deleteGalleryBtn">Delete Gallery</button>
         </div>
       </div>
 
-      <div class="dropzone super-admin-only" id="dropzone" style="display:none">
+      <div class="dropzone" id="dropzone">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
         <p class="dropzone-text">Drag &amp; drop photos here, or click to browse</p>
         <p class="dropzone-sub">JPG, PNG, or WEBP — you can select multiple files at once</p>
@@ -400,25 +387,19 @@ input,textarea{font-family:inherit;color:inherit}
 
       <div class="upload-queue" id="uploadQueue"></div>
 
-      <div class="photo-grid super-admin-only" id="photoGrid" style="display:none"><!-- injected --></div>
+      <div class="photo-grid" id="photoGrid"><!-- injected --></div>
 
-      <!-- Access management -->
-      <div id="accessPanel" style="margin-top:2.4rem;padding-top:2rem;border-top:1px solid rgba(124,77,219,.22)">
-        <h3 style="font-family:var(--fd);font-size:1.5rem;letter-spacing:.03em;margin-bottom:.3rem">Who Can Access This Gallery</h3>
-        <p style="font-family:var(--fs);font-style:italic;color:var(--muted);margin-bottom:1.2rem" id="accessPanelSub">Only matters for private galleries — public galleries are visible to everyone.</p>
-
-        <form id="accessForm" style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.4rem">
-          <input type="email" id="accessEmail" placeholder="person@email.com" required
-            style="flex:1;min-width:200px;background:rgba(14,10,26,.6);border:1px solid rgba(124,77,219,.3);border-radius:3px;padding:.65rem .9rem;font-size:.85rem;color:var(--white)" />
-          <select id="accessRole" style="background:rgba(14,10,26,.6);border:1px solid rgba(124,77,219,.3);border-radius:3px;padding:.65rem .9rem;font-size:.85rem;color:var(--white)">
-            <option value="viewer">Viewer — can view</option>
-            <option value="manager" class="super-admin-only-option">Manager — can also grant access</option>
-          </select>
-          <button type="submit" class="btn-sm filled">Add Access</button>
-        </form>
-        <div class="form-msg" id="accessMsg"></div>
-
-        <div id="accessList" style="display:flex;flex-direction:column;gap:.5rem"><!-- injected --></div>
+      <!-- Direct link -->
+      <div id="linkPanel" style="margin-top:2.4rem;padding-top:2rem;border-top:1px solid rgba(124,77,219,.22)">
+        <h3 style="font-family:var(--fd);font-size:1.5rem;letter-spacing:.03em;margin-bottom:.3rem">Direct Link</h3>
+        <p style="font-family:var(--fs);font-style:italic;color:var(--muted);margin-bottom:1.2rem" id="linkPanelSub">
+          Anyone with this link can view this gallery, whether it's public or private — private just means it won't show on the gallery page grid.
+        </p>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+          <input type="text" id="directLinkInput" readonly
+            style="flex:1;min-width:220px;background:rgba(14,10,26,.6);border:1px solid rgba(124,77,219,.3);border-radius:3px;padding:.65rem .9rem;font-size:.85rem;color:var(--white)" />
+          <button type="button" class="btn-sm filled" id="copyLinkBtn">Copy Link</button>
+        </div>
       </div>
     </div>
 
@@ -505,105 +486,16 @@ function escapeHtml(str) {
 
 /* ────────────────────────────────────────────────────────────
    AUTH
+   There's no public sign-up and no roles to manage — the only
+   account(s) that exist are ones you created by hand in Supabase
+   (Authentication → Users), so anyone who can sign in here is a
+   full admin.
 ──────────────────────────────────────────────────────────── */
 const loginScreen = $('loginScreen');
 const dashboard   = $('dashboard');
 const signOutBtn  = $('signOutBtn');
 
 let myUserId = null;
-let myIsSuperAdmin = false;
-
-async function loadMyProfile() {
-  const { data: userData } = await supa.auth.getUser();
-  if (!userData || !userData.user) return false;
-  myUserId = userData.user.id;
-  const { data: profile, error } = await supa
-    .from('profiles')
-    .select('is_super_admin')
-    .eq('id', myUserId)
-    .single();
-  if (error) { console.error('Profile load error:', error.message); return false; }
-  myIsSuperAdmin = !!(profile && profile.is_super_admin);
-  return true;
-}
-
-function applyRoleUI() {
-  document.querySelectorAll('.super-admin-only').forEach(function(el) {
-    el.style.display = myIsSuperAdmin ? '' : 'none';
-  });
-  $('dashSubtitle').textContent = myIsSuperAdmin
-    ? 'Create galleries, then drag & drop photos into each one.'
-    : 'Manage who has access to your galleries.';
-  if (myIsSuperAdmin) {
-    $('navTabGalleries').classList.add('active');
-  }
-}
-
-$('navTabGalleries').addEventListener('click', function() { switchTab('galleries'); });
-$('navTabUsers').addEventListener('click', function() { switchTab('users'); });
-
-function switchTab(tab) {
-  $('navTabGalleries').classList.toggle('active', tab === 'galleries');
-  $('navTabUsers').classList.toggle('active', tab === 'users');
-  $('galleryListView').style.display = tab === 'galleries' ? '' : 'none';
-  $('manageView').classList.remove('active');
-  $('usersView').style.display = tab === 'users' ? '' : 'none';
-  if (tab === 'users') loadUsers();
-}
-
-let usersCache = [];
-async function loadUsers() {
-  const grid = $('usersGrid');
-  grid.innerHTML = '<div class="dash-empty">Loading…</div>';
-  const { data, error } = await supa
-    .from('profiles')
-    .select('id, email, display_name, is_super_admin, created_at')
-    .order('created_at', { ascending: false });
-  if (error) {
-    grid.innerHTML = '<div class="dash-empty">Couldn\'t load users: ' + escapeHtml(error.message) + '</div>';
-    return;
-  }
-  usersCache = data || [];
-  renderUsers();
-}
-
-function renderUsers() {
-  const grid = $('usersGrid');
-  grid.innerHTML = '';
-  if (!usersCache.length) {
-    grid.innerHTML = '<div class="dash-empty">No accounts yet.</div>';
-    return;
-  }
-  usersCache.forEach(function(u) {
-    const row = document.createElement('div');
-    row.className = 'dash-card';
-    row.style.cssText = 'flex-direction:row;align-items:center;padding:1rem 1.2rem;gap:1rem';
-    row.innerHTML =
-      '<div style="flex:1;min-width:0">' +
-        '<div class="dash-name" style="font-size:1.1rem">' + escapeHtml(u.display_name || u.email || 'Unknown') + '</div>' +
-        '<div class="dash-meta">' + escapeHtml(u.email || '') + '</div>' +
-      '</div>' +
-      '<button class="btn-sm' + (u.is_super_admin ? ' filled' : '') + '" data-toggle-admin="' + u.id + '">' +
-        (u.is_super_admin ? 'Super Admin ✓' : 'Make Super Admin') +
-      '</button>';
-    grid.appendChild(row);
-  });
-
-  grid.querySelectorAll('[data-toggle-admin]').forEach(function(btn) {
-    btn.addEventListener('click', async function() {
-      const id = btn.getAttribute('data-toggle-admin');
-      const u = usersCache.find(function(x) { return x.id === id; });
-      if (!u) return;
-      if (u.id === myUserId && u.is_super_admin) {
-        if (!confirm('Remove your own super admin access? You\'ll need another admin to restore it.')) return;
-      }
-      const { error } = await supa.from('profiles').update({ is_super_admin: !u.is_super_admin }).eq('id', id);
-      if (error) { showToast(error.message, true); return; }
-      showToast('Updated.');
-      await loadUsers();
-    });
-  });
-}
 
 async function checkSession() {
   if (!supa) return;
@@ -614,11 +506,12 @@ async function checkSession() {
 }
 
 async function enterDashboard() {
+  const { data: userData } = await supa.auth.getUser();
+  myUserId = userData && userData.user ? userData.user.id : null;
+
   loginScreen.style.display = 'none';
   dashboard.classList.add('active');
   signOutBtn.style.display = '';
-  await loadMyProfile();
-  applyRoleUI();
   loadGalleries();
 }
 
@@ -680,20 +573,16 @@ signOutBtn.addEventListener('click', async function() {
 ──────────────────────────────────────────────────────────── */
 let galleriesCache = [];
 
-async function getSignedUrlMap(paths) {
-  const unique = Array.from(new Set(paths.filter(Boolean)));
-  if (!unique.length) return {};
-  try {
-    const { data, error } = await supa.storage.from(BUCKET_NAME).createSignedUrls(unique, 3600);
-    const map = {};
-    if (!error && data) {
-      data.forEach(function(item, i) { if (item && item.signedUrl) map[unique[i]] = item.signedUrl; });
-    }
-    return map;
-  } catch (err) {
-    console.error('Signed URL error:', err);
-    return {};
-  }
+// Turns a storage path into a public URL. The bucket is public, so this
+// is just URL construction — no network round-trip, no expiry.
+function publicUrlFor(path) {
+  if (!path) return '';
+  const { data } = supa.storage.from(BUCKET_NAME).getPublicUrl(path);
+  return (data && data.publicUrl) || '';
+}
+
+function directLinkFor(id) {
+  return window.location.origin + '/gallery.html#g-' + id;
 }
 
 async function loadGalleries() {
@@ -701,7 +590,7 @@ async function loadGalleries() {
   grid.innerHTML = '<div class="dash-empty">Loading…</div>';
   const { data, error } = await supa
     .from('galleries')
-    .select('id, title, description, cover_url, cover_path, visibility, owner_id, sort_order, gallery_photos(id, url, sort_order)')
+    .select('id, title, description, cover_url, cover_path, visibility, sort_order, gallery_photos(id, url, sort_order)')
     .order('sort_order', { ascending: true });
 
   if (error) {
@@ -710,10 +599,8 @@ async function loadGalleries() {
   }
   galleriesCache = data || [];
 
-  const coverPaths = galleriesCache.map(function(g) { return g.cover_path; }).filter(Boolean);
-  const signedMap = await getSignedUrlMap(coverPaths);
   galleriesCache.forEach(function(g) {
-    g._coverDisplay = (g.cover_path && signedMap[g.cover_path]) || g.cover_url || '';
+    g._coverDisplay = (g.cover_path && publicUrlFor(g.cover_path)) || g.cover_url || '';
   });
 
   renderGalleryList();
@@ -723,9 +610,7 @@ function renderGalleryList() {
   const grid = $('dashGrid');
   grid.innerHTML = '';
   if (!galleriesCache.length) {
-    grid.innerHTML = '<div class="dash-empty">' +
-      (myIsSuperAdmin ? 'No galleries yet — click "New Gallery" to create your first one.' : 'You don\'t manage any galleries yet.') +
-      '</div>';
+    grid.innerHTML = '<div class="dash-empty">No galleries yet — click "New Gallery" to create your first one.</div>';
     return;
   }
   galleriesCache.forEach(function(g) {
@@ -742,11 +627,10 @@ function renderGalleryList() {
         '<div class="dash-name">' + escapeHtml(g.title) + '</div>' +
         '<div class="dash-meta">' + photoCount + ' photo' + (photoCount !== 1 ? 's' : '') + ' &middot; ' + (isPrivate ? 'Private' : 'Public') + '</div>' +
         '<div class="dash-actions">' +
-          (myIsSuperAdmin
-            ? '<button class="btn-sm filled" data-manage="' + g.id + '">Manage Photos</button>' +
-              '<button class="btn-sm" data-edit="' + g.id + '">Edit</button>' +
-              '<button class="btn-sm danger" data-delete="' + g.id + '">Delete</button>'
-            : '<button class="btn-sm filled" data-manage="' + g.id + '">Manage Access</button>') +
+          '<button class="btn-sm filled" data-manage="' + g.id + '">Manage</button>' +
+          '<button class="btn-sm" data-edit="' + g.id + '">Edit</button>' +
+          '<button class="btn-sm" data-copy="' + g.id + '">Copy Link</button>' +
+          '<button class="btn-sm danger" data-delete="' + g.id + '">Delete</button>' +
         '</div>' +
       '</div>';
     grid.appendChild(card);
@@ -761,6 +645,19 @@ function renderGalleryList() {
   grid.querySelectorAll('[data-delete]').forEach(function(btn) {
     btn.addEventListener('click', function() { deleteGallery(btn.getAttribute('data-delete')); });
   });
+  grid.querySelectorAll('[data-copy]').forEach(function(btn) {
+    btn.addEventListener('click', function() { copyLink(btn.getAttribute('data-copy')); });
+  });
+}
+
+async function copyLink(id) {
+  const link = directLinkFor(id);
+  try {
+    await navigator.clipboard.writeText(link);
+    showToast('Link copied.');
+  } catch (err) {
+    showToast(link, false);
+  }
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -807,7 +704,6 @@ $('galleryForm').addEventListener('submit', async function(e) {
     ({ error } = await supa.from('galleries').update(payload).eq('id', editingGalleryId));
   } else {
     payload.sort_order = galleriesCache.length;
-    payload.owner_id = myUserId;
     ({ error } = await supa.from('galleries').insert(payload));
   }
 
@@ -844,12 +740,11 @@ async function deleteGallery(id) {
 }
 
 /* ────────────────────────────────────────────────────────────
-   MANAGE GALLERY VIEW (photos + access)
+   MANAGE GALLERY VIEW (photos + direct link)
 ──────────────────────────────────────────────────────────── */
 let currentGalleryId = null;
 let currentPhotos = [];
 let currentGalleryData = null;
-let iCanManageAccess = false;
 
 $('backToListBtn').addEventListener('click', function() {
   $('manageView').classList.remove('active');
@@ -868,7 +763,7 @@ async function openManage(id) {
 async function refreshManageView() {
   const { data: g, error } = await supa
     .from('galleries')
-    .select('id, title, description, cover_url, cover_path, visibility, owner_id')
+    .select('id, title, description, cover_url, cover_path, visibility')
     .eq('id', currentGalleryId)
     .single();
   if (error) { showToast(error.message, true); return; }
@@ -878,52 +773,23 @@ async function refreshManageView() {
   $('manageDesc').textContent = g.description || '';
   $('manageVisBadge').textContent = g.visibility === 'private' ? 'Private gallery' : 'Public gallery';
 
-  // Am I allowed to manage access here? (super admin, owner, or explicit manager)
-  iCanManageAccess = myIsSuperAdmin || g.owner_id === myUserId;
-  if (!iCanManageAccess) {
-    const { data: myAccess } = await supa
-      .from('gallery_access')
-      .select('role')
-      .eq('gallery_id', currentGalleryId)
-      .eq('user_id', myUserId)
-      .maybeSingle();
-    iCanManageAccess = !!(myAccess && myAccess.role === 'manager');
-  }
+  $('directLinkInput').value = directLinkFor(g.id);
+  $('linkPanelSub').textContent = g.visibility === 'private'
+    ? "This gallery is private — it won't show on the gallery page grid, but this link opens it directly for anyone who has it."
+    : 'This gallery is public and already shows on the gallery page — this link jumps straight to it.';
 
-  document.querySelectorAll('.super-admin-only-option').forEach(function(opt) {
-    opt.hidden = !myIsSuperAdmin;
+  const { data: photos, error: pErr } = await supa
+    .from('gallery_photos')
+    .select('id, url, storage_path, sort_order')
+    .eq('gallery_id', currentGalleryId)
+    .order('sort_order', { ascending: true });
+  if (pErr) { showToast(pErr.message, true); return; }
+
+  currentPhotos = (photos || []).map(function(p) {
+    return Object.assign({}, p, { _display: (p.storage_path && publicUrlFor(p.storage_path)) || p.url });
   });
-  $('accessForm').style.display = iCanManageAccess ? '' : 'none';
-  $('accessPanelSub').textContent = g.visibility === 'private'
-    ? 'People listed below can view this private gallery.'
-    : 'This gallery is public — everyone can already see it. Access below only matters if you switch it to private.';
-
-  if (myIsSuperAdmin) {
-    $('manageAdminActions').style.display = '';
-    $('dropzone').style.display = '';
-    $('photoGrid').style.display = '';
-
-    const { data: photos, error: pErr } = await supa
-      .from('gallery_photos')
-      .select('id, url, storage_path, sort_order')
-      .eq('gallery_id', currentGalleryId)
-      .order('sort_order', { ascending: true });
-    if (pErr) { showToast(pErr.message, true); return; }
-
-    const paths = (photos || []).map(function(p) { return p.storage_path; }).filter(Boolean);
-    if (g.cover_path) paths.push(g.cover_path);
-    const signedMap = await getSignedUrlMap(paths);
-
-    currentPhotos = (photos || []).map(function(p) {
-      return Object.assign({}, p, { _display: (p.storage_path && signedMap[p.storage_path]) || p.url });
-    });
-    const coverDisplay = (g.cover_path && signedMap[g.cover_path]) || g.cover_url;
-    renderPhotoGrid(coverDisplay);
-  } else {
-    currentPhotos = [];
-  }
-
-  await renderAccessList();
+  const coverDisplay = (g.cover_path && publicUrlFor(g.cover_path)) || g.cover_url;
+  renderPhotoGrid(coverDisplay);
 }
 
 function renderPhotoGrid(coverDisplay) {
@@ -987,90 +853,15 @@ $('deleteGalleryBtn').addEventListener('click', async function() {
   $('galleryListView').style.display = '';
 });
 
-/* ────────────────────────────────────────────────────────────
-   ACCESS PANEL — grant/revoke access to a private gallery
-──────────────────────────────────────────────────────────── */
-async function renderAccessList() {
-  const list = $('accessList');
-  if (!iCanManageAccess) {
-    list.innerHTML = '';
-    return;
+$('copyLinkBtn').addEventListener('click', async function() {
+  const input = $('directLinkInput');
+  try {
+    await navigator.clipboard.writeText(input.value);
+    showToast('Link copied.');
+  } catch (err) {
+    input.select();
+    showToast('Select and copy the link above.');
   }
-  list.innerHTML = '<div class="dash-empty" style="padding:1rem">Loading…</div>';
-
-  const { data, error } = await supa
-    .from('gallery_access')
-    .select('id, role, user_id, profiles(email, display_name)')
-    .eq('gallery_id', currentGalleryId);
-
-  if (error) {
-    list.innerHTML = '<div class="dash-empty" style="padding:1rem">Couldn\'t load access list: ' + escapeHtml(error.message) + '</div>';
-    return;
-  }
-
-  if (!data || !data.length) {
-    list.innerHTML = '<div class="dash-empty" style="padding:1rem">No one has been granted access yet.</div>';
-    return;
-  }
-
-  list.innerHTML = '';
-  data.forEach(function(row) {
-    const email = row.profiles ? row.profiles.email : row.user_id;
-    const item = document.createElement('div');
-    item.style.cssText = 'display:flex;align-items:center;gap:.7rem;background:rgba(59,31,114,.15);border:1px solid rgba(124,77,219,.2);border-radius:3px;padding:.6rem .9rem;font-size:.85rem';
-    item.innerHTML =
-      '<span style="flex:1">' + escapeHtml(email || 'Unknown') + '</span>' +
-      '<span style="font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border:1px solid rgba(124,77,219,.3);padding:.2rem .5rem;border-radius:2px">' + row.role + '</span>' +
-      (myIsSuperAdmin || iCanManageAccess ? '<button class="tile-btn danger" data-remove-access="' + row.id + '" style="background:rgba(14,10,26,.6);border-color:rgba(224,90,107,.4)">Remove</button>' : '');
-    list.appendChild(item);
-  });
-
-  list.querySelectorAll('[data-remove-access]').forEach(function(btn) {
-    btn.addEventListener('click', async function() {
-      const { error: delErr } = await supa.from('gallery_access').delete().eq('id', btn.getAttribute('data-remove-access'));
-      if (delErr) { showToast(delErr.message, true); return; }
-      showToast('Access removed.');
-      await renderAccessList();
-    });
-  });
-}
-
-$('accessForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const msg = $('accessMsg');
-  msg.classList.remove('show', 'ok', 'err');
-
-  const email = $('accessEmail').value.trim().toLowerCase();
-  const role = $('accessRole').value;
-
-  const { data: profile, error: pErr } = await supa
-    .from('profiles')
-    .select('id')
-    .ilike('email', email)
-    .maybeSingle();
-
-  if (pErr || !profile) {
-    msg.textContent = 'No account found with that email — they need to create an account at login.html first.';
-    msg.classList.add('show', 'err');
-    return;
-  }
-
-  const { error } = await supa.from('gallery_access').insert({
-    gallery_id: currentGalleryId,
-    user_id: profile.id,
-    role: role
-  });
-
-  if (error) {
-    msg.textContent = error.message;
-    msg.classList.add('show', 'err');
-    return;
-  }
-
-  $('accessEmail').value = '';
-  msg.textContent = 'Access granted.';
-  msg.classList.add('show', 'ok');
-  await renderAccessList();
 });
 
 /* ────────────────────────────────────────────────────────────
