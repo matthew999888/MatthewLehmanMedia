@@ -155,7 +155,7 @@
 <link rel="dns-prefetch" href="https://lh3.googleusercontent.com" />
 <!-- LCP candidate: hero background image — fetch starts immediately -->
 <link rel="preload" as="image"
-  href="https://drive.google.com/thumbnail?id=1HJsopvmRg0BxzFi7bi8p98xvH3RJNb56&sz=w1920"
+  href="https://lh3.googleusercontent.com/d/1HJsopvmRg0BxzFi7bi8p98xvH3RJNb56=w1920"
   fetchpriority="high" />
 <!-- ──────────────────────────────────────────────────────────────── -->
 
@@ -662,6 +662,7 @@
     <a href="#services" data-target="services">Services</a>
     <a href="#contact"  data-target="contact">Contact</a>
     <a href="gallery.html" class="nav-gallery-pill">Gallery</a>
+    <a href="login.html" id="navAuthLink">Sign In</a>
   </div>
 
   <button class="nav-burger" id="navBurger" aria-label="Open menu">
@@ -675,6 +676,7 @@
   <a href="#services" data-target="services" class="drawer-link">Services</a>
   <a href="#contact"  data-target="contact"  class="drawer-link">Contact</a>
   <a href="gallery.html" class="drawer-link">Gallery</a>
+  <a href="login.html" class="drawer-link">Sign In</a>
 </div>
 
 <span id="top"></span>
@@ -690,7 +692,7 @@
       the parser reaches this <img>, cutting LCP time further.
     -->
     <img
-      src="https://drive.google.com/thumbnail?id=1HJsopvmRg0BxzFi7bi8p98xvH3RJNb56&sz=w1920"
+      src="https://lh3.googleusercontent.com/d/1HJsopvmRg0BxzFi7bi8p98xvH3RJNb56=w1920" referrerpolicy="no-referrer"
       alt="Matthew Lehman Media — Athletic Photography"
       fetchpriority="high"
       loading="eager"
@@ -737,7 +739,7 @@
   <div class="about-vis">
     <div class="ac"></div>
     <div class="about-frame">
-      <img src="https://lh3.googleusercontent.com/pw/AP1GczNCBI9Xt4SfwyHxCe2IRxrUQkYMHvDHwC1mSxoY-sQcwGOk3cb238apbxn7AFhJk1_HDH05ggu0_03qqqwqWbe8ZUoqlBxo4e-9U5-eWh7-Eqxtog=w1200-k-no" alt="Matthew Lehman, sports photographer based in Logan, Ohio" itemprop="image" loading="lazy" />
+      <img src="https://lh3.googleusercontent.com/pw/AP1GczNCBI9Xt4SfwyHxCe2IRxrUQkYMHvDHwC1mSxoY-sQcwGOk3cb238apbxn7AFhJk1_HDH05ggu0_03qqqwqWbe8ZUoqlBxo4e-9U5-eWh7-Eqxtog=w1200-k-no" referrerpolicy="no-referrer" alt="Matthew Lehman, sports photographer based in Logan, Ohio" itemprop="image" loading="lazy" />
     </div>
     <div class="acbr"></div>
   </div>
@@ -829,19 +831,27 @@
   </div>
   <div class="c-right">
     <p class="form-label-top">Send a Message</p>
-    <form class="form" id="contactForm" action="https://formspree.io/f/xzdkjlek" method="POST">
+    <!-- Posts to /api/contact, which verifies Turnstile, rate limits by IP,
+         and delivers through Resend with reply-to set to the sender. -->
+    <form class="form" id="contactForm" action="/api/contact" method="POST">
       <div class="field-row">
         <div class="field"><label class="field-label" for="name">Your Name</label><input type="text" id="name" name="name" required autocomplete="name" /></div>
         <div class="field"><label class="field-label" for="email">Your Email</label><input type="email" id="email" name="email" required autocomplete="email" /></div>
       </div>
       <div class="field"><label class="field-label" for="sport">Sport / Type of Shoot</label><input type="text" id="sport" name="sport" /></div>
       <div class="field"><label class="field-label" for="message">Tell me about your shoot</label><textarea id="message" name="message" rows="5" required></textarea></div>
+      <!-- Honeypot: hidden from people, filled in by bots. -->
+      <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+        <label for="company">Company</label>
+        <input type="text" id="company" name="company" tabindex="-1" autocomplete="off" />
+      </div>
+      <div id="contactTurnstile" style="margin-bottom:1rem"></div>
       <div class="submit-row">
         <button class="btn-send" type="submit" id="submitBtn">Send Message</button>
         <span class="send-note">I'll reply as soon as I can.</span>
       </div>
       <div class="status success" id="statusSuccess" role="alert"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Message sent — I'll be in touch soon!</div>
-      <div class="status error"   id="statusError"   role="alert"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>Something went wrong. Please email me directly.</div>
+      <div class="status error"   id="statusError"   role="alert"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><span id="statusErrorText">Something went wrong. Please email me directly.</span></div>
     </form>
   </div>
 </section>
@@ -905,20 +915,97 @@ document.querySelectorAll('.field input, .field textarea').forEach(input => {
   const check = () => input.closest('.field').classList.toggle('has-val', input.value.trim() !== '');
   input.addEventListener('input', check); input.addEventListener('change', check); check();
 });
+/* ── Turnstile + contact form ──────────────────────────────────────────────
+   The widget only appears once a site key is configured; until then the
+   server skips the check and the form keeps working.
+─────────────────────────────────────────────────────────────────────────── */
+let turnstileSiteKey = null;
+let turnstileWidgetId = null;
+
+(async function loadSiteConfig() {
+  try {
+    const res = await fetch('/api/config');
+    if (!res.ok) return;
+    const cfg = await res.json();
+    turnstileSiteKey = cfg.turnstileSiteKey || null;
+    if (!turnstileSiteKey) return;
+
+    const s = document.createElement('script');
+    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    s.async = true; s.defer = true;
+    s.onload = () => {
+      turnstileWidgetId = window.turnstile.render('#contactTurnstile', {
+        sitekey: turnstileSiteKey,
+        theme: 'dark',
+      });
+    };
+    document.head.appendChild(s);
+  } catch {
+    /* no /api available — leave the form as-is */
+  }
+})();
+
+/* ── Nav: reflect whether they're signed in ──────────────────────────────── */
+(function reflectSession() {
+  const link = document.getElementById('navAuthLink');
+  if (!link) return;
+  try {
+    // Supabase stores its session under a project-scoped localStorage key.
+    const signedIn = Object.keys(localStorage)
+      .some(k => k.startsWith('sb-') && k.endsWith('-auth-token') && localStorage.getItem(k));
+    if (signedIn) link.textContent = 'My Account';
+  } catch {
+    /* storage blocked — leave the default label */
+  }
+})();
+
 const form  = document.getElementById('contactForm');
 const sBtn  = document.getElementById('submitBtn');
 const okEl  = document.getElementById('statusSuccess');
 const errEl = document.getElementById('statusError');
+const errText = document.getElementById('statusErrorText');
+
 form.addEventListener('submit', async e => {
-  e.preventDefault(); sBtn.disabled = true; sBtn.textContent = 'Sending…';
+  e.preventDefault();
   okEl.classList.remove('show'); errEl.classList.remove('show');
+
+  if (turnstileSiteKey && turnstileWidgetId !== null && !window.turnstile.getResponse(turnstileWidgetId)) {
+    errText.textContent = 'Please complete the human check above.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  sBtn.disabled = true; sBtn.textContent = 'Sending…';
+
   try {
-    const r = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } });
-    if (!r.ok) throw 0;
-    okEl.classList.add('show'); form.reset();
+    const r = await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name:    document.getElementById('name').value.trim(),
+        email:   document.getElementById('email').value.trim(),
+        subject: document.getElementById('sport').value.trim(),
+        message: document.getElementById('message').value.trim(),
+        company: document.getElementById('company').value,   // honeypot
+        turnstileToken: (turnstileSiteKey && turnstileWidgetId !== null)
+          ? window.turnstile.getResponse(turnstileWidgetId) : '',
+      }),
+    });
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok || body.ok === false) throw new Error(body.error || 'Send failed');
+
+    okEl.classList.add('show');
+    form.reset();
     document.querySelectorAll('.field').forEach(f => f.classList.remove('has-val'));
     sBtn.textContent = 'Sent ✓';
-  } catch { errEl.classList.add('show'); sBtn.disabled = false; sBtn.textContent = 'Send Message'; }
+  } catch (err) {
+    errText.textContent = err.message || 'Something went wrong. Please email me directly.';
+    errEl.classList.add('show');
+    sBtn.disabled = false;
+    sBtn.textContent = 'Send Message';
+  } finally {
+    if (turnstileWidgetId !== null) window.turnstile.reset(turnstileWidgetId);
+  }
 });
 
 </script>

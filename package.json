@@ -1,0 +1,19 @@
+{
+  "name": "matthewlehmanmedia",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Matthew Lehman Media — gallery site. Static pages plus Vercel serverless functions in /api.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vercel dev",
+    "seed:generate": "node db/generate-seed.mjs",
+    "test": "node --test test/drive.test.mjs",
+    "test:all": "node --env-file=.env.local --test test/drive.test.mjs test/api.test.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}

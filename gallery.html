@@ -20,13 +20,18 @@
        favicon.ico  |  favicon-16x16.png  |  favicon-32x32.png
        apple-touch-icon.png  |  android-chrome-192x192.png  |  site.webmanifest
      ─────────────────────────────────────────────────────────────────────
-     CONNECTING THE UPLOAD/ADMIN SYSTEM:
-       See admin.html and supabase-setup.sql. Once you've created a
-       Supabase project, run supabase-setup.sql, and pasted your
-       Project URL + anon key into the CONFIG section below (and in
-       admin.html), galleries/photos uploaded via admin.html will
-       appear here automatically. Until then this page just shows
-       the FALLBACK_GALLERIES data further down, same as before.
+     WHAT THIS PAGE SHOWS:
+       • The public gallery grid, for everyone.
+       • "Your Galleries" — private galleries shared with the signed-in
+         account. Row-level security decides what comes back, so a
+         signed-out visitor cannot retrieve them at all.
+       • A single private gallery, when opened via /g/<secret>. That path
+         is rewritten here by vercel.json and served by
+         api/galleries/secret.js — no account needed.
+       If Supabase is ever unreachable, the page falls back to the
+       FALLBACK_GALLERIES data further down rather than showing nothing.
+
+       Managed from admin.html. Setup: see README-SETUP.md.
 ═══════════════════════════════════════════════════════════════════════ -->
 <html lang="en">
 <head>
@@ -640,6 +645,111 @@ footer{
 @media(max-width:640px){
   .page-header{padding:7rem 1.2rem 3rem}
 }
+
+/* ════════════════════════════════════════════════════════════
+   ACCOUNTS, PRIVATE GALLERIES, VIDEO
+   Added for the signed-in experience — everything above is the
+   original design and is untouched.
+════════════════════════════════════════════════════════════ */
+
+/* ---- Nav sign-in / account chip ---- */
+.nav-auth-link{
+  color:var(--glow)!important;border:1px solid rgba(124,77,219,.45);
+  padding:.42rem 1rem;border-radius:2px;transition:background .3s,color .3s,border-color .3s!important;
+}
+.nav-auth-link:hover{background:rgba(124,77,219,.22);border-color:var(--light)}
+.nav-auth-link.signed-in{border-color:rgba(124,77,219,.3);color:var(--muted)!important}
+.nav-auth-link.signed-in:hover{color:var(--glow)!important}
+
+/* ---- "Your Galleries" — the signed-in private section ---- */
+.mine-section{padding:4rem 4rem 0}
+.mine-head{margin-bottom:2.4rem}
+.mine-title{
+  font-family:var(--fd);font-size:clamp(2.2rem,4.5vw,3.4rem);
+  line-height:1;letter-spacing:.03em;color:var(--white);margin-bottom:.6rem;
+}
+.mine-title em{font-style:normal;-webkit-text-stroke:1.5px var(--accent);color:transparent}
+.mine-sub{
+  font-family:var(--fs);font-size:1.05rem;font-weight:300;font-style:italic;
+  color:var(--muted);line-height:1.6;max-width:560px;
+}
+.mine-divider{
+  margin:4rem 4rem 0;border:none;border-top:1px solid rgba(124,77,219,.22);
+}
+.mine-empty{
+  font-family:var(--fs);font-style:italic;color:var(--muted);
+  padding:2rem 0;font-size:1rem;
+}
+
+/* ---- Badges on a gallery card ---- */
+.card-private-badge{
+  position:absolute;top:.8rem;left:.8rem;z-index:2;
+  font-family:var(--fb);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;
+  background:rgba(124,77,219,.9);color:#fff;padding:.3rem .6rem;border-radius:2px;
+}
+
+/* ---- Video ---- */
+/* Play glyph sitting over a video tile / a card cover for a gallery with video */
+.mi-play,.card-play{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:54px;height:54px;border-radius:50%;
+  background:rgba(14,10,26,.62);border:1px solid rgba(180,143,252,.55);
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;z-index:2;transition:background .3s,transform .3s;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+.mi-play svg,.card-play svg{width:20px;height:20px;fill:var(--glow);margin-left:3px}
+.masonry-item:hover .mi-play{background:rgba(124,77,219,.8);transform:translate(-50%,-50%) scale(1.08)}
+.card-play{width:44px;height:44px}
+.card-play svg{width:16px;height:16px}
+
+/* Video in the lightbox — a Drive player iframe, sized like the image */
+.lb-video{
+  width:min(calc(95vw - 120px),1200px);aspect-ratio:16/9;max-height:90vh;
+  border:1px solid rgba(124,77,219,.3);background:#000;display:block;
+}
+/* display:block above would otherwise beat the [hidden] attribute's
+   UA display:none, leaving a black box next to every photo. */
+.lb-video[hidden]{display:none}
+.lb-video iframe{width:100%;height:100%;border:0;display:block}
+@media(max-width:640px){
+  .lb-video{width:calc(100vw - 2rem)}
+}
+
+/* ---- Private-link banner, shown when arriving via /g/<secret> ---- */
+.secret-note{
+  display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;
+  margin-top:1rem;padding:.7rem 1rem;
+  background:rgba(124,77,219,.14);border-left:2px solid var(--accent);
+  font-family:var(--fb);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--glow);
+}
+.secret-note svg{width:14px;height:14px;fill:currentColor;flex-shrink:0}
+
+/* ---- Download-all button, next to Shop ---- */
+.btn-dlall{
+  font-family:var(--fb);font-size:.75rem;font-weight:500;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--glow);background:transparent;
+  border:1px solid rgba(124,77,219,.45);
+  padding:.85rem 1.6rem;border-radius:2px;cursor:pointer;
+  transition:background .3s,color .3s,border-color .3s;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.btn-dlall svg{width:14px;height:14px;fill:currentColor;flex-shrink:0}
+.btn-dlall:hover{background:rgba(124,77,219,.2);border-color:var(--light);color:var(--white)}
+.btn-dlall[disabled]{opacity:.5;cursor:default}
+.vh-actions{display:flex;gap:.7rem;flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:640px){ .vh-actions{justify-content:flex-start} }
+
+/* ---- Loading / error state for the whole page ---- */
+.gal-loading{
+  text-align:center;padding:4rem;font-family:var(--fs);font-style:italic;
+  color:var(--muted);font-size:1.05rem;
+}
+@media(max-width:900px){
+  .mine-section{padding:3rem 1.5rem 0}
+  .mine-divider{margin:3rem 1.5rem 0}
+}
 </style>
 </head>
 <body>
@@ -653,6 +763,7 @@ footer{
     <a href="/" class="nav-home-link">← Home</a>
     <a href="https://www.instagram.com/mlmedia_28/" target="_blank" rel="noopener noreferrer">Instagram</a>
     <a href="gallery.html" class="active nav-gallery-pill">Gallery</a>
+    <a href="login.html" class="nav-auth-link" id="navAuthLink">Sign In</a>
   </div>
   <button class="nav-burger" id="navBurger" aria-label="Open navigation menu" aria-expanded="false">
     <span></span><span></span><span></span>
@@ -664,6 +775,7 @@ footer{
   <a href="/">← Home</a>
   <a href="gallery.html">Gallery</a>
   <a href="https://www.instagram.com/mlmedia_28/" target="_blank" rel="noopener noreferrer">Instagram</a>
+  <a href="login.html" id="drawerAuthLink">Sign In</a>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════
@@ -675,7 +787,8 @@ footer{
   <header class="page-header" aria-label="Photo galleries header">
     <div class="ph-bg">
       <img
-        src="https://drive.google.com/thumbnail?id=1HJsopvmRg0BxzFi7bi8p98xvH3RJNb56&sz=w1920"
+        src="https://lh3.googleusercontent.com/d/1HJsopvmRg0BxzFi7bi8p98xvH3RJNb56=w1920"
+        referrerpolicy="no-referrer"
         alt="Matthew Lehman Media — Athletic Photography"
         loading="eager"
       />
@@ -690,6 +803,19 @@ footer{
       <p class="ph-sub" id="gallerySubtitle">Browse all sessions below — select any gallery to view the full collection.</p>
     </div>
   </header>
+
+  <!-- ── Your Galleries ──────────────────────────────────────────
+       Private galleries granted to the signed-in account. Hidden
+       entirely when signed out, or when nothing has been shared.
+  ─────────────────────────────────────────────────────────────── -->
+  <section class="mine-section" id="mineSection" hidden aria-label="Your private galleries">
+    <div class="mine-head">
+      <h2 class="mine-title">Your <em>Galleries</em></h2>
+      <p class="mine-sub" id="mineSub">Private galleries shared with your account.</p>
+    </div>
+    <div class="gallery-grid" id="mineGrid"><!-- injected --></div>
+  </section>
+  <hr class="mine-divider" id="mineDivider" hidden />
 
   <!-- Gallery Card Grid -->
   <section class="landing-section" aria-label="Photo gallery directory">
@@ -725,10 +851,16 @@ footer{
       </div>
       <div class="vh-right">
         <span class="vh-count" id="vhCount"></span>
-        <a class="btn-shop-lg" id="shopBtn" href="#" target="_blank" rel="noopener noreferrer" aria-label="Shop prints in new tab">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h-2L3 2H1v2h2l3.6 7.59L5.25 14A2 2 0 007 17h12v-2H7.42a.25.25 0 01-.25-.25l.03-.12.9-1.63H19a2 2 0 001.76-1.06L23 6H5.21l-.94-2zm0 13a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z"/></svg>
-          Shop Prints
-        </a>
+        <div class="vh-actions">
+          <button class="btn-dlall" id="downloadAllBtn" type="button" aria-label="Download every photo in this gallery">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            <span id="downloadAllLabel">Download All</span>
+          </button>
+          <a class="btn-shop-lg" id="shopBtn" href="#" target="_blank" rel="noopener noreferrer" aria-label="Shop prints in new tab">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h-2L3 2H1v2h2l3.6 7.59L5.25 14A2 2 0 007 17h12v-2H7.42a.25.25 0 01-.25-.25l.03-.12.9-1.63H19a2 2 0 001.76-1.06L23 6H5.21l-.94-2zm0 13a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z"/></svg>
+            Shop Prints
+          </a>
+        </div>
       </div>
     </div>
   </header>
@@ -750,6 +882,9 @@ footer{
   <div class="lb-inner">
     <button class="lb-arrow lb-prev" id="lbPrev" aria-label="Previous photo">‹</button>
     <img id="lbImg" alt="Matthew Lehman Media gallery photo" />
+    <!-- Videos play in Drive's own embedded player. The iframe is only
+         inserted while a video is on screen, so nothing loads otherwise. -->
+    <div class="lb-video" id="lbVideo" hidden></div>
     <button class="lb-arrow lb-next" id="lbNext" aria-label="Next photo">›</button>
   </div>
   <div class="lb-bar">
@@ -799,9 +934,8 @@ footer{
 // keeps working normally either way.
 // Manage galleries/photos from admin.html once connected.
 // ──────────────────────────────────────────────
-const SUPABASE_URL      = "https://hanxyzajkhkhdlzhnron.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhhbnh5emFqa2hraGRsemhucm9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzNzIxOTEsImV4cCI6MjA5MDk0ODE5MX0.ngu3mbSZqDR1IP0itndFWNLoX49U6dv8tDfIbest5TQ";
-const BUCKET_NAME = "gallery-photos";
+const SUPABASE_URL      = "https://pexqzghhjiwvvxbiirkr.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBleHF6Z2hoaml3dnZ4YmlpcmtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyMjIzMDUsImV4cCI6MjEwMTc5ODMwNX0.uEMy93_Z1kD8w14JFhDn10k-UYZCCPHKBmgdEGWmRQ0";
 const SUPABASE_CONNECTED = SUPABASE_URL !== "PASTE_SUPABASE_URL_HERE"
   && SUPABASE_ANON_KEY !== "PASTE_SUPABASE_ANON_KEY_HERE"
   && SUPABASE_URL && SUPABASE_ANON_KEY;
@@ -828,9 +962,20 @@ const INSTAGRAM_HANDLE = "@mlmedia_28";
 // SHOP LINK (Pixieset)
 // Paste your full Pixieset shop URL below.
 // Example: "https://matthewlehman.pixieset.com/"
-// The Shop button on every gallery opens this in a new tab.
+//
+// This is the site-wide default. Any single gallery can override it
+// with its own Pixieset URL from the admin panel — useful when a
+// particular shoot has its own store. Leave this as the placeholder
+// and the Shop button simply doesn't appear.
 // ──────────────────────────────────────────────
 const SHOP_LINK = "PASTE_PIXIESET_SHOP_LINK_HERE";
+
+function shopLinkFor(gallery) {
+  const perGallery = gallery && gallery.pixiesetUrl;
+  if (perGallery) return perGallery;
+  if (SHOP_LINK && SHOP_LINK !== 'PASTE_PIXIESET_SHOP_LINK_HERE') return SHOP_LINK;
+  return null;
+}
 
 // ──────────────────────────────────────────────
 // GALLERY DIRECTORY SUBTITLE
@@ -1232,42 +1377,165 @@ const FALLBACK_GALLERIES = [
        can copy from admin.html. Knowing the link is what makes
        it viewable — there's no login wall on top of that.
 ──────────────────────────────────────────────────────────── */
-let galleries = FALLBACK_GALLERIES;      // public galleries shown on the landing grid
-let directGallery = null;                // set when a direct link (#g-<id>) is opened
+let galleries      = [];     // public galleries shown on the landing grid
+let myGalleries    = [];     // private galleries granted to the signed-in account
+let currentGallery = null;   // the gallery currently on screen
+let currentSecret  = null;   // the /g/<secret> slug, when we arrived that way
 
 let supa = null;
 if (SUPABASE_CONNECTED && typeof window.supabase !== 'undefined') {
   supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
-// Turns a storage path into a public URL. The bucket is public, so this is
-// just URL construction — no network round-trip and no expiry.
-function publicUrlFor(path) {
-  if (!supa || !path) return '';
-  const { data } = supa.storage.from(BUCKET_NAME).getPublicUrl(path);
-  return (data && data.publicUrl) || '';
+/* ────────────────────────────────────────────────────────────
+   GOOGLE DRIVE URLS
+   Photos and videos are Drive files. Everything downstream works
+   from the bare file id — this mirrors api/_lib/drive.js, which
+   does the same job on the server.
+──────────────────────────────────────────────────────────── */
+function parseDriveId(url) {
+  if (!url) return null;
+  const s = String(url).trim();
+  const m = s.match(/\/file\/d\/([A-Za-z0-9_-]{10,})/)
+         || s.match(/[?&]id=([A-Za-z0-9_-]{10,})/)
+         || s.match(/\/d\/([A-Za-z0-9_-]{10,})/);
+  return m ? m[1] : null;
+}
+// IMPORTANT: every <img> built from these URLs must carry
+// referrerpolicy="no-referrer". Google throttles hotlinked Drive images by
+// referrer — send one and the whole gallery comes back as HTTP 429 instead of
+// pictures. attachDriveImage() below is the one place that gets this right.
+//
+// We also point straight at lh3.googleusercontent.com, the host that
+// drive.google.com/thumbnail just redirects to: one less round trip per image,
+// and no Google auth cookies set on the visitor.
+function driveThumb(id, w) {
+  return 'https://lh3.googleusercontent.com/d/' + encodeURIComponent(id) + '=w' + (w || 1000);
+}
+function driveThumbFallback(id, w) {
+  return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w' + (w || 1000);
+}
+
+/**
+ * Wire up an <img> for a Drive-hosted photo.
+ *
+ * Handlers are attached before src is assigned — the other way round, a
+ * cached image can finish loading before onload exists and stay invisible.
+ */
+function attachDriveImage(img, src, fallbackSrc, onFail) {
+  img.referrerPolicy = 'no-referrer';
+  img.onload = function() { this.classList.add('loaded'); };
+  img.onerror = function() {
+    if (fallbackSrc && this.src !== fallbackSrc) { this.src = fallbackSrc; return; }
+    if (onFail) onFail.call(this);
+  };
+  img.src = src;
+}
+function drivePreview(id) {
+  return 'https://drive.google.com/file/d/' + encodeURIComponent(id) + '/preview';
+}
+
+/* ────────────────────────────────────────────────────────────
+   ROW → VIEW MODEL
+   One shape for a gallery no matter where it came from: the
+   database, the /api secret-link route, or FALLBACK_GALLERIES.
+──────────────────────────────────────────────────────────── */
+// Files uploaded through the admin panel rather than pasted from Drive.
+// The bucket is public, so this is just URL construction.
+function storageUrl(path) {
+  if (!path) return '';
+  return SUPABASE_URL + '/storage/v1/object/public/gallery-photos/' +
+    path.split('/').map(encodeURIComponent).join('/');
+}
+
+function mapMediaRow(m) {
+  const id = m.drive_file_id || null;
+  const stored = m.storage_path ? storageUrl(m.storage_path) : '';
+  return {
+    id: m.id,
+    kind: m.kind || 'photo',
+    caption: m.caption || '',
+    thumb: id ? driveThumb(id, 1000) : (stored || m.thumb_url || m.url || ''),
+    thumbFallback: id ? driveThumbFallback(id, 1000) : '',
+    full:  id ? driveThumb(id, 1920) : (stored || m.thumb_url || m.url || ''),
+    embed: (m.kind === 'video' && id) ? drivePreview(id) : null,
+    download: m.id ? ('/api/download?m=' + encodeURIComponent(m.id)) : (stored || m.url || '')
+  };
 }
 
 function mapGalleryRow(g) {
-  const photos = (g.gallery_photos || [])
+  const media = (g.media || [])
     .slice()
     .sort(function(a, b) { return (a.sort_order || 0) - (b.sort_order || 0); })
-    .map(function(p) { return (p.storage_path && publicUrlFor(p.storage_path)) || p.url || ''; })
-    .filter(Boolean);
-  const cover = (g.cover_path && publicUrlFor(g.cover_path)) || g.cover_url || (photos.length ? photos[0] : '');
+    .map(mapMediaRow)
+    .filter(function(m) { return m.thumb; });
+
+  const coverId = parseDriveId(g.cover_url);
+  const cover = coverId ? driveThumb(coverId, 1000)
+              : (g.cover_url || (media.length ? media[0].thumb : ''));
+
   return {
+    coverFallback: coverId ? driveThumbFallback(coverId, 1000) : '',
     id: g.id,
+    slug: g.slug,
     title: g.title,
     description: g.description || '',
     cover: cover,
     visible: true,
     private: g.visibility === 'private',
+    downloadsEnabled: g.downloads_enabled !== false,
+    pixiesetUrl: g.pixieset_url || null,
     categoryIds: (g.gallery_categories || []).map(function(gc) { return gc.category_id; }),
-    photos: photos
+    media: media
   };
 }
 
-let allCategories = []; // [{id, name}] — used to render filter pills and resolve names
+// The /api routes already return this shape — just fill in the couple of
+// fields the page names differently.
+function mapApiGallery(g) {
+  return {
+    id: g.id,
+    slug: g.slug,
+    title: g.title,
+    description: g.description || '',
+    cover: g.cover,
+    coverFallback: '',
+    visible: true,
+    private: g.isPrivate,
+    downloadsEnabled: g.downloadsEnabled !== false,
+    pixiesetUrl: g.pixiesetUrl || null,
+    categoryIds: g.categoryIds || [],
+    media: (g.media || []).map(function(m) {
+      return {
+        id: m.id, kind: m.kind, caption: m.caption,
+        thumb: m.thumb, thumbFallback: m.thumbFallback || '', full: m.full, embed: m.embed,
+        download: m.download + (currentSecret ? '&s=' + encodeURIComponent(currentSecret) : '')
+      };
+    })
+  };
+}
+
+// FALLBACK_GALLERIES stores plain URL strings. Lift them into the same shape
+// so the rest of the page never has to care which source it's rendering.
+function mapFallbackGallery(g) {
+  return {
+    id: null,
+    slug: slugify(g.title),
+    title: g.title,
+    description: g.description || '',
+    cover: g.cover || '',
+    visible: g.visible !== false,
+    private: false,
+    downloadsEnabled: true,
+    pixiesetUrl: null,
+    categoryIds: [],
+    media: (g.photos || []).filter(Boolean).map(function(src) {
+      return { id: null, kind: 'photo', caption: '', thumb: src, full: src, embed: null, download: src };
+    })
+  };
+}
+
+let allCategories = []; // [{id, name}] — filter pills
 
 async function loadCategoriesFromSupabase() {
   if (!supa) return;
@@ -1282,21 +1550,35 @@ async function loadCategoriesFromSupabase() {
   }
 }
 
-// Loads only PUBLIC galleries for the landing grid.
+const GALLERY_COLUMNS =
+  'id, slug, title, description, cover_url, visibility, downloads_enabled, pixieset_url, sort_order, ' +
+  'media(id, kind, drive_file_id, url, thumb_url, storage_path, caption, sort_order), ' +
+  'gallery_categories(category_id)';
+
+/**
+ * One query does both lists.
+ *
+ * Row-level security decides what comes back: everyone sees the public
+ * galleries, and a signed-in visitor additionally sees the private ones
+ * granted to them. A signed-out visitor cannot retrieve a private gallery
+ * here at all — those only open through the secret link, which is served
+ * by /api/galleries/secret.
+ */
 async function loadGalleriesFromSupabase() {
   if (!supa) return false;
   try {
     await loadCategoriesFromSupabase();
     const { data, error } = await supa
       .from('galleries')
-      .select('id, title, description, cover_url, cover_path, visibility, sort_order, gallery_photos(id, url, storage_path, sort_order), gallery_categories(category_id)')
-      .eq('visibility', 'public')
+      .select(GALLERY_COLUMNS)
       .order('sort_order', { ascending: true });
 
     if (error) { console.error('Supabase load error:', error.message); return false; }
     if (!data) return false;
 
-    galleries = data.map(mapGalleryRow);
+    const mapped = data.map(mapGalleryRow);
+    galleries   = mapped.filter(function(g) { return !g.private; });
+    myGalleries = mapped.filter(function(g) { return g.private; });
     return true;
   } catch (err) {
     console.error('Supabase load failed:', err);
@@ -1304,23 +1586,62 @@ async function loadGalleriesFromSupabase() {
   }
 }
 
-// Loads exactly ONE gallery by id, regardless of its visibility. This is
-// what powers direct links to private galleries — it only ever fetches
-// the single gallery whose id is already in the URL, never the full list.
-async function loadGalleryById(id) {
-  if (!supa || !id) return null;
+// Opens a gallery from its secret link. Served by the API using the service
+// role, because holding the secret is the authorisation and that can't be
+// expressed as a row-level policy.
+async function loadGalleryBySecret(secret) {
   try {
-    const { data, error } = await supa
-      .from('galleries')
-      .select('id, title, description, cover_url, cover_path, visibility, sort_order, gallery_photos(id, url, storage_path, sort_order)')
-      .eq('id', id)
-      .maybeSingle();
-    if (error || !data) return null;
-    return mapGalleryRow(data);
+    const res = await fetch('/api/galleries/secret?s=' + encodeURIComponent(secret), {
+      headers: await authHeaders()
+    });
+    const body = await res.json().catch(function() { return {}; });
+    if (!res.ok || !body.gallery) {
+      return { error: body.error || 'That gallery link is no longer valid.', requiresLogin: body.requiresLogin };
+    }
+    return { gallery: mapApiGallery(body.gallery) };
   } catch (err) {
-    console.error('Direct gallery load failed:', err);
-    return null;
+    console.error('Secret gallery load failed:', err);
+    return { error: 'Could not reach the server. Please try again.' };
   }
+}
+
+/* ────────────────────────────────────────────────────────────
+   SESSION
+──────────────────────────────────────────────────────────── */
+let currentUser = null;
+
+async function loadSession() {
+  if (!supa) return null;
+  try {
+    const { data } = await supa.auth.getSession();
+    currentUser = (data && data.session) ? data.session.user : null;
+  } catch (err) {
+    currentUser = null;
+  }
+  return currentUser;
+}
+
+async function authHeaders() {
+  if (!supa) return {};
+  try {
+    const { data } = await supa.auth.getSession();
+    const token = data && data.session && data.session.access_token;
+    return token ? { Authorization: 'Bearer ' + token } : {};
+  } catch (err) {
+    return {};
+  }
+}
+
+function renderAuthNav() {
+  const link = document.getElementById('navAuthLink');
+  const drawerLink = document.getElementById('drawerAuthLink');
+  const label = currentUser ? 'My Account' : 'Sign In';
+  if (link) {
+    link.textContent = label;
+    link.classList.toggle('signed-in', Boolean(currentUser));
+    if (currentUser) link.title = currentUser.email || '';
+  }
+  if (drawerLink) drawerLink.textContent = label;
 }
 
 
@@ -1408,38 +1729,212 @@ function showGalleryView(idx) {
 
 // Handle back button
 window.addEventListener('popstate', function(e) {
-  if (e.state && typeof e.state.galleryIdx === 'number') {
+  if (e.state && e.state.secret) {
+    openSecretGallery(e.state.secret, false);
+  } else if (e.state && e.state.mineSlug) {
+    const g = myGalleries.find(function(x) { return x.slug === e.state.mineSlug; });
+    if (g) showGalleryView(g); else showLanding();
+  } else if (e.state && typeof e.state.galleryIdx === 'number') {
     showGalleryView(e.state.galleryIdx);
-  } else if (e.state && e.state.directId) {
-    openDirectGallery(e.state.directId, false);
   } else {
     showLanding();
   }
 });
 
-// Loads and displays a single gallery by id (used for direct links to
-// private galleries, and for reloading one on back/forward navigation).
-async function openDirectGallery(id, pushHistory) {
-  const g = await loadGalleryById(id);
-  if (!g) { showLanding(); return; }
-  directGallery = g;
-  if (pushHistory) history.pushState({ directId: id }, '', '#g-' + id);
-  showGalleryView(g);
+/**
+ * Open a gallery from its secret link — the /g/<secret> URL you email out.
+ * No sign-in required: holding the link is the permission.
+ */
+async function openSecretGallery(secret, pushHistory) {
+  currentSecret = secret;
+
+  const grid = document.getElementById('masonryGrid');
+  if (grid) grid.innerHTML = '<p class="gal-loading">Opening your gallery…</p>';
+
+  const result = await loadGalleryBySecret(secret);
+
+  if (result.error) {
+    currentSecret = null;
+    showSecretError(result.error, result.requiresLogin);
+    return;
+  }
+
+  if (pushHistory) history.pushState({ secret: secret }, '', '/g/' + secret);
+  showGalleryView(result.gallery);
+}
+
+// A dead or revoked link shouldn't dump the visitor on the public grid with
+// no explanation.
+function showSecretError(message, requiresLogin) {
+  pageLanding.classList.remove('hidden');
+  pageLanding.style.display = '';
+  pageGalleryView.style.display = 'none';
+  pageGalleryView.classList.remove('active');
+
+  const grid = document.getElementById('galleryGrid');
+  const mine = document.getElementById('mineSection');
+  const divider = document.getElementById('mineDivider');
+  if (mine) mine.hidden = true;
+  if (divider) divider.hidden = true;
+
+  if (grid) {
+    grid.innerHTML =
+      '<div class="empty-state">' + escapeHtmlGal(message) +
+      (requiresLogin
+        ? ' <a href="login.html" style="color:var(--glow);text-decoration:underline">Sign in</a> to view it.'
+        : ' Ask Matthew to send you a fresh link.') +
+      '</div>';
+  }
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 
 /* ════════════════════════════════════════════════════════════
    GALLERY LANDING — build cards
 ════════════════════════════════════════════════════════════ */
+/**
+ * Build one gallery card. Shared by the public grid and by "Your Galleries",
+ * so both look and behave identically.
+ */
+function createGalleryCard(g, onOpen) {
+  const photoCount = g.media.filter(function(m) { return m.kind !== 'video'; }).length;
+  const videoCount = g.media.filter(function(m) { return m.kind === 'video'; }).length;
+
+  const card = document.createElement('article');
+  card.className = 'gal-card';
+  card.setAttribute('aria-label', g.title + ' gallery');
+  card.setAttribute('tabindex', '0');
+  card.dataset.searchText = ((g.title || '') + ' ' + (g.description || '')).toLowerCase();
+  card.dataset.categories = (g.categoryIds || []).join(',');
+
+  // Cover section
+  const coverDiv = document.createElement('div');
+  coverDiv.className = 'card-cover';
+
+  // Placeholder text (first letter)
+  const ph = document.createElement('div');
+  ph.className = 'card-cover-placeholder';
+  ph.innerHTML = '<span>' + (g.title ? g.title.charAt(0).toUpperCase() : 'G') + '</span>';
+  coverDiv.appendChild(ph);
+
+  // Cover image (if provided)
+  if (g.cover) {
+    const img = document.createElement('img');
+    img.alt = g.title + ' cover photo — ' + BUSINESS_NAME;
+    img.loading = 'lazy';
+    attachDriveImage(img, g.cover, g.coverFallback, function() {
+      // Both hosts failed — fall back to the big first-letter placeholder.
+      this.style.display = 'none';
+    });
+    coverDiv.appendChild(img);
+  }
+
+  // Overlay gradient
+  const ov = document.createElement('div');
+  ov.className = 'card-cover-ov';
+
+  if (g.private) {
+    const priv = document.createElement('span');
+    priv.className = 'card-private-badge';
+    priv.textContent = 'Private';
+    coverDiv.appendChild(priv);
+  }
+  coverDiv.appendChild(ov);
+
+  // A gallery holding video gets a play glyph so it reads as watchable.
+  if (videoCount) {
+    const play = document.createElement('span');
+    play.className = 'card-play';
+    play.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+    coverDiv.appendChild(play);
+  }
+
+  // Count badge — photos, videos, or both
+  const badge = document.createElement('span');
+  badge.className = 'card-badge';
+  const parts = [];
+  if (photoCount) parts.push(photoCount + ' Photo' + (photoCount !== 1 ? 's' : ''));
+  if (videoCount) parts.push(videoCount + ' Video' + (videoCount !== 1 ? 's' : ''));
+  badge.textContent = parts.length ? parts.join(' · ') : 'Empty';
+  coverDiv.appendChild(badge);
+
+  // Card info
+  const info = document.createElement('div');
+  info.className = 'card-info';
+
+  const name = document.createElement('h2');
+  name.className = 'card-name';
+  name.textContent = g.title || 'Gallery';
+
+  const desc = document.createElement('p');
+  desc.className = 'card-desc';
+  desc.textContent = g.description || '';
+
+  // Actions row
+  const actions = document.createElement('div');
+  actions.className = 'card-actions';
+
+  const viewBtn = document.createElement('button');
+  viewBtn.className = 'btn-view';
+  viewBtn.textContent = 'View Gallery';
+  viewBtn.setAttribute('aria-label', 'View ' + g.title + ' gallery');
+  // Navigation is handled by the card-level click listener below;
+  // this button still works for click/keyboard since its click bubbles up.
+
+  actions.appendChild(viewBtn);
+
+  const shopHref = shopLinkFor(g);
+  if (shopHref) {
+    const shopCard = document.createElement('a');
+    shopCard.className = 'btn-shop';
+    shopCard.href = shopHref;
+    shopCard.target = '_blank';
+    shopCard.rel = 'noopener noreferrer';
+    shopCard.setAttribute('aria-label', 'Shop prints — opens in new tab');
+    shopCard.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h-2L3 2H1v2h2l3.6 7.59L5.25 14A2 2 0 007 17h12v-2H7.42a.25.25 0 01-.25-.25l.03-.12.9-1.63H19a2 2 0 001.76-1.06L23 6H5.21l-.94-2zm0 13a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z"/></svg>Shop';
+    // Don't let clicking "Shop" also trigger the card's gallery navigation
+    shopCard.addEventListener('click', function(e) { e.stopPropagation(); });
+    actions.appendChild(shopCard);
+  }
+
+  info.appendChild(name);
+  info.appendChild(desc);
+  info.appendChild(actions);
+
+  card.appendChild(coverDiv);
+  card.appendChild(info);
+
+  card.addEventListener('click', onOpen);
+  card.addEventListener('keydown', function(e) {
+    if (e.target !== card) return; // let buttons/links handle their own Enter/Space
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onOpen();
+    }
+  });
+
+  // Stagger reveal
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      card.classList.add('visible');
+    });
+  });
+
+  return card;
+}
+
 function buildLanding() {
   const grid = document.getElementById('galleryGrid');
   grid.innerHTML = '';
+
+  buildMineGrid();
 
   // Only count galleries that are visible (visible: false hides from landing but not from links)
   const visibleGalleries = galleries.filter(function(g) { return g.visible !== false; });
 
   if (!visibleGalleries.length) {
-    grid.innerHTML = '<div class="empty-state">No galleries yet — add them in the EASY EDIT SETTINGS at the top of the script.</div>';
+    grid.innerHTML = '<div class="empty-state">No public galleries yet — add one from the admin panel.</div>';
+    setupSearchAndFilters();
     return;
   }
 
@@ -1448,124 +1943,46 @@ function buildLanding() {
     // Skip hidden galleries — they're still accessible via direct link, just not shown here
     if (g.visible === false) return;
 
-    const photoCount = g.photos ? g.photos.length : 0;
-
-    const card = document.createElement('article');
-    card.className = 'gal-card';
-    card.setAttribute('aria-label', g.title + ' gallery');
-    card.setAttribute('tabindex', '0');
-    card.dataset.searchText = ((g.title || '') + ' ' + (g.description || '')).toLowerCase();
-    card.dataset.categories = (g.categoryIds || []).join(',');
-
-    // Cover section
-    const coverDiv = document.createElement('div');
-    coverDiv.className = 'card-cover';
-
-    // Placeholder text (first letter)
-    const ph = document.createElement('div');
-    ph.className = 'card-cover-placeholder';
-    ph.innerHTML = '<span>' + (g.title ? g.title.charAt(0).toUpperCase() : 'G') + '</span>';
-    coverDiv.appendChild(ph);
-
-    // Cover image (if provided)
-    if (g.cover) {
-      const img = document.createElement('img');
-      img.alt = g.title + ' cover photo — ' + BUSINESS_NAME;
-      img.loading = 'lazy';
-      img.src = g.cover;
-      img.onload  = function() { this.classList.add('loaded'); };
-      img.onerror = function() { this.style.display = 'none'; };
-      coverDiv.appendChild(img);
-    }
-
-    // Overlay gradient
-    const ov = document.createElement('div');
-    ov.className = 'card-cover-ov';
-
-    if (g.private) {
-      const badge = document.createElement('span');
-      badge.textContent = 'Private';
-      badge.style.cssText = 'position:absolute;top:.7rem;left:.7rem;z-index:2;font-family:var(--fb);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;background:rgba(124,77,219,.9);color:#fff;padding:.3rem .6rem;border-radius:2px;';
-      coverDiv.appendChild(badge);
-    }
-    coverDiv.appendChild(ov);
-
-    // Photo count badge
-    const badge = document.createElement('span');
-    badge.className = 'card-badge';
-    badge.textContent = photoCount + ' Photo' + (photoCount !== 1 ? 's' : '');
-    coverDiv.appendChild(badge);
-
-    // Card info
-    const info = document.createElement('div');
-    info.className = 'card-info';
-
-    const name = document.createElement('h2');
-    name.className = 'card-name';
-    name.textContent = g.title || 'Gallery';
-
-    const desc = document.createElement('p');
-    desc.className = 'card-desc';
-    desc.textContent = g.description || '';
-
-    // Actions row
-    const actions = document.createElement('div');
-    actions.className = 'card-actions';
-
-    const viewBtn = document.createElement('button');
-    viewBtn.className = 'btn-view';
-    viewBtn.textContent = 'View Gallery';
-    viewBtn.setAttribute('aria-label', 'View ' + g.title + ' gallery');
-    // Navigation is handled by the card-level click listener below;
-    // this button still works for click/keyboard since its click bubbles up.
-
-    actions.appendChild(viewBtn);
-
-    if (SHOP_LINK && SHOP_LINK !== 'PASTE_PIXIESET_SHOP_LINK_HERE') {
-      const shopCard = document.createElement('a');
-      shopCard.className = 'btn-shop';
-      shopCard.href = SHOP_LINK;
-      shopCard.target = '_blank';
-      shopCard.rel = 'noopener noreferrer';
-      shopCard.setAttribute('aria-label', 'Shop prints — opens in new tab');
-      shopCard.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h-2L3 2H1v2h2l3.6 7.59L5.25 14A2 2 0 007 17h12v-2H7.42a.25.25 0 01-.25-.25l.03-.12.9-1.63H19a2 2 0 001.76-1.06L23 6H5.21l-.94-2zm0 13a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z"/></svg>Shop';
-      // Don't let clicking "Shop" also trigger the card's gallery navigation
-      shopCard.addEventListener('click', function(e) { e.stopPropagation(); });
-      actions.appendChild(shopCard);
-    }
-
-    info.appendChild(name);
-    info.appendChild(desc);
-    info.appendChild(actions);
-
-    card.appendChild(coverDiv);
-    card.appendChild(info);
-
-    // Whole card is clickable to open the gallery
-    function openThisGallery() {
+    grid.appendChild(createGalleryCard(g, function() {
       history.pushState({ galleryIdx: idx }, '', '#gallery-' + slugify(g.title));
       showGalleryView(idx);
-    }
-    card.addEventListener('click', openThisGallery);
-    card.addEventListener('keydown', function(e) {
-      if (e.target !== card) return; // let buttons/links handle their own Enter/Space
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        openThisGallery();
-      }
-    });
-
-    grid.appendChild(card);
-
-    // Stagger reveal
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() {
-        card.classList.add('visible');
-      });
-    });
+    }));
   });
 
   setupSearchAndFilters();
+}
+
+/**
+ * "Your Galleries" — the private galleries granted to this account.
+ *
+ * Hidden entirely when signed out or when nothing has been shared, so a
+ * visitor with no private galleries sees exactly the page they saw before.
+ */
+function buildMineGrid() {
+  const section = document.getElementById('mineSection');
+  const divider = document.getElementById('mineDivider');
+  const grid    = document.getElementById('mineGrid');
+  if (!section || !grid) return;
+
+  const show = Boolean(currentUser) && myGalleries.length > 0;
+  section.hidden = !show;
+  divider.hidden = !show;
+  if (!show) return;
+
+  const sub = document.getElementById('mineSub');
+  if (sub) {
+    sub.textContent = myGalleries.length === 1
+      ? 'One private gallery has been shared with your account.'
+      : myGalleries.length + ' private galleries have been shared with your account.';
+  }
+
+  grid.innerHTML = '';
+  myGalleries.forEach(function(g) {
+    grid.appendChild(createGalleryCard(g, function() {
+      history.pushState({ mineSlug: g.slug }, '', '#gallery-' + (g.slug || slugify(g.title)));
+      showGalleryView(g);
+    }));
+  });
 }
 
 
@@ -1647,65 +2064,114 @@ if (gallerySearchInput) {
 /* ════════════════════════════════════════════════════════════
    GALLERY VIEW — build individual gallery
 ════════════════════════════════════════════════════════════ */
-let currentPhotos  = [];
+let currentPhotos  = [];   // the current gallery's media, in display order
 let currentGalName = '';
 
 function buildGalleryView(ref) {
   const g = (typeof ref === 'number') ? galleries[ref] : ref;
   if (!g) { showLanding(); return; }
 
-  currentPhotos  = g.photos || [];
+  currentGallery = g;
+  currentPhotos  = g.media || [];
   currentGalName = g.title || 'Gallery';
+
+  const photoCount = currentPhotos.filter(function(m) { return m.kind !== 'video'; }).length;
+  const videoCount = currentPhotos.filter(function(m) { return m.kind === 'video'; }).length;
 
   // Update header
   document.getElementById('vhTitle').innerHTML = g.title
     ? g.title.replace(/(\S+)\s*$/, '<em>$1</em>')
     : 'Gallery';
-  document.getElementById('vhDesc').textContent    = g.description || '';
-  document.getElementById('vhCount').textContent   = currentPhotos.length + ' Photo' + (currentPhotos.length !== 1 ? 's' : '');
+  document.getElementById('vhDesc').textContent = g.description || '';
+
+  const countParts = [];
+  if (photoCount) countParts.push(photoCount + ' Photo' + (photoCount !== 1 ? 's' : ''));
+  if (videoCount) countParts.push(videoCount + ' Video' + (videoCount !== 1 ? 's' : ''));
+  document.getElementById('vhCount').textContent = countParts.join('  ·  ');
   document.title = g.title + ' | ' + BUSINESS_NAME;
 
-  // Update shop button
+  // A visitor who arrived on a secret link should be told the link is private,
+  // so they know not to forward it around.
+  renderSecretNote(Boolean(currentSecret));
+
+  // Update shop button — per-gallery Pixieset URL wins over the site default
   const sBtn = document.getElementById('shopBtn');
-  if (SHOP_LINK && SHOP_LINK !== 'PASTE_PIXIESET_SHOP_LINK_HERE') {
-    sBtn.href = SHOP_LINK;
+  const shopHref = shopLinkFor(g);
+  if (shopHref) {
+    sBtn.href = shopHref;
     sBtn.style.display = '';
   } else {
     sBtn.style.display = 'none';
+  }
+
+  // Download-all
+  const dlAll = document.getElementById('downloadAllBtn');
+  if (dlAll) {
+    const downloadable = currentPhotos.filter(function(m) { return m.download; });
+    dlAll.style.display = (g.downloadsEnabled && downloadable.length) ? '' : 'none';
+    dlAll.disabled = false;
+    document.getElementById('downloadAllLabel').textContent = 'Download All';
   }
 
   // Build masonry
   buildMasonry(currentPhotos, currentGalName);
 }
 
-function buildMasonry(photos, galName) {
+function renderSecretNote(show) {
+  const host = document.querySelector('.vh-left');
+  if (!host) return;
+  let note = document.getElementById('secretNote');
+  if (!show) { if (note) note.remove(); return; }
+  if (note) return;
+
+  note = document.createElement('div');
+  note.className = 'secret-note';
+  note.id = 'secretNote';
+  note.innerHTML =
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8h-1V6a5 5 0 00-10 0v2H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2zM9 6a3 3 0 016 0v2H9V6zm3 12a2 2 0 110-4 2 2 0 010 4z"/></svg>' +
+    '<span>Private link — please don’t share it</span>';
+  host.appendChild(note);
+}
+
+function buildMasonry(items, galName) {
   const grid = document.getElementById('masonryGrid');
   grid.innerHTML = '';
 
-  if (!photos.length) {
+  if (!items.length) {
     const empty = document.createElement('p');
     empty.style.cssText = 'text-align:center;padding:4rem;font-family:var(--fs);font-style:italic;color:var(--muted);font-size:1.05rem;';
-    empty.textContent = 'Photos will appear here once you add them in the EASY EDIT SETTINGS.';
+    empty.textContent = 'Nothing in this gallery yet — check back soon.';
     grid.appendChild(empty);
     return;
   }
 
-  photos.forEach(function(src, i) {
+  const allowDownloads = !currentGallery || currentGallery.downloadsEnabled !== false;
+
+  items.forEach(function(m, i) {
     const item = document.createElement('div');
     item.className = 'masonry-item';
 
     const img = document.createElement('img');
     img.loading = 'lazy';
-    img.alt = BUSINESS_NAME + ' — ' + galName + ' photo ' + (i + 1);
-    img.src = src;
-    img.onload  = function() { this.classList.add('loaded'); };
-    img.onerror = function() {
+    img.alt = BUSINESS_NAME + ' — ' + galName + ' ' +
+      (m.kind === 'video' ? 'video ' : 'photo ') + (i + 1) +
+      (m.caption ? ': ' + m.caption : '');
+    attachDriveImage(img, m.thumb, m.thumbFallback, function() {
       this.style.opacity = '.15';
       this.classList.add('loaded');
       // Set a placeholder height so item isn't invisible
       this.style.height = '200px';
       this.style.background = 'rgba(22,13,46,.5)';
-    };
+    });
+    item.appendChild(img);
+
+    // Video tiles show Drive's poster frame with a play glyph over it.
+    if (m.kind === 'video') {
+      const play = document.createElement('span');
+      play.className = 'mi-play';
+      play.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+      item.appendChild(play);
+    }
 
     // Hover overlay: centered "View" label + save button
     const ov = document.createElement('div');
@@ -1713,30 +2179,70 @@ function buildMasonry(photos, galName) {
 
     const viewLabel = document.createElement('span');
     viewLabel.className = 'mi-view';
-    viewLabel.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg>View';
+    viewLabel.innerHTML = m.kind === 'video'
+      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Play'
+      : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg>View';
     ov.appendChild(viewLabel);
 
-    const dlBtn = document.createElement('a');
-    dlBtn.className = 'mi-dl';
-    dlBtn.href = src;
-    dlBtn.download = slugify(galName) + '-' + (i + 1) + '.jpg';
-    dlBtn.target = '_blank';
-    dlBtn.rel = 'noopener noreferrer';
-    dlBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>Save';
-    dlBtn.addEventListener('click', function(e) { e.stopPropagation(); });
-    ov.appendChild(dlBtn);
+    if (allowDownloads && m.download) {
+      const dlBtn = document.createElement('a');
+      dlBtn.className = 'mi-dl';
+      dlBtn.href = m.download;
+      // The API sets Content-Disposition, so the browser saves with a proper
+      // name. The attribute is a hint for the fallback (non-API) case.
+      dlBtn.setAttribute('download', '');
+      dlBtn.rel = 'noopener noreferrer';
+      dlBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>Save';
+      dlBtn.addEventListener('click', function(e) { e.stopPropagation(); });
+      ov.appendChild(dlBtn);
+    }
 
-    item.appendChild(img);
     item.appendChild(ov);
-    item.addEventListener('click', function() { openLb(photos, i); });
+    item.addEventListener('click', function() { openLb(items, i); });
 
     grid.appendChild(item);
   });
 }
 
+/* ────────────────────────────────────────────────────────────
+   DOWNLOAD ALL
+   Sequential, with a small gap — browsers block a burst of
+   simultaneous downloads, and Drive rate-limits them anyway.
+──────────────────────────────────────────────────────────── */
+const downloadAllBtn = document.getElementById('downloadAllBtn');
+if (downloadAllBtn) {
+  downloadAllBtn.addEventListener('click', async function() {
+    const items = currentPhotos.filter(function(m) { return m.download; });
+    if (!items.length) return;
+
+    const label = document.getElementById('downloadAllLabel');
+    downloadAllBtn.disabled = true;
+
+    for (let i = 0; i < items.length; i++) {
+      label.textContent = 'Downloading ' + (i + 1) + ' / ' + items.length;
+      const a = document.createElement('a');
+      a.href = items[i].download;
+      a.setAttribute('download', '');
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      await new Promise(function(r) { setTimeout(r, 700); });
+    }
+
+    label.textContent = 'Done';
+    setTimeout(function() {
+      label.textContent = 'Download All';
+      downloadAllBtn.disabled = false;
+    }, 2500);
+  });
+}
+
 // Back button
 document.getElementById('backBtn').addEventListener('click', function() {
-  history.pushState(null, '', 'gallery.html');
+  // Leaving a secret-link gallery drops back to the ordinary public grid.
+  currentSecret = null;
+  history.pushState(null, '', '/gallery.html');
   showLanding();
 });
 
@@ -1748,6 +2254,7 @@ let lbPhotos  = [];
 let lbIdx     = 0;
 const lb      = document.getElementById('lightbox');
 const lbImg   = document.getElementById('lbImg');
+const lbVideo = document.getElementById('lbVideo');
 const lbCount = document.getElementById('lbCounter');
 const lbDl    = document.getElementById('lbDownload');
 
@@ -1763,17 +2270,54 @@ function closeLb() {
   lb.classList.remove('show');
   document.body.style.overflow = '';
   lbImg.src = '';
+  // Clearing the iframe is what actually stops playback.
+  lbVideo.innerHTML = '';
+  lbVideo.hidden = true;
 }
 
 function renderLb() {
-  const src = lbPhotos[lbIdx];
-  lbImg.style.opacity = '0';
-  lbImg.onload = function() { lbImg.style.opacity = '1'; };
-  lbImg.src = src;
-  lbImg.alt = BUSINESS_NAME + ' — ' + currentGalName + ' (' + (lbIdx + 1) + ' of ' + lbPhotos.length + ')';
+  const m = lbPhotos[lbIdx];
+  if (!m) return;
+
+  const isVideo = m.kind === 'video' && m.embed;
+
+  // Swap the image and the player rather than stacking them, so only one
+  // thing is ever loaded.
+  lbImg.hidden = isVideo;
+  lbImg.style.display = isVideo ? 'none' : '';
+  lbVideo.hidden = !isVideo;
+
+  if (isVideo) {
+    lbImg.src = '';
+    lbVideo.innerHTML =
+      '<iframe src="' + m.embed + '" allow="autoplay; fullscreen" allowfullscreen ' +
+      'title="' + escapeHtmlGal(currentGalName + ' video ' + (lbIdx + 1)) + '"></iframe>';
+  } else {
+    lbVideo.innerHTML = '';
+    lbImg.style.opacity = '0';
+    lbImg.referrerPolicy = 'no-referrer';
+    lbImg.onload = function() { lbImg.style.opacity = '1'; };
+    // Full size can 429 where the smaller grid render succeeded; drop back to
+    // the thumbnail rather than showing an empty lightbox.
+    lbImg.onerror = function() {
+      if (m.thumb && lbImg.src !== m.thumb) { lbImg.src = m.thumb; return; }
+      lbImg.style.opacity = '1';
+    };
+    lbImg.src = m.full || m.thumb;
+    lbImg.alt = BUSINESS_NAME + ' — ' + currentGalName + ' (' + (lbIdx + 1) + ' of ' + lbPhotos.length + ')' +
+      (m.caption ? ': ' + m.caption : '');
+  }
+
   lbCount.textContent = (lbIdx + 1) + ' / ' + lbPhotos.length;
-  lbDl.href     = src;
-  lbDl.download = slugify(currentGalName) + '-' + (lbIdx + 1) + '.jpg';
+
+  const allowDownloads = !currentGallery || currentGallery.downloadsEnabled !== false;
+  if (allowDownloads && m.download) {
+    lbDl.style.display = '';
+    lbDl.href = m.download;
+    lbDl.setAttribute('download', '');
+  } else {
+    lbDl.style.display = 'none';
+  }
 }
 
 function lbGo(dir) {
@@ -1838,33 +2382,69 @@ function slugify(str) {
    INIT
 ════════════════════════════════════════════════════════════ */
 (async function init() {
-  await loadGalleriesFromSupabase(); // no-op / falls back silently if not connected yet
+  await loadSession();
+  renderAuthNav();
+
+  // A secret link — /g/<secret> — is the whole point of a private gallery:
+  // it opens for whoever holds it, signed in or not. vercel.json rewrites the
+  // path here, so the URL bar keeps the pretty form.
+  const secretMatch = window.location.pathname.match(/^\/g\/([^/?#]+)/);
+  if (secretMatch) {
+    // Load the public list quietly in the background so "All Galleries" works
+    // if they click it, but don't make them wait on it.
+    loadGalleriesFromSupabase().then(function() {
+      buildLanding();
+      observeCards();
+    });
+    await openSecretGallery(decodeURIComponent(secretMatch[1]), false);
+    return;
+  }
+
+  const loaded = await loadGalleriesFromSupabase();
+  if (!loaded) {
+    // Supabase unreachable — fall back to the copy baked into this file so the
+    // page still shows something rather than an empty grid.
+    galleries = FALLBACK_GALLERIES.map(mapFallbackGallery);
+    myGalleries = [];
+  }
 
   buildLanding();
   observeCards();
 
+  // Keep the nav in step if the session changes in another tab.
+  if (supa) {
+    supa.auth.onAuthStateChange(async function(_event, session) {
+      const wasSignedIn = Boolean(currentUser);
+      currentUser = session ? session.user : null;
+      renderAuthNav();
+      if (wasSignedIn !== Boolean(currentUser)) {
+        await loadGalleriesFromSupabase();
+        buildLanding();
+        observeCards();
+      }
+    });
+  }
+
   const hash = window.location.hash;
 
-  // Direct link to a specific gallery by id — works for public AND
-  // private galleries, since it's fetched individually by id rather
-  // than filtered from the public landing list. This is the link
-  // format admins copy from admin.html.
-  if (hash && hash.startsWith('#g-')) {
-    const id = hash.slice('#g-'.length);
-    await openDirectGallery(id, false);
-    return;
-  }
-
-  // Legacy/bookmark-friendly link by title slug — only ever matches
-  // against the public galleries already loaded above.
+  // Bookmark-friendly link by title slug. Matches the public galleries and,
+  // when signed in, the private ones shared with this account.
   if (hash && hash.startsWith('#gallery-')) {
     const slug  = hash.slice('#gallery-'.length);
-    const found = galleries.findIndex(function(g) { return slugify(g.title) === slug; });
-    if (found >= 0) {
-      showGalleryView(found);
-      return;
-    }
+    const found = galleries.findIndex(function(g) { return (g.slug || slugify(g.title)) === slug; });
+    if (found >= 0) { showGalleryView(found); return; }
+
+    const mine = myGalleries.find(function(g) { return (g.slug || slugify(g.title)) === slug; });
+    if (mine) { showGalleryView(mine); return; }
   }
+
+  // Legacy #g-<id> links from the previous version of the site. The ids came
+  // from a different database and no longer resolve, so send them to the grid
+  // rather than leaving a blank page.
+  if (hash && hash.startsWith('#g-')) {
+    history.replaceState(null, '', 'gallery.html');
+  }
+
   // Default: show landing
   showLanding();
 })();

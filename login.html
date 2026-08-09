@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Matthew Lehman Media — Accounts
+     login.html  |  Sign in, create an account, reset a password
+     ─────────────────────────────────────────────────────────────────────
+     Signing in is entirely optional on this site. Public galleries are open
+     to everyone, and a private gallery's secret link works without any
+     account at all. An account exists for one reason: so the private
+     galleries shared with you gather in one place under "Your Galleries".
+
+     Styling is lifted from admin.html's login card so the two pages match.
+═══════════════════════════════════════════════════════════════════════ -->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<meta name="theme-color" content="#0e0a1a" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Sign In | Matthew Lehman Media</title>
+
+<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preload" as="style"
+  href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+  onload="this.onload=null;this.rel='stylesheet'" />
+<noscript>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" />
+</noscript>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+/* ════════════════════════════════════════════════════════════
+   RESET + ROOT TOKENS (identical to gallery.html / admin.html)
+════════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --deep:#0e0a1a;--dark:#160d2e;--mid:#3b1f72;
+  --accent:#7c4ddb;--light:#b48ffc;--glow:#c9aaff;
+  --white:#f5f0ff;--muted:#9b8eb5;
+  --bad:#e05a6b;--good:#5ac98f;
+  --fd:'Bebas Neue','Arial Narrow',Arial,sans-serif;
+  --fs:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+  --fb:'DM Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+body{background:var(--deep);color:var(--white);font-family:var(--fb);min-height:100vh}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+button{cursor:pointer;border:none;background:none;font-family:inherit;color:inherit}
+input{font-family:inherit;color:inherit}
+
+/* ── Nav ─────────────────────────────────────────────────── */
+.nav{
+  position:sticky;top:0;left:0;right:0;z-index:50;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:1.1rem 2.5rem;
+  background:rgba(14,10,26,.92);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border-bottom:1px solid rgba(124,77,219,.22);
+}
+.nav-logo{font-family:var(--fd);font-size:1.3rem;letter-spacing:.14em;color:var(--glow)}
+.nav-links{display:flex;gap:1.6rem;align-items:center}
+.nav-links a{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);transition:color .25s}
+.nav-links a:hover{color:var(--glow)}
+@media(max-width:640px){.nav{padding:1rem 1.2rem}.nav-links{gap:1rem}}
+
+/* ── Layout ──────────────────────────────────────────────── */
+#screen{
+  min-height:calc(100vh - 66px);display:flex;align-items:center;justify-content:center;
+  padding:2rem;position:relative;overflow:hidden;
+}
+.login-orb{
+  position:absolute;width:600px;height:600px;border-radius:50%;top:-20%;right:-10%;
+  background:radial-gradient(circle,rgba(124,77,219,.25),transparent 70%);
+  filter:blur(90px);pointer-events:none;
+}
+.login-card{
+  position:relative;z-index:1;width:100%;max-width:420px;
+  background:linear-gradient(160deg,rgba(59,31,114,.22),rgba(14,10,26,.94));
+  border:1px solid rgba(124,77,219,.28);border-radius:6px;padding:2.6rem 2.2rem;
+}
+.login-label{font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-bottom:.6rem;display:flex;align-items:center;gap:8px}
+.login-label::before{content:'';width:18px;height:1px;background:var(--accent)}
+.login-title{font-family:var(--fd);font-size:2.6rem;letter-spacing:.03em;margin-bottom:.5rem;line-height:1}
+.login-intro{font-family:var(--fs);font-style:italic;color:var(--muted);font-size:.95rem;line-height:1.6;margin-bottom:1.8rem}
+
+/* ── Tabs ────────────────────────────────────────────────── */
+.tabs{display:flex;gap:.4rem;margin-bottom:1.8rem;border-bottom:1px solid rgba(124,77,219,.22)}
+.tab{
+  font-family:var(--fb);font-size:.68rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);padding:.6rem .2rem;margin-right:1.2rem;
+  border-bottom:2px solid transparent;transition:color .25s,border-color .25s;
+}
+.tab:hover{color:var(--glow)}
+.tab.active{color:var(--glow);border-bottom-color:var(--accent)}
+
+/* ── Fields ──────────────────────────────────────────────── */
+.field{margin-bottom:1.1rem}
+.field label{display:block;font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem}
+.field input{
+  width:100%;background:rgba(14,10,26,.6);border:1px solid rgba(124,77,219,.3);
+  border-radius:3px;padding:.75rem .9rem;font-size:.95rem;color:var(--white);transition:border-color .25s;
+}
+.field input:focus{outline:none;border-color:var(--light)}
+.field-hint{font-size:.74rem;color:var(--muted);margin-top:.4rem;line-height:1.5}
+
+/* The honeypot. Hidden from people, irresistible to bots. */
+.hp{position:absolute!important;left:-9999px!important;width:1px;height:1px;overflow:hidden}
+
+.btn-primary{
+  width:100%;font-family:var(--fb);font-size:.75rem;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--white);background:var(--accent);padding:.85rem;border-radius:3px;transition:background .25s;
+  margin-top:.6rem;
+}
+.btn-primary:hover{background:var(--light)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost{
+  font-family:var(--fb);font-size:.7rem;font-weight:500;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--muted);border:1px solid rgba(124,77,219,.3);padding:.7rem 1.2rem;border-radius:3px;transition:all .25s;
+}
+.btn-ghost:hover{color:var(--glow);border-color:var(--light)}
+
+.form-msg{font-size:.85rem;margin-top:1rem;padding:.7rem .9rem;border-radius:3px;display:none;line-height:1.55}
+.form-msg.show{display:block}
+.form-msg.err{background:rgba(224,90,107,.12);border:1px solid rgba(224,90,107,.4);color:#ff9aa6}
+.form-msg.ok{background:rgba(90,201,143,.12);border:1px solid rgba(90,201,143,.4);color:#8fe8b8}
+
+.link-row{display:flex;justify-content:space-between;gap:1rem;margin-top:1.2rem;flex-wrap:wrap}
+.link-btn{
+  font-size:.74rem;letter-spacing:.06em;color:var(--muted);
+  text-decoration:underline;text-underline-offset:3px;transition:color .25s;background:none;
+}
+.link-btn:hover{color:var(--glow)}
+
+.turnstile-holder{margin:1.1rem 0 .2rem;min-height:0}
+
+/* ── Signed-in account panel ─────────────────────────────── */
+.account-email{
+  font-family:var(--fs);font-size:1.15rem;color:var(--white);margin-bottom:.3rem;word-break:break-all;
+}
+.account-role{font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:1.6rem}
+.mygal-list{display:flex;flex-direction:column;gap:.5rem;margin:1.2rem 0 1.6rem;max-height:320px;overflow-y:auto}
+.mygal{
+  display:flex;align-items:center;gap:.8rem;padding:.6rem .7rem;
+  background:rgba(14,10,26,.5);border:1px solid rgba(124,77,219,.22);border-radius:3px;
+  transition:border-color .25s,background .25s;
+}
+.mygal:hover{border-color:rgba(180,143,252,.5);background:rgba(59,31,114,.2)}
+.mygal img{width:52px;height:38px;object-fit:cover;border-radius:2px;flex-shrink:0;background:rgba(59,31,114,.3)}
+.mygal-name{font-size:.85rem;color:var(--white);line-height:1.3}
+.mygal-meta{font-size:.68rem;color:var(--muted);margin-top:.15rem}
+.section-head{
+  font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);
+  margin-top:1.6rem;padding-top:1.4rem;border-top:1px solid rgba(59,31,114,.4);
+}
+.empty-note{font-family:var(--fs);font-style:italic;color:var(--muted);font-size:.92rem;line-height:1.6;margin-top:1rem}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">MLM</a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/gallery.html">Galleries</a>
+  </div>
+</nav>
+
+<div id="screen">
+  <div class="login-orb"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SIGNED OUT — sign in / create account / reset
+  ══════════════════════════════════════════════════════════ -->
+  <div class="login-card" id="authCard">
+    <p class="login-label">Matthew Lehman Media</p>
+    <h1 class="login-title" id="cardTitle">Sign In</h1>
+    <p class="login-intro" id="cardIntro">
+      Signing in is optional — it's just how your private galleries gather in one place.
+    </p>
+
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-mode="signin" type="button">Sign In</button>
+      <button class="tab" data-mode="signup" type="button">Create Account</button>
+    </div>
+
+    <!-- ── Sign in ── -->
+    <form id="signinForm">
+      <div class="field">
+        <label for="siEmail">Email</label>
+        <input type="email" id="siEmail" autocomplete="email" required />
+      </div>
+      <div class="field">
+        <label for="siPassword">Password</label>
+        <input type="password" id="siPassword" autocomplete="current-password" required />
+      </div>
+      <button type="submit" class="btn-primary" id="siBtn">Sign In</button>
+      <div class="link-row">
+        <button type="button" class="link-btn" id="forgotBtn">Forgot your password?</button>
+        <button type="button" class="link-btn" id="resendBtn">Resend confirmation</button>
+      </div>
+      <div class="form-msg" id="siMsg"></div>
+    </form>
+
+    <!-- ── Create account ── -->
+    <form id="signupForm" hidden>
+      <div class="field">
+        <label for="suName">Your name</label>
+        <input type="text" id="suName" autocomplete="name" />
+      </div>
+      <div class="field">
+        <label for="suEmail">Email</label>
+        <input type="email" id="suEmail" autocomplete="email" required />
+        <p class="field-hint">Use the address Matthew shared your galleries with — they'll appear automatically.</p>
+      </div>
+      <div class="field">
+        <label for="suPassword">Password</label>
+        <input type="password" id="suPassword" autocomplete="new-password" required minlength="8" />
+        <p class="field-hint">At least 8 characters.</p>
+      </div>
+      <!-- honeypot -->
+      <div class="hp" aria-hidden="true">
+        <label for="suCompany">Company</label>
+        <input type="text" id="suCompany" tabindex="-1" autocomplete="off" />
+      </div>
+      <div class="turnstile-holder" id="suTurnstile"></div>
+      <button type="submit" class="btn-primary" id="suBtn">Create Account</button>
+      <div class="form-msg" id="suMsg"></div>
+    </form>
+
+    <!-- ── Forgot password ── -->
+    <form id="resetForm" hidden>
+      <div class="field">
+        <label for="rsEmail">Email</label>
+        <input type="email" id="rsEmail" autocomplete="email" required />
+        <p class="field-hint">We'll send you a link to choose a new password.</p>
+      </div>
+      <div class="turnstile-holder" id="rsTurnstile"></div>
+      <button type="submit" class="btn-primary" id="rsBtn">Send Reset Link</button>
+      <div class="link-row">
+        <button type="button" class="link-btn" data-goto="signin">← Back to sign in</button>
+      </div>
+      <div class="form-msg" id="rsMsg"></div>
+    </form>
+
+    <!-- ── Resend confirmation ── -->
+    <form id="confirmForm" hidden>
+      <div class="field">
+        <label for="cfEmail">Email</label>
+        <input type="email" id="cfEmail" autocomplete="email" required />
+        <p class="field-hint">We'll send the confirmation link again.</p>
+      </div>
+      <div class="turnstile-holder" id="cfTurnstile"></div>
+      <button type="submit" class="btn-primary" id="cfBtn">Resend Confirmation</button>
+      <div class="link-row">
+        <button type="button" class="link-btn" data-goto="signin">← Back to sign in</button>
+      </div>
+      <div class="form-msg" id="cfMsg"></div>
+    </form>
+
+    <!-- ── Choose a new password (arrived from a reset email) ── -->
+    <form id="newPasswordForm" hidden>
+      <div class="field">
+        <label for="npPassword">New password</label>
+        <input type="password" id="npPassword" autocomplete="new-password" required minlength="8" />
+        <p class="field-hint">At least 8 characters.</p>
+      </div>
+      <button type="submit" class="btn-primary" id="npBtn">Save New Password</button>
+      <div class="form-msg" id="npMsg"></div>
+    </form>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SIGNED IN — account + the galleries shared with you
+  ══════════════════════════════════════════════════════════ -->
+  <div class="login-card" id="accountCard" hidden>
+    <p class="login-label">Your Account</p>
+    <h1 class="login-title">Welcome</h1>
+    <p class="account-email" id="accEmail"></p>
+    <p class="account-role" id="accRole"></p>
+
+    <div id="myGalleriesWrap">
+      <p class="section-head">Your Galleries</p>
+      <div class="mygal-list" id="myGalList"></div>
+    </div>
+
+    <a class="btn-primary" href="/gallery.html" style="display:block;text-align:center">Browse All Galleries</a>
+    <div class="link-row">
+      <button type="button" class="link-btn" id="signOutBtn">Sign out</button>
+      <a class="link-btn" href="/admin.html" id="adminLink" hidden>Admin panel</a>
+    </div>
+    <div class="form-msg" id="accMsg"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG — must match gallery.html / admin.html
+   ============================================================ */
+const SUPABASE_URL      = "https://pexqzghhjiwvvxbiirkr.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBleHF6Z2hoaml3dnZ4YmlpcmtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyMjIzMDUsImV4cCI6MjEwMTc5ODMwNX0.uEMy93_Z1kD8w14JFhDn10k-UYZCCPHKBmgdEGWmRQ0";
+
+const supa = (typeof window.supabase !== 'undefined')
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+function $(id) { return document.getElementById(id); }
+
+function msg(el, text, kind) {
+  el.textContent = text;
+  el.classList.remove('ok', 'err');
+  el.classList.add('show', kind);
+}
+function clearMsg(el) { el.classList.remove('show', 'ok', 'err'); }
+
+function busy(btn, on, label) {
+  btn.disabled = on;
+  if (on) { btn.dataset.label = btn.textContent; btn.textContent = label || 'Working…'; }
+  else if (btn.dataset.label) { btn.textContent = btn.dataset.label; }
+}
+
+/* ────────────────────────────────────────────────────────────
+   TURNSTILE
+   Rendered only when a site key is configured. With no key the
+   widgets simply never appear and the server skips the check,
+   so the page works before Turnstile is set up.
+──────────────────────────────────────────────────────────── */
+let turnstileSiteKey = null;
+const turnstileWidgets = {}; // holderId -> widget id
+
+async function loadConfig() {
+  try {
+    const res = await fetch('/api/config');
+    if (!res.ok) return;
+    const cfg = await res.json();
+    turnstileSiteKey = cfg.turnstileSiteKey || null;
+    if (turnstileSiteKey) loadTurnstileScript();
+  } catch (err) {
+    // No /api (e.g. opened as a bare file) — carry on without the bot check.
+  }
+}
+
+function loadTurnstileScript() {
+  if (document.getElementById('cfTurnstileScript')) return;
+  const s = document.createElement('script');
+  s.id = 'cfTurnstileScript';
+  s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+  s.async = true;
+  s.defer = true;
+  s.onload = function() { renderTurnstile('suTurnstile'); };
+  document.head.appendChild(s);
+}
+
+function renderTurnstile(holderId) {
+  if (!turnstileSiteKey || !window.turnstile) return;
+  if (turnstileWidgets[holderId] !== undefined) return;
+  const holder = $(holderId);
+  if (!holder) return;
+  turnstileWidgets[holderId] = window.turnstile.render(holder, {
+    sitekey: turnstileSiteKey,
+    theme: 'dark',
+  });
+}
+
+function turnstileToken(holderId) {
+  if (!turnstileSiteKey || !window.turnstile) return '';
+  const id = turnstileWidgets[holderId];
+  return id !== undefined ? (window.turnstile.getResponse(id) || '') : '';
+}
+
+function resetTurnstile(holderId) {
+  const id = turnstileWidgets[holderId];
+  if (id !== undefined && window.turnstile) window.turnstile.reset(id);
+}
+
+/* ────────────────────────────────────────────────────────────
+   MODE SWITCHING
+──────────────────────────────────────────────────────────── */
+const FORMS = {
+  signin:  { form: 'signinForm',      title: 'Sign In',           intro: "Signing in is optional — it's just how your private galleries gather in one place." },
+  signup:  { form: 'signupForm',      title: 'Create Account',    intro: 'Use the email your galleries were shared with and they’ll be waiting for you.' },
+  reset:   { form: 'resetForm',       title: 'Reset Password',    intro: 'Enter your email and we’ll send you a link to choose a new one.' },
+  confirm: { form: 'confirmForm',     title: 'Resend Link',       intro: 'Didn’t get the confirmation email? We’ll send it again.' },
+  newpass: { form: 'newPasswordForm', title: 'New Password',      intro: 'Choose a new password for your account.' },
+};
+
+function setMode(mode) {
+  Object.values(FORMS).forEach(function(f) { $(f.form).hidden = true; });
+  const cfg = FORMS[mode] || FORMS.signin;
+  $(cfg.form).hidden = false;
+  $('cardTitle').textContent = cfg.title;
+  $('cardIntro').textContent = cfg.intro;
+
+  // Tabs only make sense for the two main modes.
+  const showTabs = mode === 'signin' || mode === 'signup';
+  $('tabs').style.display = showTabs ? '' : 'none';
+  document.querySelectorAll('.tab').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.mode === mode);
+  });
+
+  if (mode === 'signup')  renderTurnstile('suTurnstile');
+  if (mode === 'reset')   renderTurnstile('rsTurnstile');
+  if (mode === 'confirm') renderTurnstile('cfTurnstile');
+}
+
+document.querySelectorAll('.tab').forEach(function(tab) {
+  tab.addEventListener('click', function() { setMode(tab.dataset.mode); });
+});
+document.querySelectorAll('[data-goto]').forEach(function(btn) {
+  btn.addEventListener('click', function() { setMode(btn.dataset.goto); });
+});
+$('forgotBtn').addEventListener('click', function() { setMode('reset'); });
+$('resendBtn').addEventListener('click', function() { setMode('confirm'); });
+
+/* ────────────────────────────────────────────────────────────
+   POST helper
+──────────────────────────────────────────────────────────── */
+async function postJson(url, payload) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const body = await res.json().catch(function() { return {}; });
+  return { ok: res.ok && body.ok !== false, status: res.status, body };
+}
+
+/* ────────────────────────────────────────────────────────────
+   SIGN IN
+──────────────────────────────────────────────────────────── */
+$('signinForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const m = $('siMsg');
+  clearMsg(m);
+  if (!supa) { msg(m, 'Accounts are unavailable right now.', 'err'); return; }
+
+  busy($('siBtn'), true, 'Signing in…');
+  const { error } = await supa.auth.signInWithPassword({
+    email: $('siEmail').value.trim(),
+    password: $('siPassword').value,
+  });
+  busy($('siBtn'), false);
+
+  if (error) {
+    // Supabase says "Invalid login credentials" for an unconfirmed account
+    // too, which sends people round in circles. Point at the way out.
+    const hint = /email not confirmed/i.test(error.message)
+      ? ' Check your inbox for the confirmation link, or resend it below.'
+      : '';
+    msg(m, error.message + hint, 'err');
+    return;
+  }
+  await showAccount();
+});
+
+/* ────────────────────────────────────────────────────────────
+   CREATE ACCOUNT
+──────────────────────────────────────────────────────────── */
+$('signupForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const m = $('suMsg');
+  clearMsg(m);
+
+  if (turnstileSiteKey && !turnstileToken('suTurnstile')) {
+    msg(m, 'Please complete the human check first.', 'err');
+    return;
+  }
+
+  busy($('suBtn'), true, 'Creating…');
+  const result = await postJson('/api/auth/signup', {
+    email: $('suEmail').value.trim(),
+    password: $('suPassword').value,
+    fullName: $('suName').value.trim(),
+    company: $('suCompany').value,       // honeypot
+    turnstileToken: turnstileToken('suTurnstile'),
+  });
+  busy($('suBtn'), false);
+  resetTurnstile('suTurnstile');
+
+  if (!result.ok) {
+    msg(m, result.body.error || 'Could not create that account.', 'err');
+    return;
+  }
+  msg(m, result.body.message || 'Check your inbox to confirm your email.', 'ok');
+  $('signupForm').reset();
+});
+
+/* ────────────────────────────────────────────────────────────
+   RESET / RESEND
+──────────────────────────────────────────────────────────── */
+$('resetForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const m = $('rsMsg');
+  clearMsg(m);
+  busy($('rsBtn'), true, 'Sending…');
+  const result = await postJson('/api/auth/request-reset', {
+    email: $('rsEmail').value.trim(),
+    turnstileToken: turnstileToken('rsTurnstile'),
+  });
+  busy($('rsBtn'), false);
+  resetTurnstile('rsTurnstile');
+  msg(m, result.body.message || (result.ok ? 'Check your inbox.' : 'Something went wrong.'),
+      result.ok ? 'ok' : 'err');
+});
+
+$('confirmForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const m = $('cfMsg');
+  clearMsg(m);
+  busy($('cfBtn'), true, 'Sending…');
+  const result = await postJson('/api/auth/resend-confirmation', {
+    email: $('cfEmail').value.trim(),
+    turnstileToken: turnstileToken('cfTurnstile'),
+  });
+  busy($('cfBtn'), false);
+  resetTurnstile('cfTurnstile');
+  msg(m, result.body.message || (result.ok ? 'Check your inbox.' : 'Something went wrong.'),
+      result.ok ? 'ok' : 'err');
+});
+
+/* ────────────────────────────────────────────────────────────
+   NEW PASSWORD (arrived from the reset email — Supabase has
+   already put a recovery session in place by this point)
+──────────────────────────────────────────────────────────── */
+$('newPasswordForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const m = $('npMsg');
+  clearMsg(m);
+  if (!supa) return;
+
+  busy($('npBtn'), true, 'Saving…');
+  const { error } = await supa.auth.updateUser({ password: $('npPassword').value });
+  busy($('npBtn'), false);
+
+  if (error) { msg(m, error.message, 'err'); return; }
+  msg(m, 'Password updated. Signing you in…', 'ok');
+  setTimeout(showAccount, 900);
+});
+
+/* ────────────────────────────────────────────────────────────
+   SIGNED-IN VIEW
+──────────────────────────────────────────────────────────── */
+async function showAccount() {
+  if (!supa) return;
+  const { data } = await supa.auth.getUser();
+  const user = data && data.user;
+  if (!user) { showAuth(); return; }
+
+  $('authCard').hidden = true;
+  $('accountCard').hidden = false;
+  $('accEmail').textContent = user.email || '';
+
+  const { data: profile } = await supa
+    .from('profiles').select('is_admin, full_name').eq('id', user.id).maybeSingle();
+
+  const isAdmin = Boolean(profile && profile.is_admin);
+  $('accRole').textContent = isAdmin ? 'Administrator' : 'Client account';
+  $('adminLink').hidden = !isAdmin;
+
+  await loadMyGalleries();
+}
+
+function showAuth() {
+  $('authCard').hidden = false;
+  $('accountCard').hidden = true;
+}
+
+// Row-level security does the filtering: this returns exactly the private
+// galleries shared with the signed-in account, and nothing else.
+async function loadMyGalleries() {
+  const list = $('myGalList');
+  const wrap = $('myGalleriesWrap');
+  list.innerHTML = '<p class="empty-note">Loading…</p>';
+
+  const { data, error } = await supa
+    .from('galleries')
+    .select('id, slug, title, cover_url, visibility, media(id)')
+    .eq('visibility', 'private')
+    .order('sort_order', { ascending: true });
+
+  if (error) {
+    list.innerHTML = '<p class="empty-note">Couldn\'t load your galleries just now.</p>';
+    return;
+  }
+
+  if (!data || !data.length) {
+    wrap.innerHTML =
+      '<p class="section-head">Your Galleries</p>' +
+      '<p class="empty-note">Nothing has been shared with this account yet. ' +
+      'If Matthew sent you a private link, it works on its own — you don\'t need to be signed in to open it.</p>';
+    return;
+  }
+
+  list.innerHTML = '';
+  data.forEach(function(g) {
+    const count = (g.media || []).length;
+    const a = document.createElement('a');
+    a.className = 'mygal';
+    a.href = '/gallery.html#gallery-' + (g.slug || '');
+
+    const coverId = parseDriveId(g.cover_url);
+    // Direct lh3 host + no referrer — Google 429s hotlinked Drive images.
+    const thumb = coverId
+      ? 'https://lh3.googleusercontent.com/d/' + encodeURIComponent(coverId) + '=w200'
+      : (g.cover_url || '');
+
+    if (thumb) {
+      const img = document.createElement('img');
+      img.referrerPolicy = 'no-referrer';
+      img.alt = '';
+      img.loading = 'lazy';
+      img.onerror = function() { this.style.visibility = 'hidden'; };
+      img.src = thumb;
+      a.appendChild(img);
+    }
+
+    const text = document.createElement('div');
+    const name = document.createElement('div');
+    name.className = 'mygal-name';
+    name.textContent = g.title;
+    const meta = document.createElement('div');
+    meta.className = 'mygal-meta';
+    meta.textContent = count + (count === 1 ? ' item' : ' items');
+    text.appendChild(name);
+    text.appendChild(meta);
+    a.appendChild(text);
+
+    list.appendChild(a);
+  });
+}
+
+function parseDriveId(url) {
+  if (!url) return null;
+  const s = String(url);
+  const m = s.match(/\/file\/d\/([A-Za-z0-9_-]{10,})/)
+         || s.match(/[?&]id=([A-Za-z0-9_-]{10,})/)
+         || s.match(/\/d\/([A-Za-z0-9_-]{10,})/);
+  return m ? m[1] : null;
+}
+
+$('signOutBtn').addEventListener('click', async function() {
+  if (supa) await supa.auth.signOut();
+  showAuth();
+  setMode('signin');
+});
+
+/* ────────────────────────────────────────────────────────────
+   INIT
+──────────────────────────────────────────────────────────── */
+(async function init() {
+  await loadConfig();
+
+  const params = new URLSearchParams(window.location.search);
+
+  // Arriving from a reset email: Supabase has exchanged the token for a
+  // recovery session already, so go straight to choosing a new password.
+  if (params.get('reset')) {
+    setMode('newpass');
+    // Strip the token fragment from the address bar.
+    history.replaceState(null, '', '/login.html');
+    return;
+  }
+
+  if (!supa) { setMode('signin'); return; }
+
+  const { data } = await supa.auth.getSession();
+  if (data && data.session) {
+    if (params.get('confirmed')) history.replaceState(null, '', '/login.html');
+    await showAccount();
+    return;
+  }
+
+  setMode('signin');
+  if (params.get('confirmed')) {
+    msg($('siMsg'), 'Email confirmed — you can sign in now.', 'ok');
+    history.replaceState(null, '', '/login.html');
+  }
+})();
+</script>
+</body>
+</html>

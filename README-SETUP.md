@@ -1,121 +1,228 @@
-# Your site — galleries & deployment
+# Matthew Lehman Media — how the site works
 
-Everything is already connected to a live Supabase project (`lehman-gallery`).
-The database, storage bucket, and security rules are set up and running.
-What's left is a few things only you can do (creating your admin login,
-optionally Google sign-in, and putting the site online).
+Four pages, a small backend, and a Supabase database. This file covers what
+each part does, the setup steps only you can do, and how to run it locally.
 
-## What you now have
+---
 
-- **`gallery.html`** — the public gallery page. Shows every **public**
-  gallery to everyone. A **private** gallery doesn't show up here, but the
-  exact same page still opens it for anyone who has the direct link.
-- **`admin.html`** — the only sign-in page on the whole site. Not linked
-  from the public nav — bookmark it directly. Sign in here to create
-  galleries, upload photos (drag & drop), set a gallery to Public or
-  Private, and copy each gallery's direct link.
-- There is **no public sign-up page**. The only way to get an account is
-  you creating one by hand in the Supabase dashboard — see below.
+## The pages
 
-## How access works
+| Page | What it's for |
+|---|---|
+| `index.html` | The main site. Contact form now posts to your own backend. |
+| `gallery.html` | Public gallery grid, plus **Your Galleries** for signed-in clients. |
+| `login.html` | Sign in, create an account, reset a password. |
+| `admin.html` | Your dashboard. Not linked from anywhere — bookmark it. |
+| `/g/<link>` | A private gallery opened by its secret link. No account needed. |
 
-- **Public gallery** → shows on `gallery.html`'s grid for anyone, no
-  sign-in required.
-- **Private gallery** → doesn't show on the grid, but works exactly like
-  an unlisted video: anyone with its direct link
-  (`gallery.html#g-<gallery-id>`) can open and view it, no login wall.
-  Copy that link anytime from the gallery's page in `admin.html`.
-- **Admin account** → any account you create in Supabase can sign in at
-  `admin.html` and has full access to every gallery: create, edit, delete,
-  upload/remove photos, change Public/Private, and copy links. There are
-  no separate roles or permission levels to manage.
+`api/` holds the backend — small serverless functions Vercel runs for you.
+`db/` holds the database setup. Neither needs touching day to day.
 
-## One-time setup steps
+---
 
-### 1. Create your admin account
-1. Supabase dashboard → **Authentication → Users → Add user**. Set an
-   email and password (turn off "Auto confirm" only if you want to send a
-   real invite email instead).
-2. Go to `admin.html` on your site and sign in with that email/password.
-   You're in — no extra "make me admin" step needed, since every account
-   is a full admin.
+## How galleries work
 
-### 2. (Optional) Set up Google Sign-In
-Only worth doing if you'd rather click "Continue with Google" than type a
-password:
-1. Go to [Google Cloud Console](https://console.cloud.google.com/) →
-   create a project (or use an existing one).
-2. **APIs & Services → OAuth consent screen** — set it up for "External"
-   users, add your site name and your email.
-3. **APIs & Services → Credentials → Create Credentials → OAuth client ID**
-   → Application type: **Web application**.
-4. In Supabase dashboard → **Authentication → Providers → Google** → copy
-   the **Callback URL** shown there, and paste it into "Authorized redirect
-   URIs" on the Google credential you just made.
-5. Copy the **Client ID** and **Client Secret** Google gives you, paste them
-   into the Supabase Google provider settings, and toggle it **on**.
-6. Once you deploy the site (see below), also add your live domain under
-   Supabase → **Authentication → URL Configuration → Redirect URLs** and
-   set **Site URL** to your domain — otherwise Google login will bounce
-   back to the wrong place.
-7. In Supabase → **Authentication → Users**, your Google account still
-   needs to exist as a user before (or right after) you sign in with it —
-   signing in with Google the first time creates it automatically.
+Every gallery is either **public** or **private**.
 
-## Deploying: GitHub + Vercel
+**Public** — listed on the gallery page for everyone.
 
-This is a good plan — it's the standard way to host a static site like
-this one, and it's free at this scale.
+**Private** — not listed anywhere, and reachable two ways at once:
 
-1. **Create a GitHub repo** and push this folder to it:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial site"
-   git branch -M main
-   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
-   git push -u origin main
-   ```
-2. **Import it into Vercel**: vercel.com → Add New → Project → pick your
-   GitHub repo. No build settings needed — it's static HTML, Vercel will
-   detect that automatically. Click Deploy.
-3. **Update Supabase's allowed URLs**: once you have your `*.vercel.app`
-   URL (and later your real domain), add both to Supabase → Authentication
-   → URL Configuration → Redirect URLs, and set Site URL to your primary
-   domain.
-4. From then on, every `git push` to `main` auto-deploys.
+1. **Its private link** (`yoursite.com/g/AbC123…`). Anyone holding that link
+   opens the gallery. No account, no password. This is what you email to
+   parents and coaches, and it's the normal way clients see their photos.
+2. **Their account.** If you add someone's email under *People With Account
+   Access*, that gallery shows up under **Your Galleries** when they sign in.
 
-A couple of things worth knowing:
-- The Supabase **anon key** baked into these files is meant to be public —
-  it's safe to commit to GitHub. Admin write access is enforced by the
-  database rules (RLS) requiring a signed-in session, not by hiding that
-  key.
-- `admin.html` isn't linked from your public nav, but it *is* still a
-  public URL — that's fine, since no one can do anything there without
-  signing in, and there's no way to create an account except you doing it
-  by hand in Supabase.
-- Photos are stored in a **public** storage bucket. That's intentional:
-  privacy for a gallery comes from whether its link is public (shown on
-  the grid) or private (only shared directly), not from the image files
-  themselves being locked down. Don't treat a "private" gallery as
-  suitable for anything truly sensitive — treat it like an unlisted link.
-- If you ever want to rotate the Supabase key (e.g. you think it leaked in
-  a way that matters, though it usually doesn't since it's meant to be
-  public), get a fresh one from Supabase → Project Settings → API and
-  swap it into both `gallery.html` and `admin.html`.
+Both work at the same time — you don't have to choose. Signing in is purely a
+convenience so a returning client finds everything in one place.
 
-## Upgrading from the older multi-account version
+Two switches per gallery worth knowing:
 
-If this site previously had `login.html`, viewer accounts, and per-person
-gallery access — that system has been removed. Re-run
-`supabase-setup.sql`; it automatically drops the old `profiles` and
-`gallery_access` tables and the `owner_id` column, and switches the photo
-storage bucket from private (signed URLs) to public. Existing galleries
-and photos are untouched, just re-pointed at the simpler model above.
+- **Regenerate** (on the Private Link panel) mints a brand-new link and
+  **instantly breaks every link you've already sent**. Use it if a link leaks.
+- **Private link works without signing in** (in Edit Gallery) is on by default.
+  Turn it off and the link alone stops working — visitors must sign in with an
+  account you've granted. Only worth using for something genuinely sensitive.
 
-## Notes / known limitations
+You can grant access to someone **before they have an account**. The grant sits
+waiting and activates by itself the moment they sign up with that email.
 
-- There are a few pre-existing, unrelated empty tables in this Supabase
-  project (`albums`, `images`, `site_settings`) left over from earlier
-  scaffolding, with permissive write policies. They aren't used by this
-  site — worth deleting if you don't need them, just to keep things tidy.
+### One honest limitation
+
+A "private" gallery is *unlisted*, not *secure*. The photos are Google Drive
+files shared as "anyone with the link" — that Drive URL works for whoever has
+it, no matter what this site says. Fine for client galleries. Don't use it for
+anything that would actually matter if it got out.
+
+---
+
+## Adding photos and videos
+
+Open a gallery → **Manage** → paste Google Drive links, one per line.
+
+Any Drive link shape works — the share link, a `/preview` link, or an old
+`thumbnail?id=…` URL. Duplicates are skipped. Anything unreadable is reported
+rather than silently dropped.
+
+**Each file must be shared as "Anyone with the link" in Drive**, or it won't
+load for visitors. This is the single most common thing to get wrong.
+
+- **Videos**: tick *These are videos* before adding. They get a play badge and
+  open in Drive's player. If something comes in as the wrong type, the
+  **Mark Video** / **Mark Photo** button on each tile fixes it.
+- **Uploads**: the second tab still takes drag-and-drop files, stored in
+  Supabase. Drive links are usually easier.
+- **Downloads** go through `/api/download`, which checks permission, gives the
+  file a real name, and rate-limits. Turn them off per gallery in Edit Gallery.
+
+---
+
+## Setup — the parts only you can do
+
+Everything below degrades gracefully. Miss a step and that feature stays
+switched off; the site keeps working.
+
+### 1. Make yourself an admin
+
+Signing in is open to anyone, so admin rights are a flag on your row.
+
+1. Go to `/login.html` and create your account with your real email.
+2. Confirm it (or, before Resend is set up, confirm the user by hand in
+   Supabase → Authentication → Users).
+3. Supabase → **Table Editor → profiles** → find your row → set `is_admin`
+   to `true`.
+4. `/admin.html` now lets you in. After that you can promote anyone else from
+   the **People** tab.
+
+### 2. Environment variables
+
+Set these in Vercel → Project → Settings → Environment Variables. See
+`.env.example` for the full annotated list.
+
+| Variable | Needed for |
+|---|---|
+| `SUPABASE_URL` | everything |
+| `SUPABASE_ANON_KEY` | everything |
+| `SUPABASE_SERVICE_ROLE_KEY` | **secret** — private links, signup, admin writes |
+| `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | bot protection |
+| `RESEND_API_KEY`, `RESEND_FROM` | all outgoing email |
+| `OWNER_EMAIL` | where contact-form enquiries land |
+| `SITE_URL` | building the links inside emails |
+
+The service role key bypasses every security rule in the database. It belongs
+in Vercel only — never in an HTML file, never in git.
+
+### 3. Cloudflare Turnstile
+
+1. [dash.cloudflare.com](https://dash.cloudflare.com) → **Turnstile** → Add site.
+2. Add your domain. Widget mode **Managed** is fine.
+3. Copy the **Site Key** and **Secret Key** into the two env vars above.
+
+Leave them blank and the bot check is skipped — signup and the contact form
+still work, just less protected.
+
+### 4. Resend (email)
+
+1. [resend.com](https://resend.com) → **Domains** → add `matthewlehmanmedia.com`
+   and add the DNS records it gives you. Wait for **Verified**.
+2. **API Keys** → create one → put it in `RESEND_API_KEY`.
+3. Set `RESEND_FROM` to something at that domain, e.g.
+   `Matthew Lehman Media <noreply@matthewlehmanmedia.com>`.
+
+Until this is done: confirmation emails, password resets, "email this gallery",
+and the contact form are all switched off and say so.
+
+### 5. Pixieset
+
+Open `gallery.html`, find `SHOP_LINK` near the top of the script, and paste
+your shop URL. That's the site-wide default; any single gallery can override it
+with its own Pixieset URL in **Edit Gallery**. Leave the placeholder and the
+Shop button just doesn't appear.
+
+---
+
+## The database
+
+Already applied to Supabase project `pexqzghhjiwvvxbiirkr`. The files in `db/`
+are the record of what's there, and are safe to re-run:
+
+| File | What it does |
+|---|---|
+| `001_schema.sql` | Tables, triggers, rate limiter, row-level security |
+| `002_seed.sql` | The 13 starting galleries — **generated, don't hand-edit** |
+| `003_storage.sql` | The upload bucket and its policies |
+
+Regenerate the seed from the fallback data in `gallery.html` with:
+
+```bash
+node db/generate-seed.mjs
+```
+
+Don't re-run `002_seed.sql` after you've curated those galleries in the admin
+panel — it resets their photo lists back to what `gallery.html` says.
+
+**Row-level security is on for every table.** Anonymous visitors can read
+public galleries and nothing else — a private gallery cannot be reached with
+the public key at all. Private links are resolved server-side instead, where
+holding the secret is the proof. Admin writes are re-checked on the server on
+every single request, never trusted from the browser.
+
+---
+
+## Rate limits
+
+Counted in Postgres — no Redis, no extra bill. Current budgets live in
+`api/_lib/ratelimit.js`:
+
+| Action | Limit |
+|---|---|
+| Signup | 5/hour per IP, 3/day per email |
+| Password reset / resend confirmation | 3–5/hour |
+| Opening a private link | 60 per 5 min per IP |
+| Downloads | 300/hour per IP |
+| Contact form | 5/hour per IP |
+
+If the database is unreachable the limiter lets requests through rather than
+taking the site down — Turnstile is the real gate on the sensitive routes.
+
+---
+
+## Running it locally
+
+```bash
+npm install
+cp .env.example .env.local     # then fill in the values
+npx vercel dev
+```
+
+`vercel dev` is what runs the `/api` functions. Opening the HTML files
+directly still shows the site, but anything needing the backend — private
+links, signup, downloads — won't work.
+
+---
+
+## Deploying
+
+Push to `main`. Vercel builds and deploys automatically.
+
+After the first deploy with accounts enabled, set Supabase → Authentication →
+**URL Configuration**: Site URL to your domain, and add your domain plus any
+`*.vercel.app` preview URLs to Redirect URLs. Confirmation links bounce to the
+wrong place otherwise.
+
+`vercel.json` handles the `/g/<link>` rewrite, security headers, and the
+content-security policy. If you ever add a script from a new domain, it needs
+adding to the CSP there or the browser will block it.
+
+---
+
+## Notes
+
+- The Supabase **anon key** in the page source is meant to be public. Security
+  comes from the database rules, not from hiding it.
+- `admin.html` and `/g/…` links are marked `noindex` so they stay out of Google.
+- `FALLBACK_GALLERIES` in `gallery.html` is a safety net: if Supabase is ever
+  unreachable, the page still shows those galleries instead of an empty grid.
+- Every admin action is written to the `audit_log` table, and every email sent
+  to `email_log`.

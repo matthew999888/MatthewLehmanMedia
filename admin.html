@@ -5,11 +5,13 @@
      ─────────────────────────────────────────────────────────────────────
      THIS PAGE IS NOT LINKED FROM THE PUBLIC SITE.
      Bookmark it directly: https://www.matthewlehmanmedia.com/admin.html
-     Only people who sign in with the admin account you create in
-     Supabase can make changes. Everyone else just sees a login form.
+     Anyone can create an account at /login.html, so signing in proves
+     nothing on its own — admin rights come from profiles.is_admin, which
+     is checked here for the UI and again on the server for every write.
      ─────────────────────────────────────────────────────────────────────
-     SETUP: See supabase-setup.sql for the one-time database setup,
-     then paste your Project URL + anon key into the CONFIG block below.
+     SETUP: run the files in db/ against your Supabase project, then set
+     is_admin = true on your row in the profiles table.
+     See README-SETUP.md for the full walkthrough.
 ═══════════════════════════════════════════════════════════════════════ -->
 <html lang="en">
 <head>
@@ -308,6 +310,99 @@ input,textarea{font-family:inherit;color:inherit}
   padding:.5rem 1rem;border-radius:3px;transition:all .25s;margin-bottom:1.4rem;
 }
 .back-link:hover{color:var(--glow);border-color:var(--light)}
+
+/* ════════════════════════════════════════════════════════════
+   ADDED: Drive links, sharing, access, users
+════════════════════════════════════════════════════════════ */
+
+/* ---- Panels inside the manage view ---- */
+.panel{margin-top:2.4rem;padding-top:2rem;border-top:1px solid rgba(124,77,219,.22)}
+.panel h3{font-family:var(--fd);font-size:1.5rem;letter-spacing:.03em;margin-bottom:.3rem}
+.panel-sub{font-family:var(--fs);font-style:italic;color:var(--muted);margin-bottom:1.2rem;line-height:1.6}
+.panel-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-start}
+.panel-row .grow{flex:1;min-width:220px}
+
+.input-plain{
+  width:100%;background:rgba(14,10,26,.6);border:1px solid rgba(124,77,219,.3);
+  border-radius:3px;padding:.65rem .9rem;font-size:.85rem;color:var(--white);transition:border-color .25s;
+}
+.input-plain:focus{outline:none;border-color:var(--light)}
+textarea.input-plain{resize:vertical;min-height:90px;font-size:.85rem;line-height:1.55}
+.input-hint{font-size:.74rem;color:var(--muted);margin-top:.45rem;line-height:1.55}
+.input-hint code{font-family:monospace;background:rgba(124,77,219,.15);padding:.1rem .3rem;border-radius:2px;font-size:.78rem}
+
+/* ---- Add-media box (paste Drive links) ---- */
+.addmedia{
+  border:1px solid rgba(124,77,219,.28);border-radius:6px;padding:1.3rem 1.4rem;
+  background:linear-gradient(160deg,rgba(59,31,114,.15),rgba(14,10,26,.6));margin-bottom:1.6rem;
+}
+.addmedia-tabs{display:flex;gap:1.2rem;margin-bottom:1rem;border-bottom:1px solid rgba(124,77,219,.2)}
+.addmedia-tab{
+  font-family:var(--fb);font-size:.66rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);padding:.5rem .1rem;border-bottom:2px solid transparent;transition:all .25s;
+}
+.addmedia-tab:hover{color:var(--glow)}
+.addmedia-tab.active{color:var(--glow);border-bottom-color:var(--accent)}
+.addmedia-pane{display:none}
+.addmedia-pane.active{display:block}
+
+/* ---- Toggles ---- */
+.toggle-row{
+  display:flex;align-items:flex-start;gap:.7rem;padding:.75rem 0;
+  border-bottom:1px solid rgba(124,77,219,.12);
+}
+.toggle-row:last-child{border-bottom:none}
+.toggle-row input{width:16px;height:16px;accent-color:var(--accent);margin-top:.15rem;flex-shrink:0}
+.toggle-row .toggle-text{flex:1}
+.toggle-row .toggle-name{font-size:.85rem;color:var(--white);display:block;margin-bottom:.2rem}
+.toggle-row .toggle-desc{font-size:.75rem;color:var(--muted);line-height:1.5}
+
+/* ---- Access list ---- */
+.access-list{display:flex;flex-direction:column;gap:.5rem;margin-top:1.1rem}
+.access-row{
+  display:flex;align-items:center;gap:.8rem;font-size:.84rem;
+  background:rgba(59,31,114,.15);border:1px solid rgba(124,77,219,.2);
+  border-radius:3px;padding:.6rem .9rem;
+}
+.access-row .email{flex:1;word-break:break-all;color:var(--white)}
+.access-pill{
+  font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;padding:.22rem .5rem;
+  border-radius:10px;flex-shrink:0;
+}
+.access-pill.active{background:rgba(90,201,143,.15);border:1px solid rgba(90,201,143,.4);color:#8fe8b8}
+.access-pill.pending{background:rgba(124,77,219,.15);border:1px solid rgba(124,77,219,.4);color:var(--light)}
+.access-empty{font-family:var(--fs);font-style:italic;color:var(--muted);font-size:.9rem;padding:.8rem 0}
+
+/* ---- Video tile marker in the photo grid ---- */
+.tile-kind-badge{
+  position:absolute;top:.4rem;right:.4rem;font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;
+  background:rgba(14,10,26,.85);border:1px solid rgba(180,143,252,.5);color:var(--glow);
+  padding:.2rem .42rem;border-radius:2px;display:flex;align-items:center;gap:3px;
+}
+.tile-kind-badge svg{width:9px;height:9px;fill:currentColor}
+
+/* ---- Users table ---- */
+.user-row{
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  background:rgba(59,31,114,.13);border:1px solid rgba(124,77,219,.2);
+  border-radius:4px;padding:.85rem 1.1rem;
+}
+.user-main{flex:1;min-width:200px}
+.user-email{font-size:.9rem;color:var(--white);word-break:break-all}
+.user-meta{font-size:.72rem;color:var(--muted);margin-top:.25rem}
+.user-list{display:flex;flex-direction:column;gap:.6rem}
+
+/* ---- Secret link display ---- */
+.secret-link-box{
+  display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;
+}
+.secret-link-box input{
+  flex:1;min-width:240px;font-family:monospace;font-size:.8rem;
+}
+.warn-note{
+  margin-top:.9rem;padding:.7rem .9rem;border-radius:3px;font-size:.8rem;line-height:1.55;
+  background:rgba(224,90,107,.1);border:1px solid rgba(224,90,107,.3);color:#ffb3bd;
+}
 </style>
 </head>
 <body>
@@ -320,6 +415,8 @@ input,textarea{font-family:inherit;color:inherit}
     <span class="nav-logo">MLM</span><span class="nav-tag">Admin</span>
   </div>
   <div class="nav-links">
+    <button class="nav-tab-btn active" id="tabGalleriesBtn" type="button" style="display:none">Galleries</button>
+    <button class="nav-tab-btn" id="tabUsersBtn" type="button" style="display:none">People</button>
     <a href="/" target="_blank" rel="noopener noreferrer">View Public Site ↗</a>
     <button class="btn-signout" id="signOutBtn" style="display:none">Sign Out</button>
   </div>
@@ -352,9 +449,14 @@ input,textarea{font-family:inherit;color:inherit}
     </button>
     <p class="setup-note" id="setupNote">
       Not connected yet — paste your Supabase Project URL and anon key into the
-      <code>CONFIG</code> block near the top of this file's script, run
-      <code>supabase-setup.sql</code> in your Supabase project, then create your
-      admin login under Authentication → Users.
+      <code>CONFIG</code> block near the top of this file's script, run the files in
+      <code>db/</code> in your Supabase SQL editor, then create your admin login under
+      Authentication → Users.
+    </p>
+    <p class="setup-note" id="notAdminNote" style="display:none">
+      You're signed in, but this account isn't an administrator. If it should be, set
+      <code>is_admin</code> to <code>true</code> on its row in the <code>profiles</code>
+      table — see README-SETUP.md.
     </p>
   </div>
 </div>
@@ -370,7 +472,7 @@ input,textarea{font-family:inherit;color:inherit}
       <div class="dash-head">
         <div>
           <h1 class="dash-title">Galleries</h1>
-          <p class="dash-sub" id="dashSubtitle">Create galleries, then drag &amp; drop photos into each one.</p>
+          <p class="dash-sub" id="dashSubtitle">Create a gallery, then paste in your Google Drive links.</p>
         </div>
         <div style="display:flex;gap:.6rem;flex-wrap:wrap">
           <button class="btn-sm" id="manageCategoriesBtn" type="button">Manage Categories</button>
@@ -398,29 +500,127 @@ input,textarea{font-family:inherit;color:inherit}
         </div>
       </div>
 
-      <div class="dropzone" id="dropzone">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-        <p class="dropzone-text">Drag &amp; drop photos here, or click to browse</p>
-        <p class="dropzone-sub">JPG, PNG, or WEBP — you can select multiple files at once</p>
-        <input type="file" id="fileInput" accept="image/*" multiple />
+      <!-- ── Add photos & videos ─────────────────────────────── -->
+      <div class="addmedia">
+        <div class="addmedia-tabs">
+          <button class="addmedia-tab active" type="button" data-pane="paneLinks">Paste Google Drive Links</button>
+          <button class="addmedia-tab" type="button" data-pane="paneUpload">Upload Files</button>
+        </div>
+
+        <!-- Drive links: the main way photos get in -->
+        <div class="addmedia-pane active" id="paneLinks">
+          <textarea class="input-plain" id="driveLinksInput" rows="5"
+            placeholder="Paste Google Drive links here — one per line&#10;&#10;https://drive.google.com/file/d/1AbC.../view?usp=sharing&#10;https://drive.google.com/file/d/1XyZ.../view?usp=sharing"></textarea>
+          <p class="input-hint">
+            Any Drive link works — the share link, a <code>/preview</code> link, or an old
+            <code>thumbnail?id=</code> URL. Make sure each file is shared as
+            <strong>“Anyone with the link”</strong> in Drive, or it won't load for visitors.
+            Duplicates are skipped automatically.
+          </p>
+          <div class="panel-row" style="margin-top:.9rem">
+            <label class="cat-chip" style="cursor:pointer">
+              <input type="checkbox" id="driveIsVideo" />
+              These are videos
+            </label>
+            <button type="button" class="btn-sm filled" id="addDriveLinksBtn">Add to Gallery</button>
+          </div>
+          <div class="form-msg" id="driveLinksMsg"></div>
+        </div>
+
+        <!-- Direct upload, for the occasional file that isn't in Drive -->
+        <div class="addmedia-pane" id="paneUpload">
+          <div class="dropzone" id="dropzone" style="margin-bottom:0">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            <p class="dropzone-text">Drag &amp; drop photos here, or click to browse</p>
+            <p class="dropzone-sub">JPG, PNG, or WEBP — you can select multiple files at once</p>
+            <input type="file" id="fileInput" accept="image/*" multiple />
+          </div>
+          <p class="input-hint">Uploaded straight to your own storage. Google Drive links are usually the easier route.</p>
+        </div>
       </div>
 
       <div class="upload-queue" id="uploadQueue"></div>
 
       <div class="photo-grid" id="photoGrid"><!-- injected --></div>
 
-      <!-- Direct link -->
-      <div id="linkPanel" style="margin-top:2.4rem;padding-top:2rem;border-top:1px solid rgba(124,77,219,.22)">
-        <h3 style="font-family:var(--fd);font-size:1.5rem;letter-spacing:.03em;margin-bottom:.3rem">Direct Link</h3>
-        <p style="font-family:var(--fs);font-style:italic;color:var(--muted);margin-bottom:1.2rem" id="linkPanelSub">
-          Anyone with this link can view this gallery, whether it's public or private — private just means it won't show on the gallery page grid.
-        </p>
-        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
-          <input type="text" id="directLinkInput" readonly
-            style="flex:1;min-width:220px;background:rgba(14,10,26,.6);border:1px solid rgba(124,77,219,.3);border-radius:3px;padding:.65rem .9rem;font-size:.85rem;color:var(--white)" />
+      <!-- ── Private link ─────────────────────────────────────── -->
+      <div class="panel" id="linkPanel">
+        <h3>Private Link</h3>
+        <p class="panel-sub" id="linkPanelSub"></p>
+        <div class="secret-link-box">
+          <input type="text" id="directLinkInput" class="input-plain" readonly />
           <button type="button" class="btn-sm filled" id="copyLinkBtn">Copy Link</button>
+          <button type="button" class="btn-sm danger" id="regenLinkBtn">Regenerate</button>
+        </div>
+        <p class="input-hint">
+          Regenerating makes a brand-new link and <strong>immediately breaks every link
+          you've already sent</strong>. Use it if a link ends up somewhere it shouldn't.
+        </p>
+      </div>
+
+      <!-- ── Email this gallery ───────────────────────────────── -->
+      <div class="panel" id="emailPanel">
+        <h3>Email This Gallery</h3>
+        <p class="panel-sub">
+          Sends the private link straight to their inbox. They do <em>not</em> need an
+          account — the link opens on its own.
+        </p>
+        <div class="field">
+          <label for="emailRecipients">Send to</label>
+          <textarea class="input-plain" id="emailRecipients" rows="2"
+            placeholder="parent@example.com, coach@example.com"></textarea>
+          <p class="input-hint">Separate addresses with commas, spaces, or new lines.</p>
+        </div>
+        <div class="field">
+          <label for="emailMessage">Personal note (optional)</label>
+          <textarea class="input-plain" id="emailMessage" rows="3"
+            placeholder="Hi! Here are the photos from Friday's game — enjoy."></textarea>
+        </div>
+        <div class="toggle-row">
+          <input type="checkbox" id="emailAlsoGrant" />
+          <div class="toggle-text">
+            <span class="toggle-name">Also link this gallery to their account</span>
+            <span class="toggle-desc">
+              If they ever sign in with that email, this gallery appears under
+              “Your Galleries”. Works even if they haven't signed up yet.
+            </span>
+          </div>
+        </div>
+        <button type="button" class="btn-sm filled" id="sendEmailBtn" style="margin-top:1rem">Send Link</button>
+        <div class="form-msg" id="emailMsg"></div>
+      </div>
+
+      <!-- ── People with access ───────────────────────────────── -->
+      <div class="panel" id="accessPanel">
+        <h3>People With Account Access</h3>
+        <p class="panel-sub">
+          These people see this gallery under “Your Galleries” when they sign in.
+          Add someone before they've registered and it activates the moment they do.
+        </p>
+        <div class="panel-row">
+          <input type="text" id="grantEmails" class="input-plain grow"
+            placeholder="parent@example.com, coach@example.com" />
+          <button type="button" class="btn-sm filled" id="grantAccessBtn">Grant Access</button>
+        </div>
+        <div class="form-msg" id="accessMsg"></div>
+        <div class="access-list" id="accessList"></div>
+      </div>
+    </div>
+
+    <!-- ── People ─────────────────────────────────────────────── -->
+    <div id="usersView" style="display:none">
+      <div class="dash-head">
+        <div>
+          <h1 class="dash-title">People</h1>
+          <p class="dash-sub">Everyone who has created an account on the site.</p>
         </div>
       </div>
+      <div class="user-list" id="userList"></div>
+      <p class="input-hint" style="margin-top:1.5rem;max-width:640px">
+        Accounts are created by people themselves at <code>/login.html</code>. To give
+        someone a gallery, open that gallery and use <strong>People With Account
+        Access</strong> — you can add their email before they've ever signed up.
+      </p>
     </div>
 
   </div>
@@ -445,13 +645,44 @@ input,textarea{font-family:inherit;color:inherit}
         <label for="galVisibility">Visibility</label>
         <select id="galVisibility" style="width:100%;background:rgba(14,10,26,.6);border:1px solid rgba(124,77,219,.3);border-radius:3px;padding:.75rem .9rem;font-size:.9rem;color:var(--white)">
           <option value="public">Public — shows on the gallery page for everyone</option>
-          <option value="private">Private — only people you grant access to can see it</option>
+          <option value="private">Private — hidden from the grid; opens by private link</option>
         </select>
+        <p class="input-hint" id="visibilityHint"></p>
       </div>
       <div class="field">
         <label>Categories</label>
         <div id="galCategoriesList" style="display:flex;flex-wrap:wrap;gap:.5rem">
           <span style="font-size:.8rem;color:var(--muted)">No categories yet — add some with "Manage Categories."</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="galShootDate">Shoot date (optional)</label>
+        <input type="date" id="galShootDate" class="input-plain" />
+      </div>
+      <div class="field">
+        <label for="galPixieset">Pixieset shop link (optional)</label>
+        <input type="url" id="galPixieset" class="input-plain" placeholder="https://matthewlehman.pixieset.com/thisgallery/" />
+        <p class="input-hint">Overrides the site-wide shop link for this gallery only.</p>
+      </div>
+      <div class="field">
+        <label>Options</label>
+        <div class="toggle-row">
+          <input type="checkbox" id="galDownloads" checked />
+          <div class="toggle-text">
+            <span class="toggle-name">Allow downloads</span>
+            <span class="toggle-desc">Shows the Save and Download All buttons to visitors.</span>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <input type="checkbox" id="galLinkAccess" checked />
+          <div class="toggle-text">
+            <span class="toggle-name">Private link works without signing in</span>
+            <span class="toggle-desc">
+              Leave this on for normal client galleries. Turn it off and the link
+              stops working on its own — visitors must sign in with an account you've
+              granted access to.
+            </span>
+          </div>
         </div>
       </div>
       <div class="modal-actions">
@@ -493,8 +724,8 @@ input,textarea{font-family:inherit;color:inherit}
    (Project Settings → API in your Supabase dashboard)
    Must match the values in gallery.html.
    ============================================================ */
-const SUPABASE_URL      = "https://hanxyzajkhkhdlzhnron.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhhbnh5emFqa2hraGRsemhucm9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzNzIxOTEsImV4cCI6MjA5MDk0ODE5MX0.ngu3mbSZqDR1IP0itndFWNLoX49U6dv8tDfIbest5TQ";
+const SUPABASE_URL      = "https://pexqzghhjiwvvxbiirkr.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBleHF6Z2hoaml3dnZ4YmlpcmtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyMjIzMDUsImV4cCI6MjEwMTc5ODMwNX0.uEMy93_Z1kD8w14JFhDn10k-UYZCCPHKBmgdEGWmRQ0";
 const BUCKET_NAME        = "gallery-photos";
 
 const SUPABASE_CONNECTED = SUPABASE_URL !== "PASTE_SUPABASE_URL_HERE"
@@ -505,6 +736,42 @@ let supa = null;
 if (SUPABASE_CONNECTED && typeof window.supabase !== 'undefined') {
   supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   document.getElementById('setupNote').style.display = 'none';
+}
+
+/* ────────────────────────────────────────────────────────────
+   API
+   Everything that changes data goes through /api/admin/*, which
+   re-checks on the server that the caller is really an admin and
+   writes an audit_log entry. Reads that row-level security can
+   answer on its own still go direct to Supabase.
+──────────────────────────────────────────────────────────── */
+async function api(path, options) {
+  const opts = options || {};
+  const headers = Object.assign({}, opts.headers || {});
+
+  if (supa) {
+    const { data } = await supa.auth.getSession();
+    const token = data && data.session && data.session.access_token;
+    if (token) headers.Authorization = 'Bearer ' + token;
+  }
+  if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
+
+  let res, body;
+  try {
+    res = await fetch(path, {
+      method: opts.method || 'GET',
+      headers: headers,
+      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+    });
+    body = await res.json().catch(function() { return {}; });
+  } catch (err) {
+    return { ok: false, error: 'Could not reach the server. Check your connection.' };
+  }
+
+  if (!res.ok || body.ok === false) {
+    return { ok: false, error: body.error || ('Request failed (' + res.status + ')'), body: body };
+  }
+  return Object.assign({ ok: true }, body);
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -531,40 +798,79 @@ function escapeHtml(str) {
 
 /* ────────────────────────────────────────────────────────────
    AUTH
-   There's no public sign-up and no roles to manage — the only
-   account(s) that exist are ones you created by hand in Supabase
-   (Authentication → Users), so anyone who can sign in here is a
-   full admin.
+   Anyone can create an account at /login.html, so signing in is
+   no longer proof of anything. Admin rights come from
+   profiles.is_admin, which is checked here for the UI and again
+   on the server for every write.
 ──────────────────────────────────────────────────────────── */
 const loginScreen = $('loginScreen');
 const dashboard   = $('dashboard');
 const signOutBtn  = $('signOutBtn');
 
 let myUserId = null;
+let myProfile = null;
 
 async function checkSession() {
   if (!supa) return;
   const { data } = await supa.auth.getSession();
   if (data && data.session) {
-    enterDashboard();
+    await enterDashboard();
   }
 }
 
 async function enterDashboard() {
   const { data: userData } = await supa.auth.getUser();
   myUserId = userData && userData.user ? userData.user.id : null;
+  if (!myUserId) { exitDashboard(); return; }
+
+  const { data: profile } = await supa
+    .from('profiles').select('id, email, is_admin').eq('id', myUserId).maybeSingle();
+  myProfile = profile || null;
+
+  // A signed-in non-admin gets told why they can't get in, rather than an
+  // empty dashboard full of failing requests.
+  if (!myProfile || !myProfile.is_admin) {
+    $('notAdminNote').style.display = '';
+    $('setupNote').style.display = 'none';
+    signOutBtn.style.display = '';
+    const msg = $('loginMsg');
+    msg.textContent = 'Signed in as ' + (myProfile ? myProfile.email : 'this account') +
+      ", but it doesn't have admin access.";
+    msg.classList.add('show', 'err');
+    return;
+  }
 
   loginScreen.style.display = 'none';
   dashboard.classList.add('active');
   signOutBtn.style.display = '';
-  loadGalleries();
+  $('tabGalleriesBtn').style.display = '';
+  $('tabUsersBtn').style.display = '';
+  await loadGalleries();
 }
 
 function exitDashboard() {
   dashboard.classList.remove('active');
   loginScreen.style.display = 'flex';
   signOutBtn.style.display = 'none';
+  $('tabGalleriesBtn').style.display = 'none';
+  $('tabUsersBtn').style.display = 'none';
+  $('notAdminNote').style.display = 'none';
+  myProfile = null;
+  myUserId = null;
 }
+
+/* ---- Top-level tabs: Galleries / People ---- */
+function showTab(name) {
+  const isUsers = name === 'users';
+  $('galleryListView').style.display = isUsers ? 'none' : '';
+  $('manageView').classList.remove('active');
+  $('usersView').style.display = isUsers ? '' : 'none';
+  $('tabGalleriesBtn').classList.toggle('active', !isUsers);
+  $('tabUsersBtn').classList.toggle('active', isUsers);
+  if (isUsers) loadUsers();
+}
+$('tabGalleriesBtn').addEventListener('click', function() { showTab('galleries'); });
+$('tabUsersBtn').addEventListener('click', function() { showTab('users'); });
 
 $('loginForm').addEventListener('submit', async function(e) {
   e.preventDefault();
@@ -627,38 +933,24 @@ async function loadCategories() {
   if (!error) categoriesCache = data || [];
 }
 
-// Turns a storage path into a public URL. The bucket is public, so this
-// is just URL construction — no network round-trip, no expiry.
-function publicUrlFor(path) {
-  if (!path) return '';
-  const { data } = supa.storage.from(BUCKET_NAME).getPublicUrl(path);
-  return (data && data.publicUrl) || '';
-}
-
-function directLinkFor(id) {
-  return window.location.origin + '/gallery.html#g-' + id;
+// The private link for a gallery — the one you email out.
+// Thumbnail and cover URLs arrive ready-made from /api/admin/galleries, so
+// all the Google Drive URL handling lives server-side in api/_lib/drive.js.
+function directLinkFor(gallery) {
+  return window.location.origin + '/g/' + gallery.secretSlug;
 }
 
 async function loadGalleries() {
   const grid = $('dashGrid');
   grid.innerHTML = '<div class="dash-empty">Loading…</div>';
   await loadCategories();
-  const { data, error } = await supa
-    .from('galleries')
-    .select('id, title, description, cover_url, cover_path, visibility, sort_order, gallery_photos(id, url, sort_order), gallery_categories(category_id)')
-    .order('sort_order', { ascending: true });
 
-  if (error) {
-    grid.innerHTML = '<div class="dash-empty">Couldn\'t load galleries: ' + escapeHtml(error.message) + '</div>';
+  const result = await api('/api/admin/galleries');
+  if (!result.ok) {
+    grid.innerHTML = '<div class="dash-empty">Couldn\'t load galleries: ' + escapeHtml(result.error) + '</div>';
     return;
   }
-  galleriesCache = data || [];
-
-  galleriesCache.forEach(function(g) {
-    g._coverDisplay = (g.cover_path && publicUrlFor(g.cover_path)) || g.cover_url || '';
-    g._categoryIds = (g.gallery_categories || []).map(function(gc) { return gc.category_id; });
-  });
-
+  galleriesCache = result.galleries || [];
   renderGalleryList();
 }
 
@@ -677,19 +969,26 @@ function renderGalleryList() {
     return;
   }
   galleriesCache.forEach(function(g) {
-    const photoCount = (g.gallery_photos || []).length;
-    const isPrivate = g.visibility === 'private';
-    const catNames = categoryNamesFor(g._categoryIds);
+    const isPrivate = g.isPrivate;
+    const catNames = categoryNamesFor(g.categoryIds);
+
+    const counts = [];
+    if (g.photoCount) counts.push(g.photoCount + ' photo' + (g.photoCount !== 1 ? 's' : ''));
+    if (g.videoCount) counts.push(g.videoCount + ' video' + (g.videoCount !== 1 ? 's' : ''));
+    if (!counts.length) counts.push('empty');
+
     const card = document.createElement('div');
     card.className = 'dash-card';
     card.innerHTML =
       '<div class="dash-cover">' +
         (isPrivate ? '<span class="dash-hidden-badge">Private</span>' : '') +
-        (g._coverDisplay ? '<img src="' + g._coverDisplay + '" alt="">' : '<div class="ph-empty">' + (g.title ? g.title.charAt(0).toUpperCase() : 'G') + '</div>') +
+        // referrerpolicy is required: Google 429s hotlinked Drive images.
+        (g.cover ? '<img src="' + escapeHtml(g.cover) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '<div class="ph-empty">' + (g.title ? escapeHtml(g.title.charAt(0).toUpperCase()) : 'G') + '</div>') +
       '</div>' +
       '<div class="dash-body">' +
         '<div class="dash-name">' + escapeHtml(g.title) + '</div>' +
-        '<div class="dash-meta">' + photoCount + ' photo' + (photoCount !== 1 ? 's' : '') + ' &middot; ' + (isPrivate ? 'Private' : 'Public') + '</div>' +
+        '<div class="dash-meta">' + counts.join(' &middot; ') + ' &middot; ' + (isPrivate ? 'Private' : 'Public') +
+          (g.downloadsEnabled ? '' : ' &middot; no downloads') + '</div>' +
         (catNames.length ? '<div>' + catNames.map(function(n) { return '<span class="dash-cat-pill">' + escapeHtml(n) + '</span>'; }).join('') + '</div>' : '') +
         '<div class="dash-actions">' +
           '<button class="btn-sm filled" data-manage="' + g.id + '">Manage</button>' +
@@ -716,7 +1015,9 @@ function renderGalleryList() {
 }
 
 async function copyLink(id) {
-  const link = directLinkFor(id);
+  const g = galleriesCache.find(function(x) { return x.id === id; });
+  if (!g) return;
+  const link = directLinkFor(g);
   try {
     await navigator.clipboard.writeText(link);
     showToast('Link copied.');
@@ -739,14 +1040,29 @@ function openGalleryModal(id) {
   editingGalleryId = id;
   const g = id ? galleriesCache.find(function(x) { return x.id === id; }) : null;
   $('galleryModalTitle').textContent = g ? 'Edit Gallery' : 'New Gallery';
-  $('galTitle').value   = g ? g.title : '';
-  $('galDesc').value    = g ? (g.description || '') : '';
-  $('galVisibility').value = g ? (g.visibility || 'public') : 'public';
-  renderCategoryCheckboxes(g ? (g._categoryIds || []) : []);
+  $('galTitle').value      = g ? g.title : '';
+  $('galDesc').value       = g ? (g.description || '') : '';
+  $('galVisibility').value = g ? g.visibility : 'public';
+  $('galShootDate').value  = g && g.shootDate ? g.shootDate : '';
+  $('galPixieset').value   = g && g.pixiesetUrl ? g.pixiesetUrl : '';
+  $('galDownloads').checked  = g ? g.downloadsEnabled !== false : true;
+  $('galLinkAccess').checked = g ? g.linkAccessEnabled !== false : true;
+  renderCategoryCheckboxes(g ? (g.categoryIds || []) : []);
+  updateVisibilityHint();
   $('galModalMsg').classList.remove('show', 'ok', 'err');
   galleryModalBg.classList.add('show');
 }
 function closeGalleryModal() { galleryModalBg.classList.remove('show'); }
+
+// Spell out what each choice actually does, since "private" here means
+// something specific: hidden from the grid, but open to anyone with the link.
+function updateVisibilityHint() {
+  const isPrivate = $('galVisibility').value === 'private';
+  $('visibilityHint').textContent = isPrivate
+    ? "Won't appear on the gallery page. Opens for anyone with its private link, and shows under “Your Galleries” for people you grant access to."
+    : 'Listed on the gallery page for everyone. It still has a private link you can send directly.';
+}
+$('galVisibility').addEventListener('change', updateVisibilityHint);
 
 function renderCategoryCheckboxes(selectedIds) {
   const wrap = $('galCategoriesList');
@@ -783,47 +1099,44 @@ $('galleryForm').addEventListener('submit', async function(e) {
   const payload = {
     title: title,
     description: $('galDesc').value.trim(),
-    visibility: $('galVisibility').value
+    visibility: $('galVisibility').value,
+    shootDate: $('galShootDate').value || null,
+    pixiesetUrl: $('galPixieset').value.trim(),
+    downloadsEnabled: $('galDownloads').checked,
+    linkAccessEnabled: $('galLinkAccess').checked,
+    categoryIds: getSelectedCategoryIds()
   };
-  const selectedCategoryIds = getSelectedCategoryIds();
 
   const btn = $('galSaveBtn');
   btn.disabled = true;
   btn.textContent = 'Saving…';
 
-  let error, galleryId = editingGalleryId;
+  let result;
   if (editingGalleryId) {
-    ({ error } = await supa.from('galleries').update(payload).eq('id', editingGalleryId));
+    payload.id = editingGalleryId;
+    result = await api('/api/admin/galleries', { method: 'PATCH', body: payload });
   } else {
-    payload.sort_order = galleriesCache.length;
-    const { data: inserted, error: insErr } = await supa.from('galleries').insert(payload).select('id').single();
-    error = insErr;
-    galleryId = inserted ? inserted.id : null;
-  }
-
-  if (!error && galleryId) {
-    // Full-replace sync of category assignments for this gallery
-    const { error: delErr } = await supa.from('gallery_categories').delete().eq('gallery_id', galleryId);
-    if (!delErr && selectedCategoryIds.length) {
-      const rows = selectedCategoryIds.map(function(cid) { return { gallery_id: galleryId, category_id: cid }; });
-      const { error: insCatErr } = await supa.from('gallery_categories').insert(rows);
-      if (insCatErr) error = insCatErr;
-    } else if (delErr) {
-      error = delErr;
-    }
+    payload.sortOrder = galleriesCache.length;
+    result = await api('/api/admin/galleries', { method: 'POST', body: payload });
   }
 
   btn.disabled = false;
   btn.textContent = 'Save Gallery';
 
-  if (error) {
-    msg.textContent = error.message;
+  if (!result.ok) {
+    msg.textContent = result.error;
     msg.classList.add('show', 'err');
     return;
   }
+
+  const wasEditing = Boolean(editingGalleryId);
   closeGalleryModal();
-  showToast(editingGalleryId ? 'Gallery updated.' : 'Gallery created.');
+  showToast(wasEditing ? 'Gallery updated.' : 'Gallery created.');
   await loadGalleries();
+  // Keep the manage view in step if it's what we were editing from.
+  if (wasEditing && currentGalleryId === payload.id && $('manageView').classList.contains('active')) {
+    await refreshManageView();
+  }
 });
 
 /* ────────────────────────────────────────────────────────────
@@ -858,8 +1171,8 @@ function renderCategoriesModalList() {
       const c = categoriesCache.find(function(x) { return x.id === id; });
       if (!c) return;
       if (!confirm('Delete category "' + c.name + '"? It will be removed from any galleries using it.')) return;
-      const { error } = await supa.from('categories').delete().eq('id', id);
-      if (error) { showToast(error.message, true); return; }
+      const result = await api('/api/admin/categories?id=' + encodeURIComponent(id), { method: 'DELETE' });
+      if (!result.ok) { showToast(result.error, true); return; }
       showToast('Category deleted.');
       await loadCategories();
       renderCategoriesModalList();
@@ -890,27 +1203,29 @@ $('newCategoryForm').addEventListener('submit', async function(e) {
 async function deleteGallery(id) {
   const g = galleriesCache.find(function(x) { return x.id === id; });
   if (!g) return;
-  if (!confirm('Delete "' + g.title + '" and all its photos? This can\'t be undone.')) return;
+  if (!confirm('Delete "' + g.title + '" and everything in it? This can\'t be undone.')) return;
 
-  // Best-effort: remove uploaded files from storage first (frees up storage space)
-  const { data: photoRows } = await supa
-    .from('gallery_photos')
-    .select('storage_path')
-    .eq('gallery_id', id);
-  const paths = (photoRows || []).map(function(p) { return p.storage_path; }).filter(Boolean);
-  if (paths.length) await supa.storage.from(BUCKET_NAME).remove(paths);
+  // Best-effort: clear uploaded files out of storage first. Drive-hosted media
+  // isn't ours to delete — those files stay in your Drive.
+  try {
+    const { data: rows } = await supa.from('media').select('storage_path').eq('gallery_id', id);
+    const paths = (rows || []).map(function(m) { return m.storage_path; }).filter(Boolean);
+    if (paths.length) await supa.storage.from(BUCKET_NAME).remove(paths);
+  } catch (err) {
+    console.error('Storage cleanup failed:', err);
+  }
 
-  const { error } = await supa.from('galleries').delete().eq('id', id);
-  if (error) { showToast(error.message, true); return; }
+  const result = await api('/api/admin/galleries?id=' + encodeURIComponent(id), { method: 'DELETE' });
+  if (!result.ok) { showToast(result.error, true); return; }
   showToast('Gallery deleted.');
   await loadGalleries();
 }
 
 /* ────────────────────────────────────────────────────────────
-   MANAGE GALLERY VIEW (photos + direct link)
+   MANAGE GALLERY VIEW
 ──────────────────────────────────────────────────────────── */
 let currentGalleryId = null;
-let currentPhotos = [];
+let currentMedia = [];
 let currentGalleryData = null;
 
 $('backToListBtn').addEventListener('click', function() {
@@ -922,60 +1237,73 @@ $('backToListBtn').addEventListener('click', function() {
 async function openManage(id) {
   currentGalleryId = id;
   $('galleryListView').style.display = 'none';
+  $('usersView').style.display = 'none';
   $('manageView').classList.add('active');
   $('uploadQueue').innerHTML = '';
+  $('driveLinksInput').value = '';
+  clearMsgEl('driveLinksMsg');
+  clearMsgEl('emailMsg');
+  clearMsgEl('accessMsg');
   await refreshManageView();
 }
 
 async function refreshManageView() {
-  const { data: g, error } = await supa
-    .from('galleries')
-    .select('id, title, description, cover_url, cover_path, visibility')
-    .eq('id', currentGalleryId)
-    .single();
-  if (error) { showToast(error.message, true); return; }
+  // Read straight from the cache the API already gave us where possible, but
+  // re-fetch so counts and the secret stay accurate after every change.
+  const result = await api('/api/admin/galleries');
+  if (!result.ok) { showToast(result.error, true); return; }
+  galleriesCache = result.galleries || [];
+
+  const g = galleriesCache.find(function(x) { return x.id === currentGalleryId; });
+  if (!g) { showToast('That gallery no longer exists.', true); $('backToListBtn').click(); return; }
   currentGalleryData = g;
+  currentMedia = g.media || [];
 
   $('manageTitle').textContent = g.title;
   $('manageDesc').textContent = g.description || '';
-  $('manageVisBadge').textContent = g.visibility === 'private' ? 'Private gallery' : 'Public gallery';
 
-  $('directLinkInput').value = directLinkFor(g.id);
-  $('linkPanelSub').textContent = g.visibility === 'private'
-    ? "This gallery is private — it won't show on the gallery page grid, but this link opens it directly for anyone who has it."
-    : 'This gallery is public and already shows on the gallery page — this link jumps straight to it.';
+  const bits = [g.isPrivate ? 'Private gallery' : 'Public gallery'];
+  if (!g.downloadsEnabled) bits.push('downloads off');
+  if (g.isPrivate && g.linkAccessEnabled === false) bits.push('link requires sign-in');
+  $('manageVisBadge').textContent = bits.join('  ·  ');
 
-  const { data: photos, error: pErr } = await supa
-    .from('gallery_photos')
-    .select('id, url, storage_path, sort_order')
-    .eq('gallery_id', currentGalleryId)
-    .order('sort_order', { ascending: true });
-  if (pErr) { showToast(pErr.message, true); return; }
+  $('directLinkInput').value = directLinkFor(g);
+  $('linkPanelSub').innerHTML = g.linkAccessEnabled === false
+    ? 'Link access is <strong>off</strong> for this gallery — this link only opens for people signed in with an account you’ve granted below.'
+    : (g.isPrivate
+        ? 'Anyone with this link can open the gallery, no account needed. It doesn’t appear on the public gallery page.'
+        : 'This gallery is public and already listed on the gallery page. This link jumps straight to it.');
 
-  currentPhotos = (photos || []).map(function(p) {
-    return Object.assign({}, p, { _display: (p.storage_path && publicUrlFor(p.storage_path)) || p.url });
-  });
-  const coverDisplay = (g.cover_path && publicUrlFor(g.cover_path)) || g.cover_url;
-  renderPhotoGrid(coverDisplay);
+  renderPhotoGrid();
+  await loadAccessList();
 }
 
-function renderPhotoGrid(coverDisplay) {
+function renderPhotoGrid() {
   const grid = $('photoGrid');
   grid.innerHTML = '';
-  if (!currentPhotos.length) {
-    grid.innerHTML = '<div class="photo-grid-empty">No photos yet — drag some into the box above.</div>';
+  if (!currentMedia.length) {
+    grid.innerHTML = '<div class="photo-grid-empty">Nothing here yet — paste some Google Drive links above.</div>';
     return;
   }
-  currentPhotos.forEach(function(p) {
+
+  const coverUrl = currentGalleryData ? currentGalleryData.cover : '';
+
+  currentMedia.forEach(function(m) {
     const tile = document.createElement('div');
     tile.className = 'photo-tile';
-    const isCover = p._display === coverDisplay && !!coverDisplay;
+    const isCover = Boolean(coverUrl) && m.thumb === coverUrl;
+    const isVideo = m.kind === 'video';
+
     tile.innerHTML =
-      '<img src="' + p._display + '" loading="lazy" alt="">' +
+      '<img src="' + escapeHtml(m.thumb) + '" loading="lazy" alt="" referrerpolicy="no-referrer">' +
       (isCover ? '<span class="tile-cover-badge">Cover</span>' : '') +
+      (isVideo
+        ? '<span class="tile-kind-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Video</span>'
+        : '') +
       '<div class="tile-ov"><div class="tile-btn-row">' +
-        (isCover ? '' : '<button class="tile-btn" data-cover="' + p.id + '">Set Cover</button>') +
-        '<button class="tile-btn danger" data-del="' + p.id + '">Delete</button>' +
+        (isCover ? '' : '<button class="tile-btn" data-cover="' + m.id + '">Set Cover</button>') +
+        '<button class="tile-btn" data-kind="' + m.id + '">' + (isVideo ? 'Mark Photo' : 'Mark Video') + '</button>' +
+        '<button class="tile-btn danger" data-del="' + m.id + '">Delete</button>' +
       '</div></div>';
     grid.appendChild(tile);
   });
@@ -983,41 +1311,64 @@ function renderPhotoGrid(coverDisplay) {
   grid.querySelectorAll('[data-cover]').forEach(function(btn) {
     btn.addEventListener('click', function() { setCover(btn.getAttribute('data-cover')); });
   });
+  grid.querySelectorAll('[data-kind]').forEach(function(btn) {
+    btn.addEventListener('click', function() { toggleKind(btn.getAttribute('data-kind')); });
+  });
   grid.querySelectorAll('[data-del]').forEach(function(btn) {
-    btn.addEventListener('click', function() { deletePhoto(btn.getAttribute('data-del')); });
+    btn.addEventListener('click', function() { deleteMedia(btn.getAttribute('data-del')); });
   });
 }
 
-async function setCover(photoId) {
-  const p = currentPhotos.find(function(x) { return x.id === photoId; });
-  if (!p) return;
-  const { error } = await supa.from('galleries')
-    .update({ cover_url: null, cover_path: p.storage_path })
-    .eq('id', currentGalleryId);
-  if (error) { showToast(error.message, true); return; }
-  showToast('Cover photo updated.');
+async function setCover(mediaId) {
+  const m = currentMedia.find(function(x) { return x.id === mediaId; });
+  if (!m) return;
+  const result = await api('/api/admin/galleries', {
+    method: 'PATCH',
+    body: { id: currentGalleryId, coverUrl: m.thumb }
+  });
+  if (!result.ok) { showToast(result.error, true); return; }
+  showToast('Cover updated.');
   await refreshManageView();
 }
 
-async function deletePhoto(photoId) {
-  const p = currentPhotos.find(function(x) { return x.id === photoId; });
-  if (!p) return;
-  if (!confirm('Delete this photo?')) return;
+// Drive doesn't tell us whether a file is a photo or a video, so this is the
+// switch for anything that came in under the wrong kind.
+async function toggleKind(mediaId) {
+  const m = currentMedia.find(function(x) { return x.id === mediaId; });
+  if (!m) return;
+  const result = await api('/api/admin/media', {
+    method: 'PATCH',
+    body: { id: mediaId, kind: m.kind === 'video' ? 'photo' : 'video' }
+  });
+  if (!result.ok) { showToast(result.error, true); return; }
+  await refreshManageView();
+}
 
-  if (p.storage_path) {
-    await supa.storage.from(BUCKET_NAME).remove([p.storage_path]);
+async function deleteMedia(mediaId) {
+  if (!confirm('Remove this from the gallery?')) return;
+
+  // If it was an upload, take the file out of storage too.
+  try {
+    const { data: row } = await supa.from('media').select('storage_path').eq('id', mediaId).maybeSingle();
+    if (row && row.storage_path) await supa.storage.from(BUCKET_NAME).remove([row.storage_path]);
+  } catch (err) {
+    console.error('Storage cleanup failed:', err);
   }
-  const { error } = await supa.from('gallery_photos').delete().eq('id', photoId);
-  if (error) { showToast(error.message, true); return; }
-  showToast('Photo deleted.');
+
+  const result = await api('/api/admin/media?id=' + encodeURIComponent(mediaId), { method: 'DELETE' });
+  if (!result.ok) { showToast(result.error, true); return; }
+  showToast('Removed.');
   await refreshManageView();
 }
 
 $('editGalleryBtn').addEventListener('click', function() { openGalleryModal(currentGalleryId); });
 $('deleteGalleryBtn').addEventListener('click', async function() {
-  await deleteGallery(currentGalleryId);
-  $('manageView').classList.remove('active');
-  $('galleryListView').style.display = '';
+  const id = currentGalleryId;
+  await deleteGallery(id);
+  if (!galleriesCache.some(function(x) { return x.id === id; })) {
+    $('manageView').classList.remove('active');
+    $('galleryListView').style.display = '';
+  }
 });
 
 $('copyLinkBtn').addEventListener('click', async function() {
@@ -1031,8 +1382,243 @@ $('copyLinkBtn').addEventListener('click', async function() {
   }
 });
 
+$('regenLinkBtn').addEventListener('click', async function() {
+  if (!confirm('Make a new private link?\n\nEvery link you have already sent for this gallery will stop working immediately.')) return;
+  const result = await api('/api/admin/galleries', {
+    method: 'PATCH',
+    body: { id: currentGalleryId, action: 'regenerate-secret' }
+  });
+  if (!result.ok) { showToast(result.error, true); return; }
+  showToast('New link created — old ones no longer work.');
+  await refreshManageView();
+});
+
+/* ────────────────────────────────────────────────────────────
+   ADD MEDIA — paste Drive links
+──────────────────────────────────────────────────────────── */
+document.querySelectorAll('.addmedia-tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.addmedia-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.addmedia-pane').forEach(function(p) { p.classList.remove('active'); });
+    tab.classList.add('active');
+    $(tab.dataset.pane).classList.add('active');
+  });
+});
+
+function setMsgEl(id, text, kind) {
+  const el = $(id);
+  el.textContent = text;
+  el.classList.remove('ok', 'err');
+  el.classList.add('show', kind);
+}
+function clearMsgEl(id) { $(id).classList.remove('show', 'ok', 'err'); }
+
+$('addDriveLinksBtn').addEventListener('click', async function() {
+  const raw = $('driveLinksInput').value.trim();
+  clearMsgEl('driveLinksMsg');
+  if (!raw) { setMsgEl('driveLinksMsg', 'Paste at least one link first.', 'err'); return; }
+
+  const btn = $('addDriveLinksBtn');
+  btn.disabled = true;
+  btn.textContent = 'Adding…';
+
+  const result = await api('/api/admin/media', {
+    method: 'POST',
+    body: {
+      galleryId: currentGalleryId,
+      links: raw,
+      kind: $('driveIsVideo').checked ? 'video' : 'photo'
+    }
+  });
+
+  btn.disabled = false;
+  btn.textContent = 'Add to Gallery';
+
+  if (!result.ok) {
+    const rejected = (result.body && result.body.rejected) || [];
+    setMsgEl('driveLinksMsg',
+      result.error + (rejected.length ? ' Couldn’t read: ' + rejected.slice(0, 3).join(', ') : ''),
+      'err');
+    return;
+  }
+
+  const parts = ['Added ' + result.added + ' item' + (result.added !== 1 ? 's' : '') + '.'];
+  if (result.duplicates) parts.push(result.duplicates + ' already in this gallery, skipped.');
+  if (result.rejected && result.rejected.length) {
+    parts.push(result.rejected.length + " couldn't be read as a link.");
+  }
+  setMsgEl('driveLinksMsg', parts.join(' '), result.added ? 'ok' : 'err');
+
+  $('driveLinksInput').value = '';
+  await refreshManageView();
+});
+
+/* ────────────────────────────────────────────────────────────
+   EMAIL THIS GALLERY
+──────────────────────────────────────────────────────────── */
+$('sendEmailBtn').addEventListener('click', async function() {
+  const emails = $('emailRecipients').value.trim();
+  clearMsgEl('emailMsg');
+  if (!emails) { setMsgEl('emailMsg', 'Add at least one email address.', 'err'); return; }
+
+  const btn = $('sendEmailBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  const result = await api('/api/admin/send-gallery-link', {
+    method: 'POST',
+    body: {
+      galleryId: currentGalleryId,
+      emails: emails,
+      message: $('emailMessage').value.trim(),
+      alsoGrantAccess: $('emailAlsoGrant').checked
+    }
+  });
+
+  btn.disabled = false;
+  btn.textContent = 'Send Link';
+
+  if (!result.ok) { setMsgEl('emailMsg', result.error, 'err'); return; }
+
+  let text = result.message;
+  if (result.failed) {
+    text += ' ' + result.failed + " couldn't be delivered: " +
+      (result.failures || []).map(function(f) { return f.email; }).join(', ');
+  }
+  setMsgEl('emailMsg', text, result.failed ? 'err' : 'ok');
+  $('emailRecipients').value = '';
+  $('emailMessage').value = '';
+  if ($('emailAlsoGrant').checked) await loadAccessList();
+});
+
+/* ────────────────────────────────────────────────────────────
+   ACCOUNT ACCESS
+──────────────────────────────────────────────────────────── */
+async function loadAccessList() {
+  const list = $('accessList');
+  list.innerHTML = '<p class="access-empty">Loading…</p>';
+
+  const result = await api('/api/admin/access?galleryId=' + encodeURIComponent(currentGalleryId));
+  if (!result.ok) {
+    list.innerHTML = '<p class="access-empty">Couldn\'t load: ' + escapeHtml(result.error) + '</p>';
+    return;
+  }
+
+  const rows = result.access || [];
+  if (!rows.length) {
+    list.innerHTML = '<p class="access-empty">No one yet. Anyone with the private link can still view it.</p>';
+    return;
+  }
+
+  list.innerHTML = '';
+  rows.forEach(function(r) {
+    const row = document.createElement('div');
+    row.className = 'access-row';
+    row.innerHTML =
+      '<span class="email">' + escapeHtml(r.email) + '</span>' +
+      (r.hasAccount
+        ? '<span class="access-pill active">Active</span>'
+        : '<span class="access-pill pending">Awaiting signup</span>') +
+      '<button class="tile-btn danger" data-revoke="' + r.id + '" ' +
+        'style="background:rgba(14,10,26,.6);border-color:rgba(224,90,107,.4)">Remove</button>';
+    list.appendChild(row);
+  });
+
+  list.querySelectorAll('[data-revoke]').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      const result = await api('/api/admin/access?id=' + encodeURIComponent(btn.getAttribute('data-revoke')), { method: 'DELETE' });
+      if (!result.ok) { showToast(result.error, true); return; }
+      showToast('Access removed.');
+      await loadAccessList();
+    });
+  });
+}
+
+$('grantAccessBtn').addEventListener('click', async function() {
+  const emails = $('grantEmails').value.trim();
+  clearMsgEl('accessMsg');
+  if (!emails) { setMsgEl('accessMsg', 'Enter at least one email address.', 'err'); return; }
+
+  const btn = $('grantAccessBtn');
+  btn.disabled = true;
+  btn.textContent = 'Adding…';
+
+  const result = await api('/api/admin/access', {
+    method: 'POST',
+    body: { galleryId: currentGalleryId, emails: emails }
+  });
+
+  btn.disabled = false;
+  btn.textContent = 'Grant Access';
+
+  if (!result.ok) { setMsgEl('accessMsg', result.error, 'err'); return; }
+  setMsgEl('accessMsg',
+    'Added ' + result.granted + ' ' + (result.granted === 1 ? 'person' : 'people') +
+    '. Anyone without an account yet will get access automatically when they sign up.',
+    'ok');
+  $('grantEmails').value = '';
+  await loadAccessList();
+});
+
+/* ────────────────────────────────────────────────────────────
+   PEOPLE
+──────────────────────────────────────────────────────────── */
+async function loadUsers() {
+  const list = $('userList');
+  list.innerHTML = '<div class="dash-empty">Loading…</div>';
+
+  const result = await api('/api/admin/users');
+  if (!result.ok) {
+    list.innerHTML = '<div class="dash-empty">Couldn\'t load: ' + escapeHtml(result.error) + '</div>';
+    return;
+  }
+
+  const users = result.users || [];
+  if (!users.length) {
+    list.innerHTML = '<div class="dash-empty">No accounts yet. People create their own at /login.html.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  users.forEach(function(u) {
+    const meta = [];
+    if (u.fullName) meta.push(escapeHtml(u.fullName));
+    meta.push(u.galleryCount + ' galler' + (u.galleryCount === 1 ? 'y' : 'ies'));
+    if (u.confirmed === false) meta.push('email not confirmed');
+    if (u.isAdmin) meta.push('administrator');
+
+    const row = document.createElement('div');
+    row.className = 'user-row';
+    row.innerHTML =
+      '<div class="user-main">' +
+        '<div class="user-email">' + escapeHtml(u.email) + '</div>' +
+        '<div class="user-meta">' + meta.join(' &middot; ') + '</div>' +
+      '</div>' +
+      '<button class="btn-sm' + (u.isAdmin ? ' danger' : '') + '" data-admin="' + u.id + '" data-make="' + (!u.isAdmin) + '">' +
+        (u.isAdmin ? 'Remove admin' : 'Make admin') +
+      '</button>';
+    list.appendChild(row);
+  });
+
+  list.querySelectorAll('[data-admin]').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      const makeAdmin = btn.getAttribute('data-make') === 'true';
+      if (makeAdmin && !confirm('Give this person full admin access to every gallery?')) return;
+      const result = await api('/api/admin/users', {
+        method: 'PATCH',
+        body: { id: btn.getAttribute('data-admin'), isAdmin: makeAdmin }
+      });
+      if (!result.ok) { showToast(result.error, true); return; }
+      showToast(makeAdmin ? 'Now an admin.' : 'Admin access removed.');
+      await loadUsers();
+    });
+  });
+}
+
 /* ────────────────────────────────────────────────────────────
    DRAG & DROP UPLOAD
+   Kept for files that aren't in Drive. Drive links are the main
+   route now, so this lives behind the second tab.
 ──────────────────────────────────────────────────────────── */
 const dropzone   = $('dropzone');
 const fileInput  = $('fileInput');
@@ -1061,7 +1647,9 @@ dropzone.addEventListener('drop', function(e) {
 function handleFiles(fileList) {
   const files = Array.from(fileList).filter(function(f) { return f.type.startsWith('image/'); });
   if (!files.length) return;
-  files.forEach(uploadOneFile);
+  files.reduce(function(chain, file) {
+    return chain.then(function() { return uploadOneFile(file); });
+  }, Promise.resolve()).then(refreshManageView);
 }
 
 async function uploadOneFile(file) {
@@ -1090,12 +1678,13 @@ async function uploadOneFile(file) {
 
     row.querySelector('.upload-bar-fill').style.width = '70%';
 
-    const nextOrder = currentPhotos.length
-      ? Math.max.apply(null, currentPhotos.map(function(p) { return p.sort_order || 0; })) + 1
+    const nextOrder = currentMedia.length
+      ? Math.max.apply(null, currentMedia.map(function(m) { return m.sortOrder || 0; })) + 1
       : 0;
 
-    const { error: insErr } = await supa.from('gallery_photos').insert({
+    const { error: insErr } = await supa.from('media').insert({
       gallery_id: currentGalleryId,
+      kind: 'photo',
       storage_path: path,
       sort_order: nextOrder
     });
@@ -1107,11 +1696,11 @@ async function uploadOneFile(file) {
     row.querySelector('.upload-status').textContent = 'Done';
 
     setTimeout(function() { row.remove(); }, 2200);
-    await refreshManageView();
   } catch (err) {
     row.classList.add('error');
     row.querySelector('.upload-status').textContent = 'Failed';
-    row.querySelector('.spinner').remove();
+    const sp = row.querySelector('.spinner');
+    if (sp) sp.remove();
     showToast('Upload failed: ' + (err.message || err), true);
   }
 }
