@@ -448,8 +448,8 @@ textarea.input-plain{resize:vertical;min-height:90px;font-size:.85rem;line-heigh
       Continue with Google
     </button>
     <p class="setup-note" id="setupNote">
-      Not connected yet — paste your Supabase Project URL and anon key into the
-      <code>CONFIG</code> block near the top of this file's script, run the files in
+      Not connected yet — set <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code>
+      in Vercel → Settings → Environment Variables and redeploy, run the files in
       <code>db/</code> in your Supabase SQL editor, then create your admin login under
       Authentication → Users.
     </p>
@@ -724,18 +724,33 @@ textarea.input-plain{resize:vertical;min-height:90px;font-size:.85rem;line-heigh
    (Project Settings → API in your Supabase dashboard)
    Must match the values in gallery.html.
    ============================================================ */
-const SUPABASE_URL      = "https://pexqzghhjiwvvxbiirkr.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBleHF6Z2hoaml3dnZ4YmlpcmtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyMjIzMDUsImV4cCI6MjEwMTc5ODMwNX0.uEMy93_Z1kD8w14JFhDn10k-UYZCCPHKBmgdEGWmRQ0";
-const BUCKET_NAME        = "gallery-photos";
+const BUCKET_NAME = "gallery-photos";
 
-const SUPABASE_CONNECTED = SUPABASE_URL !== "PASTE_SUPABASE_URL_HERE"
-  && SUPABASE_ANON_KEY !== "PASTE_SUPABASE_ANON_KEY_HERE"
-  && SUPABASE_URL && SUPABASE_ANON_KEY;
-
+// Read at runtime from /api/config, which serves them from the Vercel
+// environment. See the note in gallery.html for why nothing is hardcoded.
+let SUPABASE_URL       = "";
+let SUPABASE_ANON_KEY  = "";
+let SUPABASE_CONNECTED = false;
 let supa = null;
-if (SUPABASE_CONNECTED && typeof window.supabase !== 'undefined') {
-  supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  document.getElementById('setupNote').style.display = 'none';
+
+async function loadRuntimeConfig() {
+  try {
+    const res = await fetch('/api/config', { headers: { Accept: 'application/json' } });
+    if (!res.ok) return false;
+    const cfg = await res.json();
+    if (!cfg || !cfg.supabaseUrl || !cfg.supabaseAnonKey) return false;
+    if (typeof window.supabase === 'undefined') return false;
+
+    SUPABASE_URL       = cfg.supabaseUrl;
+    SUPABASE_ANON_KEY  = cfg.supabaseAnonKey;
+    SUPABASE_CONNECTED = true;
+    supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    document.getElementById('setupNote').style.display = 'none';
+    return true;
+  } catch (err) {
+    console.error('Config load failed:', err);
+    return false;
+  }
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -1707,8 +1722,12 @@ async function uploadOneFile(file) {
 
 /* ────────────────────────────────────────────────────────────
    INIT
+   Config first — checkSession() needs a client to check with.
 ──────────────────────────────────────────────────────────── */
-checkSession();
+(async function init() {
+  await loadRuntimeConfig();
+  await checkSession();
+})();
 </script>
 </body>
 </html>

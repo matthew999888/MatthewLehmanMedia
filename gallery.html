@@ -934,11 +934,35 @@ footer{
 // keeps working normally either way.
 // Manage galleries/photos from admin.html once connected.
 // ──────────────────────────────────────────────
-const SUPABASE_URL      = "https://pexqzghhjiwvvxbiirkr.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBleHF6Z2hoaml3dnZ4YmlpcmtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyMjIzMDUsImV4cCI6MjEwMTc5ODMwNX0.uEMy93_Z1kD8w14JFhDn10k-UYZCCPHKBmgdEGWmRQ0";
-const SUPABASE_CONNECTED = SUPABASE_URL !== "PASTE_SUPABASE_URL_HERE"
-  && SUPABASE_ANON_KEY !== "PASTE_SUPABASE_ANON_KEY_HERE"
-  && SUPABASE_URL && SUPABASE_ANON_KEY;
+// These are filled in at runtime from /api/config, which reads them from the
+// Vercel environment variables. Nothing is hardcoded here on purpose: this
+// file used to carry a project URL that was later deleted, and the page went
+// on pointing at a dead host with no way to correct it short of a code edit
+// in three separate files. Moving a project or rotating a key is now an env
+// var change and a redeploy.
+//
+// If the config call fails — the API is down, or the page is being opened as
+// a plain file — SUPABASE_CONNECTED stays false and the page renders
+// FALLBACK_GALLERIES instead of an empty grid.
+let SUPABASE_URL       = "";
+let SUPABASE_ANON_KEY  = "";
+let SUPABASE_CONNECTED = false;
+
+async function loadRuntimeConfig() {
+  try {
+    const res = await fetch('/api/config', { headers: { Accept: 'application/json' } });
+    if (!res.ok) return false;
+    const cfg = await res.json();
+    if (!cfg || !cfg.supabaseUrl || !cfg.supabaseAnonKey) return false;
+    SUPABASE_URL       = cfg.supabaseUrl;
+    SUPABASE_ANON_KEY  = cfg.supabaseAnonKey;
+    SUPABASE_CONNECTED = true;
+    return true;
+  } catch (err) {
+    console.error('Config load failed — falling back to built-in galleries:', err);
+    return false;
+  }
+}
 
 // ──────────────────────────────────────────────
 // SITE INFO
@@ -1382,8 +1406,11 @@ let myGalleries    = [];     // private galleries granted to the signed-in accou
 let currentGallery = null;   // the gallery currently on screen
 let currentSecret  = null;   // the /g/<secret> slug, when we arrived that way
 
+// Created by init() once loadRuntimeConfig() has the URL and key — not at
+// parse time, since the values arrive over the network.
 let supa = null;
-if (SUPABASE_CONNECTED && typeof window.supabase !== 'undefined') {
+function initSupabaseClient() {
+  if (!SUPABASE_CONNECTED || typeof window.supabase === 'undefined') return;
   supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
@@ -1409,8 +1436,14 @@ function parseDriveId(url) {
 // We also point straight at lh3.googleusercontent.com, the host that
 // drive.google.com/thumbnail just redirects to: one less round trip per image,
 // and no Google auth cookies set on the visitor.
-function driveThumb(id, w) {
-  return 'https://lh3.googleusercontent.com/d/' + encodeURIComponent(id) + '=w' + (w || 1000);
+//
+// The `-rj-l<quality>` suffix forces JPEG. It is not optional: these Drive
+// files are PNGs, and without it Drive resizes but keeps the format — 2.65 MB
+// for a 1000px tile, 9.1 MB for a 1920px one. A single gallery ran to ~40 MB
+// and never finished loading. As JPEG the same tile is ~198 KB.
+function driveThumb(id, w, q) {
+  return 'https://lh3.googleusercontent.com/d/' + encodeURIComponent(id) +
+         '=w' + (w || 1000) + '-rj-l' + (q || 80);
 }
 function driveThumbFallback(id, w) {
   return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w' + (w || 1000);
@@ -1457,7 +1490,7 @@ function mapMediaRow(m) {
     caption: m.caption || '',
     thumb: id ? driveThumb(id, 1000) : (stored || m.thumb_url || m.url || ''),
     thumbFallback: id ? driveThumbFallback(id, 1000) : '',
-    full:  id ? driveThumb(id, 1920) : (stored || m.thumb_url || m.url || ''),
+    full:  id ? driveThumb(id, 1920, 85) : (stored || m.thumb_url || m.url || ''),
     embed: (m.kind === 'video' && id) ? drivePreview(id) : null,
     download: m.id ? ('/api/download?m=' + encodeURIComponent(m.id)) : (stored || m.url || '')
   };
@@ -1517,20 +1550,41 @@ function mapApiGallery(g) {
 
 // FALLBACK_GALLERIES stores plain URL strings. Lift them into the same shape
 // so the rest of the page never has to care which source it's rendering.
+// The URLs in FALLBACK_GALLERIES are the old `drive.google.com/thumbnail?id=…`
+// shape. Those must be converted to the lh3 form rather than used as-is:
+// drive.google.com ignores the sz= parameter and hands back the full-resolution
+// original — 2.6 MB a photo, so a 15-photo gallery pulls ~40 MB — behind an
+// extra redirect that also sets Google auth cookies. Pull the file id out and
+// rebuild through the same helpers every other path uses.
 function mapFallbackGallery(g) {
+  const coverId = parseDriveId(g.cover);
+
   return {
     id: null,
     slug: slugify(g.title),
     title: g.title,
     description: g.description || '',
-    cover: g.cover || '',
+    cover: coverId ? driveThumb(coverId, 1000) : (g.cover || ''),
+    coverFallback: coverId ? driveThumbFallback(coverId, 1000) : '',
     visible: g.visible !== false,
     private: false,
     downloadsEnabled: true,
     pixiesetUrl: null,
     categoryIds: [],
     media: (g.photos || []).filter(Boolean).map(function(src) {
-      return { id: null, kind: 'photo', caption: '', thumb: src, full: src, embed: null, download: src };
+      const id = parseDriveId(src);
+      return {
+        id: null,
+        kind: 'photo',
+        caption: '',
+        thumb: id ? driveThumb(id, 1000) : src,
+        thumbFallback: id ? driveThumbFallback(id, 1000) : '',
+        full: id ? driveThumb(id, 1920, 85) : src,
+        embed: null,
+        // No /api/download here — there's no media row to authorise against,
+        // so link straight at Drive for the full-resolution original.
+        download: id ? ('https://drive.google.com/uc?export=download&id=' + encodeURIComponent(id)) : src
+      };
     })
   };
 }
@@ -2382,6 +2436,9 @@ function slugify(str) {
    INIT
 ════════════════════════════════════════════════════════════ */
 (async function init() {
+  await loadRuntimeConfig();
+  initSupabaseClient();
+
   await loadSession();
   renderAuthNav();
 

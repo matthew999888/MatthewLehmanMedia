@@ -1,6 +1,6 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 -- Matthew Lehman Media — full schema
--- Target project: pexqzghhjiwvvxbiirkr
+-- Run this in the SQL editor of whichever Supabase project SUPABASE_URL names.
 --
 -- Safe to re-run: every statement is idempotent.
 --

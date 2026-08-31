@@ -302,12 +302,11 @@ input{font-family:inherit;color:inherit}
 /* ============================================================
    CONFIG — must match gallery.html / admin.html
    ============================================================ */
-const SUPABASE_URL      = "https://pexqzghhjiwvvxbiirkr.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBleHF6Z2hoaml3dnZ4YmlpcmtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyMjIzMDUsImV4cCI6MjEwMTc5ODMwNX0.uEMy93_Z1kD8w14JFhDn10k-UYZCCPHKBmgdEGWmRQ0";
-
-const supa = (typeof window.supabase !== 'undefined')
-  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-  : null;
+// Fetched at runtime from /api/config rather than hardcoded — see the note in
+// gallery.html. The client is built once the values arrive.
+let SUPABASE_URL      = "";
+let SUPABASE_ANON_KEY = "";
+let supa = null;
 
 function $(id) { return document.getElementById(id); }
 
@@ -333,15 +332,25 @@ function busy(btn, on, label) {
 let turnstileSiteKey = null;
 const turnstileWidgets = {}; // holderId -> widget id
 
+// One call fills in everything the page needs from the environment: the
+// Supabase project to talk to, and the Turnstile key if bot protection is on.
 async function loadConfig() {
   try {
     const res = await fetch('/api/config');
     if (!res.ok) return;
     const cfg = await res.json();
+
+    if (cfg.supabaseUrl && cfg.supabaseAnonKey && typeof window.supabase !== 'undefined') {
+      SUPABASE_URL      = cfg.supabaseUrl;
+      SUPABASE_ANON_KEY = cfg.supabaseAnonKey;
+      supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
     turnstileSiteKey = cfg.turnstileSiteKey || null;
     if (turnstileSiteKey) loadTurnstileScript();
   } catch (err) {
     // No /api (e.g. opened as a bare file) — carry on without the bot check.
+    // supa stays null, and init() drops the visitor on the sign-in form.
   }
 }
 

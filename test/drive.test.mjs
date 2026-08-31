@@ -42,7 +42,11 @@ test('rejects things that are not Drive files', () => {
 test('derives the right URLs from an id', () => {
   // Thumbnails point straight at lh3 — the host drive.google.com redirects to.
   // Skipping that hop avoids a redirect per image and Google's auth cookies.
-  assert.equal(driveThumbUrl(ID, 1000), `https://lh3.googleusercontent.com/d/${ID}=w1000`);
+  //
+  // The `-rj-l80` suffix forces JPEG and is load-bearing: the source files are
+  // PNGs, and without it a 1000px tile comes back at 2.65 MB instead of ~198 KB.
+  assert.equal(driveThumbUrl(ID, 1000), `https://lh3.googleusercontent.com/d/${ID}=w1000-rj-l80`);
+  assert.equal(driveThumbUrl(ID, 1920, 85), `https://lh3.googleusercontent.com/d/${ID}=w1920-rj-l85`);
   assert.equal(driveThumbFallbackUrl(ID, 1000), `https://drive.google.com/thumbnail?id=${ID}&sz=w1000`);
   assert.equal(drivePreviewUrl(ID), `https://drive.google.com/file/d/${ID}/preview`);
   assert.equal(driveDownloadUrl(ID), `https://drive.google.com/uc?export=download&id=${ID}`);
@@ -51,7 +55,9 @@ test('derives the right URLs from an id', () => {
 test('thumbnail URLs round-trip back to the same id', () => {
   // Whatever we generate must be re-parseable, or a saved cover URL stops
   // resolving the next time it is read back.
+  // The `=w1000-rj-l80` suffix must not be swallowed into the captured id.
   assert.equal(parseDriveId(driveThumbUrl(ID, 1000)), ID);
+  assert.equal(parseDriveId(driveThumbUrl(ID, 1920, 85)), ID);
   assert.equal(parseDriveId(driveThumbFallbackUrl(ID, 1000)), ID);
   assert.equal(parseDriveId(drivePreviewUrl(ID)), ID);
   assert.equal(parseDriveId(driveDownloadUrl(ID)), ID);

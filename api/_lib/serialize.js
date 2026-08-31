@@ -8,6 +8,11 @@ import { SUPABASE_URL } from './env.js';
 
 const GRID_WIDTH = 1000;   // masonry tiles
 const FULL_WIDTH = 1920;   // lightbox
+
+// JPEG quality for each. The lightbox gets a little more since it's the image
+// the visitor is actually looking at; see driveThumbUrl for why this matters.
+const GRID_QUALITY = 80;
+const FULL_QUALITY = 85;
 const BUCKET = 'gallery-photos';
 
 // Files from the admin panel's uploader rather than Drive. The bucket is
@@ -29,9 +34,9 @@ export function serializeMedia(m) {
     caption: m.caption || '',
     sortOrder: m.sort_order ?? 0,
     // Grid thumbnail. For a video this is the Drive poster frame.
-    thumb: driveId ? driveThumbUrl(driveId, GRID_WIDTH) : (stored || m.thumb_url || m.url || ''),
+    thumb: driveId ? driveThumbUrl(driveId, GRID_WIDTH, GRID_QUALITY) : (stored || m.thumb_url || m.url || ''),
     // Full-size still, used by the lightbox for photos.
-    full: driveId ? driveThumbUrl(driveId, FULL_WIDTH) : (stored || m.thumb_url || m.url || ''),
+    full: driveId ? driveThumbUrl(driveId, FULL_WIDTH, FULL_QUALITY) : (stored || m.thumb_url || m.url || ''),
     // Used by the page's onerror handler if the lh3 host ever stops working.
     thumbFallback: driveId ? driveThumbFallbackUrl(driveId, GRID_WIDTH) : '',
     // Embeddable player, videos only.
@@ -50,7 +55,7 @@ export function serializeGallery(g, { includeSecret = false } = {}) {
 
   const coverDriveId = parseDriveId(g.cover_url);
   const cover = coverDriveId
-    ? driveThumbUrl(coverDriveId, GRID_WIDTH)
+    ? driveThumbUrl(coverDriveId, GRID_WIDTH, GRID_QUALITY)
     : g.cover_url || (media.length ? media[0].thumb : '');
 
   return {

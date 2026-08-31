@@ -144,8 +144,8 @@ Shop button just doesn't appear.
 
 ## The database
 
-Already applied to Supabase project `pexqzghhjiwvvxbiirkr`. The files in `db/`
-are the record of what's there, and are safe to re-run:
+The files in `db/` are the record of the schema, and are safe to re-run against
+whichever Supabase project `SUPABASE_URL` points at:
 
 | File | What it does |
 |---|---|

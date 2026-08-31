@@ -64,10 +64,18 @@ export function isDriveUrl(input) {
 //      per image, and avoids drive.google.com setting Google auth cookies on
 //      every page load (the third-party-cookie problem noted in index.html).
 //
+//   3. `-rj-l<quality>` forces JPEG at that quality. WITHOUT IT, Drive honours
+//      the width but keeps the original format, and these files are PNGs:
+//      =w1000 returns 2.65 MB and =w1920 returns 9.1 MB *per photo*. A 15-photo
+//      gallery pulled ~40 MB of thumbnails and simply never finished loading.
+//      Re-encoding to JPEG takes the same 1000px tile to ~198 KB — a 93%
+//      reduction — for no visible difference on a photograph.
+//
 // driveThumbFallbackUrl is the old form, kept as an onerror fallback in case
-// the lh3 shape ever changes.
-export function driveThumbUrl(fileId, width = 1000) {
-  return `https://lh3.googleusercontent.com/d/${encodeURIComponent(fileId)}=w${width}`;
+// the lh3 shape ever changes. It cannot do the JPEG conversion, so it stays
+// heavy — which is fine for something that should almost never be used.
+export function driveThumbUrl(fileId, width = 1000, quality = 80) {
+  return `https://lh3.googleusercontent.com/d/${encodeURIComponent(fileId)}=w${width}-rj-l${quality}`;
 }
 
 export function driveThumbFallbackUrl(fileId, width = 1000) {
