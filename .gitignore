@@ -11,3 +11,7 @@ node_modules/
 .DS_Store
 Thumbs.db
 *.log
+
+# Drive import working files — holds file ids for unlisted galleries,
+# including client shoots. Local only; the repo is public.
+.drive-import/
