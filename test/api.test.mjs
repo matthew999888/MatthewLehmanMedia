@@ -53,7 +53,7 @@ before(async () => {
   secretHandler   = (await import('../api/galleries/secret.js')).default;
   downloadHandler = (await import('../api/download.js')).default;
   configHandler   = (await import('../api/config.js')).default;
-  adminGalleries  = (await import('../api/admin/galleries.js')).default;
+  adminGalleries  = (await import('../api/_admin/galleries.js')).default;
 
   // A throwaway private gallery with one photo.
   const { data: g, error } = await admin
@@ -168,6 +168,39 @@ test('the service role key is not accepted as a user token', { skip: !CONFIGURED
     res
   );
   assert.equal(res.statusCode, 401);
+});
+
+// ── the /api/admin/[action].js dispatcher ──────────────────────────────────
+// The six admin handlers live in api/_admin/ so Vercel counts them as one
+// function, not six. These check the dispatcher in front of them still points
+// each URL at the right handler, and refuses anything it does not recognise.
+
+test('the admin dispatcher routes a known action to its handler', { skip: !CONFIGURED }, async () => {
+  const dispatch = (await import('../api/admin/[action].js')).default;
+  const req = mockReq('GET', '/api/admin/galleries');
+  req.query.action = 'galleries';
+
+  const res = mockRes();
+  await dispatch(req, res);
+
+  // Reaching galleries.js unauthenticated is a 401 — a 404 would mean the
+  // dispatcher never found the handler at all.
+  assert.equal(res.statusCode, 401);
+});
+
+test('the admin dispatcher 404s an unknown action', { skip: !CONFIGURED }, async () => {
+  const dispatch = (await import('../api/admin/[action].js')).default;
+
+  for (const action of ['', 'nope', '__proto__', 'constructor']) {
+    const req = mockReq('GET', `/api/admin/${action}`);
+    req.query.action = action;
+
+    const res = mockRes();
+    await dispatch(req, res);
+
+    assert.equal(res.statusCode, 404, `action ${JSON.stringify(action)} should 404`);
+    assert.equal(res.json.ok, false);
+  }
 });
 
 test('downloads on a private gallery are refused without the secret', { skip: !CONFIGURED }, async () => {
