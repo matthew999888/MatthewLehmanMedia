@@ -11,7 +11,7 @@ each part does, the setup steps only you can do, and how to run it locally.
 |---|---|
 | `index.html` | The main site. Contact form now posts to your own backend. |
 | `gallery.html` | Public gallery grid, plus **Your Galleries** for signed-in clients. |
-| `login.html` | Sign in, create an account, reset a password. |
+| `login.html` | Owner sign-in only. Not linked from the site; account creation is off. |
 | `admin.html` | Your dashboard. Not linked from anywhere — bookmark it. |
 | `/g/<link>` | A private gallery opened by its secret link. No account needed. |
 
@@ -31,8 +31,8 @@ Every gallery is either **public** or **private**.
 1. **Its private link** (`yoursite.com/g/AbC123…`). Anyone holding that link
    opens the gallery. No account, no password. This is what you email to
    parents and coaches, and it's the normal way clients see their photos.
-2. **Their account.** If you add someone's email under *People With Account
-   Access*, that gallery shows up under **Your Galleries** when they sign in.
+2. ~~**Their account.**~~ No longer available: the site has exactly one
+   account, yours. Private links are how clients see their photos.
 
 Both work at the same time — you don't have to choose. Signing in is purely a
 convenience so a returning client finds everything in one place.
@@ -83,17 +83,22 @@ load for visitors. This is the single most common thing to get wrong.
 Everything below degrades gracefully. Miss a step and that feature stays
 switched off; the site keeps working.
 
-### 1. Make yourself an admin
+### 1. The owner account — already done
 
-Signing in is open to anyone, so admin rights are a flag on your row.
+There is exactly one account, `lehmanmatthew0@gmail.com`, confirmed and with
+`profiles.is_admin` set. Sign in at `/login` and `/admin` lets you in.
 
-1. Go to `/login.html` and create your account with your real email.
-2. Confirm it (or, before Resend is set up, confirm the user by hand in
-   Supabase → Authentication → Users).
-3. Supabase → **Table Editor → profiles** → find your row → set `is_admin`
-   to `true`.
-4. `/admin.html` now lets you in. After that you can promote anyone else from
-   the **People** tab.
+Account creation is off in three places, deliberately:
+
+- `login.html` has no signup form, and no page links to `/login` any more.
+- `api/auth/signup.js` and `api/auth/resend-confirmation.js` are deleted.
+- `db/005_single_owner_account.sql` puts a trigger on `auth.users` that
+  refuses any other email. This is the one that actually matters — the first
+  two only close the site's own doors, while the Supabase auth endpoint stays
+  reachable with the public anon key.
+
+To change the password, use Supabase → **Authentication → Users**. To allow a
+second account one day, drop the trigger in `005` and restore the signup route.
 
 ### 2. Environment variables
 
@@ -152,6 +157,8 @@ whichever Supabase project `SUPABASE_URL` points at:
 | `001_schema.sql` | Tables, triggers, rate limiter, row-level security |
 | `002_seed.sql` | The 13 starting galleries — **generated, don't hand-edit** |
 | `003_storage.sql` | The upload bucket and its policies |
+| `004_column_grants.sql` | Hides `secret_slug` from the public key |
+| `005_single_owner_account.sql` | One account only — blocks every other signup |
 
 Regenerate the seed from the fallback data in `gallery.html` with:
 
@@ -177,8 +184,7 @@ Counted in Postgres — no Redis, no extra bill. Current budgets live in
 
 | Action | Limit |
 |---|---|
-| Signup | 5/hour per IP, 3/day per email |
-| Password reset / resend confirmation | 3–5/hour |
+| Password reset | 3–5/hour |
 | Opening a private link | 60 per 5 min per IP |
 | Downloads | 300/hour per IP |
 | Contact form | 5/hour per IP |

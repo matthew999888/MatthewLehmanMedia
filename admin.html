@@ -5,9 +5,10 @@
      ─────────────────────────────────────────────────────────────────────
      THIS PAGE IS NOT LINKED FROM THE PUBLIC SITE.
      Bookmark it directly: https://www.matthewlehmanmedia.com/admin.html
-     Anyone can create an account at /login.html, so signing in proves
-     nothing on its own — admin rights come from profiles.is_admin, which
-     is checked here for the UI and again on the server for every write.
+     Only the owner account exists: signup is gone from the site and a
+     trigger on auth.users refuses any other email. Admin rights still come
+     from profiles.is_admin, which is checked here for the UI and again on
+     the server for every write.
      ─────────────────────────────────────────────────────────────────────
      SETUP: run the files in db/ against your Supabase project, then set
      is_admin = true on your row in the profiles table.
@@ -617,9 +618,10 @@ textarea.input-plain{resize:vertical;min-height:90px;font-size:.85rem;line-heigh
       </div>
       <div class="user-list" id="userList"></div>
       <p class="input-hint" style="margin-top:1.5rem;max-width:640px">
-        Accounts are created by people themselves at <code>/login.html</code>. To give
-        someone a gallery, open that gallery and use <strong>People With Account
-        Access</strong> — you can add their email before they've ever signed up.
+        Account creation is switched off — only the owner account exists, and the
+        database refuses any other. <strong>People With Account Access</strong> on a
+        gallery therefore has nobody to grant to: share a private gallery by its
+        private link instead.
       </p>
     </div>
 
@@ -813,10 +815,10 @@ function escapeHtml(str) {
 
 /* ────────────────────────────────────────────────────────────
    AUTH
-   Anyone can create an account at /login.html, so signing in is
-   no longer proof of anything. Admin rights come from
-   profiles.is_admin, which is checked here for the UI and again
-   on the server for every write.
+   Only the owner account exists, so signing in is close to proof
+   on its own — but admin rights still come from profiles.is_admin,
+   which is checked here for the UI and again on the server for
+   every write.
 ──────────────────────────────────────────────────────────── */
 const loginScreen = $('loginScreen');
 const dashboard   = $('dashboard');
@@ -1590,7 +1592,7 @@ async function loadUsers() {
 
   const users = result.users || [];
   if (!users.length) {
-    list.innerHTML = '<div class="dash-empty">No accounts yet. People create their own at /login.html.</div>';
+    list.innerHTML = '<div class="dash-empty">Only the owner account exists — account creation is switched off.</div>';
     return;
   }
 

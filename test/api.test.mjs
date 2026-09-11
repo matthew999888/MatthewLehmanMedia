@@ -224,3 +224,34 @@ test('the rate limiter actually blocks', { skip: !CONFIGURED }, async () => {
   const blocked = await consume('signup', key);
   assert.equal(blocked.allowed, false, 'the call past the limit should be blocked');
 });
+
+// ── single-owner lock ────────────────────────────────────────────────────────
+// Removing the signup form and route only closes the site's own doors. The
+// Supabase auth endpoint stays reachable with the public anon key, so the lock
+// that matters is the trigger on auth.users. Prove it the way an outsider
+// would: with the anon key, against the live project.
+
+test('nobody but the owner can create an account', { skip: !CONFIGURED }, async () => {
+  const anon = process.env.SUPABASE_ANON_KEY;
+  if (!anon) return; // anon key not configured locally; nothing to assert
+
+  const { createClient } = await import('@supabase/supabase-js');
+  const pub = createClient(process.env.SUPABASE_URL, anon, {
+    auth: { persistSession: false },
+  });
+
+  const { data, error } = await pub.auth.signUp({
+    email: `intruder-${Date.now()}@example.com`,
+    password: 'a-perfectly-valid-password-123',
+  });
+
+  assert.ok(error, 'signup with a non-owner email must fail');
+  assert.equal(data?.user ?? null, null, 'no user should come back');
+
+  // And the database should still hold exactly one account.
+  const { count, error: cErr } = await admin
+    .from('profiles')
+    .select('id', { count: 'exact', head: true });
+  assert.equal(cErr, null);
+  assert.equal(count, 1, 'there should be exactly one account');
+});

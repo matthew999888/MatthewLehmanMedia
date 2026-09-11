@@ -763,7 +763,6 @@ footer{
     <a href="/" class="nav-home-link">← Home</a>
     <a href="https://www.instagram.com/mlmedia_28/" target="_blank" rel="noopener noreferrer">Instagram</a>
     <a href="gallery.html" class="active nav-gallery-pill">Gallery</a>
-    <a href="login.html" class="nav-auth-link" id="navAuthLink">Sign In</a>
   </div>
   <button class="nav-burger" id="navBurger" aria-label="Open navigation menu" aria-expanded="false">
     <span></span><span></span><span></span>
@@ -775,7 +774,6 @@ footer{
   <a href="/">← Home</a>
   <a href="gallery.html">Gallery</a>
   <a href="https://www.instagram.com/mlmedia_28/" target="_blank" rel="noopener noreferrer">Instagram</a>
-  <a href="login.html" id="drawerAuthLink">Sign In</a>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════
@@ -1834,9 +1832,7 @@ function showSecretError(message, requiresLogin) {
   if (grid) {
     grid.innerHTML =
       '<div class="empty-state">' + escapeHtmlGal(message) +
-      (requiresLogin
-        ? ' <a href="login.html" style="color:var(--glow);text-decoration:underline">Sign in</a> to view it.'
-        : ' Ask Matthew to send you a fresh link.') +
+      ' Ask Matthew to send you a fresh link.' +
       '</div>';
   }
   window.scrollTo({ top: 0, behavior: 'instant' });

@@ -66,7 +66,7 @@ const CATEGORY_RULES = [
   [/afjrotc|crew game|fort knox|drill/i, 'AFJROTC'],
   [/soccer/i,                         'Soccer'],
   [/volleyball/i,                     'Volleyball'],
-  [/prom|wedding/i,                   'Portraits'],
+  [/prom/i,                           'Portraits'],
 ];
 const categoryFor = (t) => {
   for (const [re, name] of CATEGORY_RULES) if (re.test(t)) return name;

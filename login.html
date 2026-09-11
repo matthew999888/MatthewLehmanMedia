@@ -181,13 +181,8 @@ input{font-family:inherit;color:inherit}
     <p class="login-label">Matthew Lehman Media</p>
     <h1 class="login-title" id="cardTitle">Sign In</h1>
     <p class="login-intro" id="cardIntro">
-      Signing in is optional — it's just how your private galleries gather in one place.
+      Owner access only.
     </p>
-
-    <div class="tabs" id="tabs">
-      <button class="tab active" data-mode="signin" type="button">Sign In</button>
-      <button class="tab" data-mode="signup" type="button">Create Account</button>
-    </div>
 
     <!-- ── Sign in ── -->
     <form id="signinForm">
@@ -202,35 +197,8 @@ input{font-family:inherit;color:inherit}
       <button type="submit" class="btn-primary" id="siBtn">Sign In</button>
       <div class="link-row">
         <button type="button" class="link-btn" id="forgotBtn">Forgot your password?</button>
-        <button type="button" class="link-btn" id="resendBtn">Resend confirmation</button>
       </div>
       <div class="form-msg" id="siMsg"></div>
-    </form>
-
-    <!-- ── Create account ── -->
-    <form id="signupForm" hidden>
-      <div class="field">
-        <label for="suName">Your name</label>
-        <input type="text" id="suName" autocomplete="name" />
-      </div>
-      <div class="field">
-        <label for="suEmail">Email</label>
-        <input type="email" id="suEmail" autocomplete="email" required />
-        <p class="field-hint">Use the address Matthew shared your galleries with — they'll appear automatically.</p>
-      </div>
-      <div class="field">
-        <label for="suPassword">Password</label>
-        <input type="password" id="suPassword" autocomplete="new-password" required minlength="8" />
-        <p class="field-hint">At least 8 characters.</p>
-      </div>
-      <!-- honeypot -->
-      <div class="hp" aria-hidden="true">
-        <label for="suCompany">Company</label>
-        <input type="text" id="suCompany" tabindex="-1" autocomplete="off" />
-      </div>
-      <div class="turnstile-holder" id="suTurnstile"></div>
-      <button type="submit" class="btn-primary" id="suBtn">Create Account</button>
-      <div class="form-msg" id="suMsg"></div>
     </form>
 
     <!-- ── Forgot password ── -->
@@ -246,21 +214,6 @@ input{font-family:inherit;color:inherit}
         <button type="button" class="link-btn" data-goto="signin">← Back to sign in</button>
       </div>
       <div class="form-msg" id="rsMsg"></div>
-    </form>
-
-    <!-- ── Resend confirmation ── -->
-    <form id="confirmForm" hidden>
-      <div class="field">
-        <label for="cfEmail">Email</label>
-        <input type="email" id="cfEmail" autocomplete="email" required />
-        <p class="field-hint">We'll send the confirmation link again.</p>
-      </div>
-      <div class="turnstile-holder" id="cfTurnstile"></div>
-      <button type="submit" class="btn-primary" id="cfBtn">Resend Confirmation</button>
-      <div class="link-row">
-        <button type="button" class="link-btn" data-goto="signin">← Back to sign in</button>
-      </div>
-      <div class="form-msg" id="cfMsg"></div>
     </form>
 
     <!-- ── Choose a new password (arrived from a reset email) ── -->
@@ -391,10 +344,8 @@ function resetTurnstile(holderId) {
    MODE SWITCHING
 ──────────────────────────────────────────────────────────── */
 const FORMS = {
-  signin:  { form: 'signinForm',      title: 'Sign In',           intro: "Signing in is optional — it's just how your private galleries gather in one place." },
-  signup:  { form: 'signupForm',      title: 'Create Account',    intro: 'Use the email your galleries were shared with and they’ll be waiting for you.' },
+  signin:  { form: 'signinForm',      title: 'Sign In',           intro: 'Owner access only.' },
   reset:   { form: 'resetForm',       title: 'Reset Password',    intro: 'Enter your email and we’ll send you a link to choose a new one.' },
-  confirm: { form: 'confirmForm',     title: 'Resend Link',       intro: 'Didn’t get the confirmation email? We’ll send it again.' },
   newpass: { form: 'newPasswordForm', title: 'New Password',      intro: 'Choose a new password for your account.' },
 };
 
@@ -405,26 +356,13 @@ function setMode(mode) {
   $('cardTitle').textContent = cfg.title;
   $('cardIntro').textContent = cfg.intro;
 
-  // Tabs only make sense for the two main modes.
-  const showTabs = mode === 'signin' || mode === 'signup';
-  $('tabs').style.display = showTabs ? '' : 'none';
-  document.querySelectorAll('.tab').forEach(function(t) {
-    t.classList.toggle('active', t.dataset.mode === mode);
-  });
-
-  if (mode === 'signup')  renderTurnstile('suTurnstile');
-  if (mode === 'reset')   renderTurnstile('rsTurnstile');
-  if (mode === 'confirm') renderTurnstile('cfTurnstile');
+  if (mode === 'reset') renderTurnstile('rsTurnstile');
 }
 
-document.querySelectorAll('.tab').forEach(function(tab) {
-  tab.addEventListener('click', function() { setMode(tab.dataset.mode); });
-});
 document.querySelectorAll('[data-goto]').forEach(function(btn) {
   btn.addEventListener('click', function() { setMode(btn.dataset.goto); });
 });
 $('forgotBtn').addEventListener('click', function() { setMode('reset'); });
-$('resendBtn').addEventListener('click', function() { setMode('confirm'); });
 
 /* ────────────────────────────────────────────────────────────
    POST helper
@@ -456,47 +394,10 @@ $('signinForm').addEventListener('submit', async function(e) {
   busy($('siBtn'), false);
 
   if (error) {
-    // Supabase says "Invalid login credentials" for an unconfirmed account
-    // too, which sends people round in circles. Point at the way out.
-    const hint = /email not confirmed/i.test(error.message)
-      ? ' Check your inbox for the confirmation link, or resend it below.'
-      : '';
-    msg(m, error.message + hint, 'err');
+    msg(m, error.message, 'err');
     return;
   }
   await showAccount();
-});
-
-/* ────────────────────────────────────────────────────────────
-   CREATE ACCOUNT
-──────────────────────────────────────────────────────────── */
-$('signupForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const m = $('suMsg');
-  clearMsg(m);
-
-  if (turnstileSiteKey && !turnstileToken('suTurnstile')) {
-    msg(m, 'Please complete the human check first.', 'err');
-    return;
-  }
-
-  busy($('suBtn'), true, 'Creating…');
-  const result = await postJson('/api/auth/signup', {
-    email: $('suEmail').value.trim(),
-    password: $('suPassword').value,
-    fullName: $('suName').value.trim(),
-    company: $('suCompany').value,       // honeypot
-    turnstileToken: turnstileToken('suTurnstile'),
-  });
-  busy($('suBtn'), false);
-  resetTurnstile('suTurnstile');
-
-  if (!result.ok) {
-    msg(m, result.body.error || 'Could not create that account.', 'err');
-    return;
-  }
-  msg(m, result.body.message || 'Check your inbox to confirm your email.', 'ok');
-  $('signupForm').reset();
 });
 
 /* ────────────────────────────────────────────────────────────
@@ -515,40 +416,6 @@ $('resetForm').addEventListener('submit', async function(e) {
   resetTurnstile('rsTurnstile');
   msg(m, result.body.message || (result.ok ? 'Check your inbox.' : 'Something went wrong.'),
       result.ok ? 'ok' : 'err');
-});
-
-$('confirmForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const m = $('cfMsg');
-  clearMsg(m);
-  busy($('cfBtn'), true, 'Sending…');
-  const result = await postJson('/api/auth/resend-confirmation', {
-    email: $('cfEmail').value.trim(),
-    turnstileToken: turnstileToken('cfTurnstile'),
-  });
-  busy($('cfBtn'), false);
-  resetTurnstile('cfTurnstile');
-  msg(m, result.body.message || (result.ok ? 'Check your inbox.' : 'Something went wrong.'),
-      result.ok ? 'ok' : 'err');
-});
-
-/* ────────────────────────────────────────────────────────────
-   NEW PASSWORD (arrived from the reset email — Supabase has
-   already put a recovery session in place by this point)
-──────────────────────────────────────────────────────────── */
-$('newPasswordForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const m = $('npMsg');
-  clearMsg(m);
-  if (!supa) return;
-
-  busy($('npBtn'), true, 'Saving…');
-  const { error } = await supa.auth.updateUser({ password: $('npPassword').value });
-  busy($('npBtn'), false);
-
-  if (error) { msg(m, error.message, 'err'); return; }
-  msg(m, 'Password updated. Signing you in…', 'ok');
-  setTimeout(showAccount, 900);
 });
 
 /* ────────────────────────────────────────────────────────────
