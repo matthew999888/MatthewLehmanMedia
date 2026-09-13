@@ -493,7 +493,7 @@
    from JS as a single transform per plane — nothing here animates on its own.
 ─────────────────────────────────────────────────────────────────────────────── */
 .planes{position:relative;background:#07040f}
-.pl-rail{height:420vh}
+.pl-rail{height:230vh}
 .pl-stage{position:sticky;top:0;height:100vh;overflow:hidden;background:#07040f}
 
 .pl-viewport{
@@ -557,7 +557,7 @@
 }
 
 @media(max-width:820px){
-  .pl-rail{height:340vh}
+  .pl-rail{height:190vh}
   .pl-viewport{perspective:1200px;perspective-origin:50% 30%}
   .pl-track{transform:translateY(30px)}
   .pl-idx{top:-16px}

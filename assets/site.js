@@ -282,7 +282,9 @@ form.addEventListener('submit', async e => {
   // ── geometry ──────────────────────────────────────────────────────────────
   const STEP = { x: 240, y: -84, z: -288 };   // one plane's offset along the axis
   const TILT = -50;                            // rotateY, as in the reference
-  const SPAN = 3.2;                            // how many steps the scroll travels per plane
+  const SPAN = 2.4;                            // how many steps the scroll travels per plane
+  const ARC = 3.4;                             // sag of the path, so it curves rather than rules
+  const FACE = 1.5;                            // how near a plane must be before it turns to camera
 
   let scale = 1;
   const measure = () => { scale = (planes[0].offsetWidth || 300) / 300; };
@@ -318,18 +320,33 @@ form.addEventListener('submit', async e => {
 
       // the wave: a sine along the axis, amplitude from scroll speed
       const wave = Math.sin(t * 0.55) * v * 1.9;
+      // a static sag, so the row curves through space instead of ruling a line
+      const arc = -(t * t) * ARC * scale;
 
       const x = t * STEP.x * scale;
-      const yy = t * STEP.y * scale + wave;
+      const yy = t * STEP.y * scale + wave + arc;
       const z = t * STEP.z * scale;
+
+      // As a plane reaches the front it turns toward the camera and grows. At a
+      // flat -50deg every photograph is foreshortened to the point of being
+      // unreadable, which is a poor trade on a photographer's site: this gives
+      // each frame one moment where you can actually see it.
+      const face = clamp(1 - Math.abs(t) / FACE, 0, 1);
+      const turn = face * face * (3 - 2 * face);          // smoothstep
+      const rotY = TILT * (1 - turn * 0.84);
+      const pop = 1 + turn * 0.24;
+      // Banking into the wave, a quarter phase off it, so the row leans as it surfs.
+      const bank = Math.cos(t * 0.55) * v * 0.09;
 
       const el = planes[i];
       el.style.transform =
         'translate3d(' + x.toFixed(1) + 'px,' + yy.toFixed(1) + 'px,' + z.toFixed(1) + 'px)' +
-        ' rotateY(' + TILT + 'deg)';
+        ' rotateY(' + rotY.toFixed(2) + 'deg)' +
+        ' rotateZ(' + bank.toFixed(2) + 'deg)' +
+        ' scale(' + pop.toFixed(3) + ')';
       // Nearer planes read brighter and sit above the ones behind them.
       const near = clamp(1 - Math.abs(t) / (N / 2), 0, 1);
-      el.style.filter = 'brightness(' + (0.42 + near * 0.58).toFixed(3) + ')';
+      el.style.filter = 'brightness(' + (0.34 + near * 0.66 + turn * 0.12).toFixed(3) + ')';
       el.style.zIndex = String(Math.round(near * 100));
       el.style.opacity = near < 0.06 ? '0' : '1';
 
