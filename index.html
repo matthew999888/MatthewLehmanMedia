@@ -164,6 +164,7 @@
 
   <div class="nav-links">
     <a href="#about"    data-target="about">About</a>
+    <a href="#planes"   data-target="planes">The Season</a>
     <a href="#contact"  data-target="contact">Contact</a>
     <a href="/gallery" class="nav-gallery-pill">Gallery</a>
   </div>
@@ -176,6 +177,7 @@
 <!-- Mobile Drawer -->
 <div class="nav-drawer" id="navDrawer">
   <a href="#about"    data-target="about"    class="drawer-link">About</a>
+  <a href="#planes"   data-target="planes"   class="drawer-link">The Season</a>
   <a href="#contact"  data-target="contact"  class="drawer-link">Contact</a>
   <a href="/gallery" class="drawer-link">Gallery</a>
 </div>
@@ -250,6 +252,53 @@
     <p class="about-p" itemprop="description">I'm <span itemprop="name">Matthew Lehman</span>. I photograph <span itemprop="affiliation">Logan Hocking</span> athletics — baseball, soccer, volleyball, tennis and the AFJROTC Raider program — and I'm a student there myself, which is how I end up on the sideline for the games nobody else is covering.</p>
     <p class="about-p">I started Matthew Lehman Media in 2025. Every shoot goes up whole rather than cut down to a few highlights, so an athlete who played the whole game can actually find themselves in it.</p>
     <p class="about-where">Logan, Ohio</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     THE SEASON — 3D planes on a scroll-velocity axis
+
+     Twelve frames strung along a single diagonal in perspective:
+     each plane sits one step further along (+240, -84, -288), so the
+     row recedes up and away. Scroll drives the row along that axis and
+     the planes wrap, so it never runs out. Scroll *speed* bends the row
+     into a wave — fast scrolling ripples it, stopping lets it settle.
+
+     Photographs are hard-coded. Images carry data-src rather than src:
+     twelve simultaneous requests to Google come back rate-limited, so
+     assets/site.js walks them three at a time.
+══════════════════════════════════════════════════════════════ -->
+<section class="planes" id="planes" aria-labelledby="planesTitle">
+  <div class="pl-rail">
+    <div class="pl-stage">
+
+      <header class="pl-head">
+        <p class="pl-kicker">Logan Hocking Athletics</p>
+        <h2 class="pl-title" id="planesTitle">The Season <sup class="pl-count">(12)</sup></h2>
+        <p class="pl-now" id="plNow">Baseball 2026 &middot; Game 4</p>
+      </header>
+
+      <div class="pl-viewport">
+        <div class="pl-track" id="plTrack" role="img"
+             aria-label="Twelve photographs from the 2025–26 season, moving through 3D space as you scroll">
+          <figure class="pl-plane" data-cap="Baseball 2026 · Game 4"><img data-src="1yifw_Z-njkmjUIJWNOaeWesga3QW6OOu" alt="" referrerpolicy="no-referrer" decoding="async" width="640" height="768"><span class="pl-idx">00</span></figure>
+          <figure class="pl-plane" data-cap="Fort Knox · 2026"><img data-src="17eRwXQSrHb-OWQZMH_HkBltGue5O_Zns" alt="" referrerpolicy="no-referrer" decoding="async" width="640" height="768"><span class="pl-idx">01</span></figure>
+          <figure class="pl-plane" data-cap="Live Oaks Raider Meet · 2025"><img data-src="1f_Jl8C6ar1Jcc9T8I2tdStyv9UeXnzIb" alt="" referrerpolicy="no-referrer" decoding="async" width="640" height="768"><span class="pl-idx">02</span></figure>
+          <figure class="pl-plane" data-cap="Tennis 2026 · Match 1"><img data-src="1vf4kiv8jR7dqX4474WCTHL4Wfp77n8RU" alt="" referrerpolicy="no-referrer" decoding="async" width="640" height="768"><span class="pl-idx">03</span></figure>
+          <figure class="pl-plane" data-cap="Baseball 2026 · Game 6"><img data-src="1eIp5egcqBYJNJfyVerbmUuqQ2Xvt7PJ7" alt="" referrerpolicy="no-referrer" decoding="async" width="640" height="768"><span class="pl-idx">04</span></figure>
+          <figure class="pl-plane" data-cap="Home Raider Meet · 2025"><img data-src="1x_uZw6YzrGp3hAwyBsGhoySCWodQ74WD" alt="" referrerpolicy="no-referrer" decoding="async" width="640" height="768"><span class="pl-idx">05</span></figure>
+          <figure class="pl-plane" data-cap="Open Drill Nationals"><img data-src="1g9-ypwrYZqhKauycFHHDX6D_by84x_uP" alt="" referrerpolicy="no-referrer" decoding="async" width="640" height="768"><span class="pl-idx">06</span></figure>
+          <figure class="pl-plane" data-cap="AFJROTC · Columbus Crew Game"><img data-src="1JiW6b5Mw4ZawKBbtGp-TyLQ8fipLVeuV" alt="" referrerpolicy="no-referrer" decoding="async" width="640" height="768"><span class="pl-idx">07</span></figure>
+          <figure class="pl-plane" data-cap="Logan vs Whetstone"><img data-src="1tDoeGhMZZceHqTxXnsmtTkoRMVr8UJm2" alt="" referrerpolicy="no-referrer" decoding="async" width="640" height="768"><span class="pl-idx">08</span></figure>
+          <figure class="pl-plane" data-cap="Raider Practice · Before Fort Knox"><img data-src="1rmoD9W_cHCkfHtw5HHRb0kE6c7GKkFkq" alt="" referrerpolicy="no-referrer" decoding="async" width="640" height="768"><span class="pl-idx">09</span></figure>
+          <figure class="pl-plane" data-cap="Baseball 2026 · Game 2"><img data-src="1Mu2dMLkt-XHveWJdswslLOLurioBoNFk" alt="" referrerpolicy="no-referrer" decoding="async" width="640" height="768"><span class="pl-idx">10</span></figure>
+          <figure class="pl-plane" data-cap="Raider Meet"><img data-src="1_TJemYN322kOk_FSnRdEOvPVCRGdV45A" alt="" referrerpolicy="no-referrer" decoding="async" width="640" height="768"><span class="pl-idx">11</span></figure>
+        </div>
+      </div>
+
+      <p class="pl-hint" aria-hidden="true">Scroll</p>
+
+    </div>
   </div>
 </section>
 

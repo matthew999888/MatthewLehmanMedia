@@ -236,3 +236,127 @@ form.addEventListener('submit', async e => {
     /* Leave the section hidden - the page is exactly as it was without it. */
   }
 })();
+
+/* ── The season: 3D planes on a scroll-velocity axis ──────────────────────────
+   Twelve frames on one diagonal in perspective. Each plane sits at t steps
+   along (+240, -84, -288), so the row recedes up and away. Scroll moves the row
+   along that axis; t wraps, so the row never runs out.
+
+   Scroll *speed* is the second input. A low-pass of the per-frame scroll delta
+   drives a sine displacement phased by t, which bends the row into a travelling
+   wave — fast scrolling ripples it, stopping lets it settle. That needs a rAF
+   loop rather than a scroll handler, because the settle happens after the last
+   scroll event, so the loop runs only while the section is on screen.
+
+   Images carry data-src: twelve simultaneous requests to Google come back 429
+   with no picture, so they are walked three at a time.
+─────────────────────────────────────────────────────────────────────────────── */
+(function theSeason() {
+  const section = document.getElementById('planes');
+  const rail    = section && section.querySelector('.pl-rail');
+  const stage   = section && section.querySelector('.pl-stage');
+  const track   = document.getElementById('plTrack');
+  const nowEl   = document.getElementById('plNow');
+  if (!section || !rail || !stage || !track) return;
+
+  const planes = [...track.querySelectorAll('.pl-plane')];
+  if (planes.length < 3) return;
+  const N = planes.length;
+
+  // ── load, a few at a time ─────────────────────────────────────────────────
+  const thumb = (id) =>
+    'https://lh3.googleusercontent.com/d/' + encodeURIComponent(id) + '=w640-rj-l78';
+  const imgs = planes.map((p) => p.querySelector('img'));
+  let next = 0;
+  const pump = () => {
+    if (next >= imgs.length) return;
+    const el = imgs[next++];
+    el.addEventListener('load', () => { el.classList.add('is-in'); pump(); }, { once: true });
+    el.addEventListener('error', pump, { once: true });
+    el.src = thumb(el.dataset.src);
+  };
+  for (let k = 0; k < 3; k++) pump();
+
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  // ── geometry ──────────────────────────────────────────────────────────────
+  const STEP = { x: 240, y: -84, z: -288 };   // one plane's offset along the axis
+  const TILT = -50;                            // rotateY, as in the reference
+  const SPAN = 3.2;                            // how many steps the scroll travels per plane
+
+  let scale = 1;
+  const measure = () => { scale = (planes[0].offsetWidth || 300) / 300; };
+
+  const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+  const wrap = (v, min, max) => {
+    const r = max - min;
+    return ((((v - min) % r) + r) % r) + min;
+  };
+
+  let vel = 0;
+  let lastY = window.scrollY;
+  let lastCap = '';
+
+  const render = () => {
+    const runway = rail.offsetHeight - stage.offsetHeight;
+    if (runway <= 0) return;
+    const p = clamp(-rail.getBoundingClientRect().top / runway, 0, 1);
+
+    const y = window.scrollY;
+    const dy = y - lastY;
+    lastY = y;
+    // Low-pass: spikes while scrolling, decays to nothing when it stops.
+    vel = vel * 0.86 + dy * 0.14;
+    const v = clamp(vel, -90, 90);
+
+    const offset = p * N * SPAN;
+    let frontT = Infinity;
+    let frontCap = '';
+
+    for (let i = 0; i < N; i++) {
+      const t = wrap(i - offset, -N / 2, N / 2);
+
+      // the wave: a sine along the axis, amplitude from scroll speed
+      const wave = Math.sin(t * 0.55) * v * 1.9;
+
+      const x = t * STEP.x * scale;
+      const yy = t * STEP.y * scale + wave;
+      const z = t * STEP.z * scale;
+
+      const el = planes[i];
+      el.style.transform =
+        'translate3d(' + x.toFixed(1) + 'px,' + yy.toFixed(1) + 'px,' + z.toFixed(1) + 'px)' +
+        ' rotateY(' + TILT + 'deg)';
+      // Nearer planes read brighter and sit above the ones behind them.
+      const near = clamp(1 - Math.abs(t) / (N / 2), 0, 1);
+      el.style.filter = 'brightness(' + (0.42 + near * 0.58).toFixed(3) + ')';
+      el.style.zIndex = String(Math.round(near * 100));
+      el.style.opacity = near < 0.06 ? '0' : '1';
+
+      if (Math.abs(t) < frontT) { frontT = Math.abs(t); frontCap = el.dataset.cap || ''; }
+    }
+
+    if (nowEl && frontCap && frontCap !== lastCap) {
+      lastCap = frontCap;
+      nowEl.style.opacity = '0';
+      setTimeout(() => { nowEl.textContent = frontCap; nowEl.style.opacity = '1'; }, 140);
+    }
+  };
+
+  // Scroll starts the loop; the loop keeps itself alive only while the wave is
+  // still settling, then stops. Gating this on an IntersectionObserver instead
+  // left the whole row frozen at its load-time position — render ran exactly
+  // once and every plane stayed at t = its own index.
+  let raf = 0;
+  const tick = () => {
+    render();
+    raf = Math.abs(vel) > 0.05 ? requestAnimationFrame(tick) : 0;
+  };
+  const ensure = () => { if (!raf) raf = requestAnimationFrame(tick); };
+
+  measure();
+  addEventListener('scroll', ensure, { passive: true });
+  addEventListener('resize', () => { measure(); ensure(); }, { passive: true });
+  addEventListener('load', ensure);
+  ensure();
+})();

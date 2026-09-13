@@ -487,3 +487,87 @@
   font-family:var(--fb);font-size:.72rem;font-weight:500;letter-spacing:.22em;
   text-transform:uppercase;color:var(--light);
 }
+
+/* ── The season: 3D planes ────────────────────────────────────────────────────
+   Twelve frames on one diagonal in perspective. Everything that moves is set
+   from JS as a single transform per plane — nothing here animates on its own.
+─────────────────────────────────────────────────────────────────────────────── */
+.planes{position:relative;background:#07040f}
+.pl-rail{height:420vh}
+.pl-stage{position:sticky;top:0;height:100vh;overflow:hidden;background:#07040f}
+
+.pl-viewport{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  perspective:2000px;perspective-origin:12% 14%;
+}
+.pl-track{
+  position:relative;transform-style:preserve-3d;
+  transform:translateY(60px);
+}
+
+.pl-plane{
+  position:absolute;margin:0;
+  width:clamp(170px,20vw,300px);aspect-ratio:5/6;
+  transform-style:preserve-3d;
+  box-shadow:0 26px 54px -14px rgba(0,0,0,.72);
+  background:#13091f;overflow:visible;
+}
+.pl-plane img{
+  width:100%;height:100%;object-fit:cover;display:block;
+  opacity:0;transition:opacity .45s ease-out;
+}
+.pl-plane img.is-in{opacity:1}
+.pl-idx{
+  position:absolute;top:-20px;left:0;
+  font-family:var(--fb);font-size:.62rem;font-weight:500;letter-spacing:.16em;
+  color:rgba(245,240,255,.5);font-variant-numeric:tabular-nums;
+}
+
+/* ── the fixed type ── */
+.pl-head{
+  position:absolute;z-index:5;top:clamp(4.5rem,9vh,7rem);left:clamp(1.2rem,4vw,3.4rem);
+  max-width:min(46ch,68vw);pointer-events:none;
+}
+.pl-kicker{
+  margin:0 0 .7rem;font-family:var(--fb);font-size:.68rem;font-weight:500;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--light);
+}
+.pl-title{
+  margin:0;font-family:var(--fd);font-size:clamp(2.1rem,5.4vw,4.4rem);line-height:.92;
+  letter-spacing:.02em;text-transform:uppercase;color:var(--white);
+}
+.pl-count{
+  font-family:var(--fb);font-size:.24em;font-weight:600;letter-spacing:0;
+  color:var(--light);font-variant-numeric:tabular-nums;top:-1.3em;
+}
+.pl-now{
+  margin:1.1rem 0 0;font-family:var(--fb);font-size:.74rem;letter-spacing:.16em;
+  text-transform:uppercase;color:rgba(245,240,255,.62);
+  transition:opacity .28s ease-out;
+}
+.pl-hint{
+  position:absolute;z-index:5;right:clamp(1.2rem,4vw,3.4rem);bottom:clamp(1.4rem,4vh,3rem);
+  margin:0;font-family:var(--fb);font-size:.64rem;letter-spacing:.26em;
+  text-transform:uppercase;color:rgba(245,240,255,.4);
+}
+
+@media(max-width:820px){
+  .pl-rail{height:340vh}
+  .pl-viewport{perspective:1200px;perspective-origin:50% 30%}
+  .pl-track{transform:translateY(30px)}
+  .pl-idx{top:-16px}
+}
+
+/* The row is the whole idea, so without motion it becomes an ordinary
+   scrollable strip of the same twelve frames rather than nothing at all. */
+@media(prefers-reduced-motion:reduce){
+  .pl-rail{height:auto}
+  .pl-stage{position:relative;height:auto;padding:9rem 0 4rem}
+  .pl-viewport{position:relative;inset:auto;perspective:none;display:block;overflow-x:auto;padding:0 clamp(1.2rem,4vw,3.4rem) 1.5rem}
+  .pl-track{transform:none;display:flex;gap:12px;width:max-content}
+  .pl-plane{position:relative;transform:none!important;width:clamp(160px,42vw,240px)}
+  .pl-plane img{opacity:1}
+  .pl-idx{top:-16px}
+  .pl-hint{display:none}
+}
