@@ -237,151 +237,125 @@ form.addEventListener('submit', async e => {
   }
 })();
 
-/* ── The burst ────────────────────────────────────────────────────────────────
-   Scroll position drives which frame is showing. A sports photographer holds
-   the shutter and the camera fires twenty frames a second; this is that, run
-   at the speed of the reader's scroll.
+/* ── The burst: contact sheet ─────────────────────────────────────────────────
+   Scroll drives three beats. Frames fly in from depth and land in the sheet;
+   then the edit happens — fourteen drain of colour and fall back while the
+   keeper lifts and sharpens; then the line settles on it.
 
-   Frames come from the same database as everything else, so this is real work
-   rather than stock. Rows arrive grouped by gallery, which is kept on purpose:
-   you get a short run inside one scene, then a cut to the next.
+   Photographs are hard-coded in the markup, so this runs with no network call
+   of its own and the section renders even if the script never gets to it.
 
-   Cost control: only opacity and transform change, the handler is rAF-throttled
-   and passive, and every frame is decoded up front so the advance never stalls.
+   Everything written per frame is transform, opacity or filter. The handler is
+   rAF-throttled and passive, and geometry is measured only on resize.
 ─────────────────────────────────────────────────────────────────────────────── */
-(async function theBurst() {
+(function theBurst() {
   const section = document.getElementById('burst');
   const rail    = section && section.querySelector('.burst-rail');
   const stage   = section && section.querySelector('.burst-stage');
-  const holder  = document.getElementById('burstFrames');
+  const sheet   = document.getElementById('burstSheet');
   const counter = document.getElementById('burstCounter');
+  const phaseEl = document.getElementById('burstPhase');
   const copy    = document.getElementById('burstCopy');
-  if (!section || !rail || !stage || !holder) return;
+  if (!section || !rail || !stage || !sheet) return;
 
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const thumb = (id) =>
-    'https://lh3.googleusercontent.com/d/' + encodeURIComponent(id) + '=w900-rj-l72';
+  const frames = [...sheet.querySelectorAll('.bframe')];
+  const keeper = sheet.querySelector('.is-keeper');
+  if (!frames.length || !keeper) return;
+
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const pad = (n) => String(n).padStart(2, '0');
+  const clamp = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+  const easeOut = (v) => 1 - Math.pow(1 - v, 3);
+  const easeInOut = (v) => (v < 0.5 ? 4 * v * v * v : 1 - Math.pow(-2 * v + 2, 3) / 2);
 
-  try {
-    const cfg = await fetch('/api/config').then((r) => r.json());
-    if (!cfg || !cfg.supabaseUrl || !cfg.supabaseAnonKey) return;
+  const ASSEMBLE_ENDS = 0.5;   // frames have all landed
+  const EDIT_ENDS     = 0.8;   // keeper is fully lifted
+  const COPY_ENTERS   = 0.74;
+  const STAGGER       = 0.028; // per frame, so it reads as a burst firing
 
-    const res = await fetch(
-      cfg.supabaseUrl + '/rest/v1/media' +
-        '?select=drive_file_id,galleries!inner(slug,visibility,sort_order)' +
-        '&galleries.visibility=eq.public&drive_file_id=not.is.null&limit=400',
-      { headers: { apikey: cfg.supabaseAnonKey, Authorization: 'Bearer ' + cfg.supabaseAnonKey } }
-    );
-    if (!res.ok) return;
-
-    // Rows come back grouped by gallery, so taking the first sixteen would be
-    // sixteen frames of one afternoon. Deal one per gallery in rotation instead:
-    // the burst then moves across sports the way a season does.
-    const FRAMES = 16;
-    const byGallery = new Map();
-    for (const r of await res.json()) {
-      const slug = r.galleries && r.galleries.slug;
-      if (!slug || !r.drive_file_id) continue;
-      if (!byGallery.has(slug)) byGallery.set(slug, []);
-      byGallery.get(slug).push(r.drive_file_id);
-    }
-    const decks = [...byGallery.values()];
-    const ids = [];
-    for (let round = 0; ids.length < FRAMES && round < 40; round++) {
-      let dealt = false;
-      for (const deck of decks) {
-        if (round >= deck.length) continue;
-        ids.push(deck[round]);
-        dealt = true;
-        if (ids.length >= FRAMES) break;
-      }
-      if (!dealt) break;
-    }
-    if (ids.length < 6) return;
-
-    const imgs = ids.map((id) => {
-      const el = document.createElement('img');
-      el.alt = '';
-      el.decoding = 'async';
-      el.referrerPolicy = 'no-referrer';
-      el.dataset.id = id;
-      holder.append(el);
-      return el;
-    });
-
-    // Google rate-limits lh3 by volume, not just by referrer: asking for every
-    // frame at once comes back as 429 for most of them and the stage fills with
-    // blanks. Requesting a few at a time and chaining on each response keeps
-    // every frame arriving. On a failure, fall back once to the older
-    // drive.google.com shape before giving that frame up.
-    const IN_FLIGHT = 3;
-    let next = 0;
-    const pump = () => {
-      if (next >= imgs.length) return;
-      const el = imgs[next++];
-      el.addEventListener('error', function onErr() {
-        if (el.dataset.retried) { pump(); return; }
-        el.dataset.retried = '1';
-        el.src = 'https://drive.google.com/thumbnail?id=' +
-                 encodeURIComponent(el.dataset.id) + '&sz=w900';
-      });
-      el.addEventListener('load', pump, { once: true });
-      el.src = thumb(el.dataset.id);
-    };
-    for (let k = 0; k < IN_FLIGHT; k++) pump();
-
-    // Nothing here waits on an image. The section ships hidden, and hidden means
-    // display:none, so its images are never fetched — awaiting decode() before
-    // revealing deadlocks: the reveal waits on a frame that is waiting on the
-    // reveal. Having the rows is proof enough that the section has something to
-    // show, so it is revealed on the data and the frames paint as they arrive.
-
-    let current = -1;
-    const show = (i) => {
-      if (i === current) return;
-      if (imgs[current]) imgs[current].classList.remove('is-on');
-      imgs[i].classList.add('is-on');
-      current = i;
-      if (counter) counter.textContent = pad(i + 1) + '/' + pad(imgs.length);
-    };
-
-    show(0);
-    section.hidden = false;
-
-    if (reduced) {
-      if (copy) copy.classList.add('is-in');
-      stage.classList.add('is-resolved');
-      return;                       // one held frame and the line, no pinning
-    }
-
-    const BURST_ENDS_AT = 0.78;     // frames stop advancing, the line lands
-    const COPY_ENTERS_AT = 0.62;
-
-    let ticking = false;
-    const update = () => {
-      ticking = false;
-      const railRect = rail.getBoundingClientRect();
-      const runway = rail.offsetHeight - stage.offsetHeight;
-      if (runway <= 0) return;
-
-      const p = Math.min(Math.max(-railRect.top / runway, 0), 1);
-      const t = Math.min(p / BURST_ENDS_AT, 1);
-      show(Math.round(t * (imgs.length - 1)));
-      const resolved = p > COPY_ENTERS_AT;
-      if (copy) copy.classList.toggle('is-in', resolved);
-      stage.classList.toggle('is-resolved', resolved);
-    };
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(update);
-    };
-
-    addEventListener('scroll', onScroll, { passive: true });
-    addEventListener('resize', onScroll, { passive: true });
-    update();
-  } catch (err) {
-    /* Leave it hidden - the page is exactly as it was without it. */
+  if (reduced) {
+    if (copy) copy.classList.add('is-in');
+    stage.classList.add('is-resolved');
+    if (counter) counter.textContent = '01/' + pad(frames.length);
+    if (phaseEl) phaseEl.textContent = 'KEEP';
+    return;
   }
+
+  let unit = 1;
+  let lift = 1;
+  const measure = () => {
+    unit = stage.clientWidth / 100;
+    const kh = keeper.offsetHeight || 1;
+    lift = Math.max(1, (stage.clientHeight * 0.74) / kh);
+  };
+
+  let lastPhase = '';
+  let ticking = false;
+
+  const update = () => {
+    ticking = false;
+    const runway = rail.offsetHeight - stage.offsetHeight;
+    if (runway <= 0) return;
+    const p = clamp(-rail.getBoundingClientRect().top / runway);
+
+    const assemble = clamp(p / ASSEMBLE_ENDS);
+    const edit = clamp((p - ASSEMBLE_ENDS) / (EDIT_ENDS - ASSEMBLE_ENDS));
+    const eEdit = easeInOut(edit);
+    let landed = 0;
+
+    for (let i = 0; i < frames.length; i++) {
+      const el = frames[i];
+      const delay = Math.min(i * STAGGER, 0.4);
+      const a = easeOut(clamp((assemble - delay) / (1 - delay)));
+      if (a > 0.85) landed++;   // visibly arrived, so the counter climbs with the burst
+
+      const away = 1 - a;                       // 1 = still out there, 0 = landed
+      const x = (Number(el.dataset.x) || 0) * unit * away;
+      const y = (Number(el.dataset.y) || 0) * unit * away;
+      const r = (Number(el.dataset.r) || 0) * away;
+      const depth = Number(el.dataset.d) || 0;
+
+      if (el === keeper) {
+        // Lifts out of the sheet and comes into focus.
+        const s = (1 - away * 0.3) * (1 + (lift - 1) * eEdit);
+        el.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0) rotate(' + r + 'deg) scale(' + s + ')';
+        el.style.opacity = String(0.1 + a * 0.9);
+        el.style.filter = away > 0.001 ? 'blur(' + (away * 6).toFixed(2) + 'px)' : 'none';
+      } else {
+        // Falls back, drains, and softens so the keeper is the only sharp thing.
+        const s = (1 - away * 0.3) * (1 - eEdit * 0.07);
+        const blur = away * depth * 1.6 + eEdit * 2.4;
+        el.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0) rotate(' + r + 'deg) scale(' + s + ')';
+        el.style.opacity = String((0.08 + a * 0.92) * (1 - eEdit * 0.82));
+        el.style.filter = 'blur(' + blur.toFixed(2) + 'px) grayscale(' + eEdit.toFixed(3) + ')';
+      }
+    }
+
+    const resolved = p > COPY_ENTERS;
+    if (copy) copy.classList.toggle('is-in', resolved);
+    stage.classList.toggle('is-resolved', edit > 0.55);
+
+    const phase = p < ASSEMBLE_ENDS ? 'BURST' : p < EDIT_ENDS ? 'EDIT' : 'KEEP';
+    if (phase !== lastPhase && phaseEl) { phaseEl.textContent = phase; lastPhase = phase; }
+    if (counter) {
+      counter.textContent = phase === 'BURST'
+        ? pad(landed) + '/' + pad(frames.length)
+        : phase === 'EDIT'
+          ? pad(frames.length) + '/' + pad(frames.length)
+          : '01/' + pad(frames.length);
+    }
+  };
+
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(update);
+  };
+  const onResize = () => { measure(); onScroll(); };
+
+  measure();
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onResize, { passive: true });
+  addEventListener('load', onResize);
+  update();
 })();
