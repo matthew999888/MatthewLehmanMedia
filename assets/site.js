@@ -141,3 +141,107 @@ form.addEventListener('submit', async e => {
     if (turnstileWidgetId !== null) window.turnstile.reset(turnstileWidgetId);
   }
 });
+
+/* ── Recent frames: a live contact sheet ──────────────────────────────────────
+   The homepage showed two photographs total, one of them a hero darkened nearly
+   to black. This pulls real gallery covers from the same database the gallery
+   page reads, so the strip is never stock and never goes stale.
+
+   Two Drive rules, both from api/_lib/drive.js and both load-bearing:
+     - referrerpolicy="no-referrer", or Google answers 429 for every tile at once
+     - the -rj-l suffix forces JPEG; without it these PNGs are megabytes each
+─────────────────────────────────────────────────────────────────────────────── */
+(async function recentFrames() {
+  const section = document.getElementById('reel');
+  const track   = document.getElementById('reelTrack');
+  const countEl = document.getElementById('reelCount');
+  if (!section || !track) return;
+
+  const driveId = (url) => {
+    if (!url) return null;
+    const s = String(url);
+    return (
+      (s.match(/\/file\/d\/([A-Za-z0-9_-]{10,})/) || [])[1] ||
+      (s.match(/[?&]id=([A-Za-z0-9_-]{10,})/) || [])[1] ||
+      (s.match(/\/d\/([A-Za-z0-9_-]{10,})/) || [])[1] ||
+      null
+    );
+  };
+  const thumb = (id) =>
+    'https://lh3.googleusercontent.com/d/' + encodeURIComponent(id) + '=w600-rj-l75';
+
+  try {
+    const cfg = await fetch('/api/config').then((r) => r.json());
+    if (!cfg || !cfg.supabaseUrl || !cfg.supabaseAnonKey) return;
+    const headers = { apikey: cfg.supabaseAnonKey, Authorization: 'Bearer ' + cfg.supabaseAnonKey };
+
+    const res = await fetch(
+      cfg.supabaseUrl + '/rest/v1/galleries' +
+        '?select=slug,title,cover_url&visibility=eq.public&order=sort_order&limit=24',
+      { headers }
+    );
+    if (!res.ok) return;
+
+    const frames = (await res.json())
+      .map((g) => ({ slug: g.slug, title: g.title, id: driveId(g.cover_url) }))
+      .filter((g) => g.id);
+    if (frames.length < 4) return;
+
+    // Built twice so the marquee wraps without a seam. The clone is hidden from
+    // assistive tech and from the tab order.
+    const build = (g, clone) => {
+      const a = document.createElement('a');
+      a.className = 'reel-frame';
+      a.href = '/gallery#gallery-' + g.slug;
+      if (clone) {
+        a.setAttribute('aria-hidden', 'true');
+        a.tabIndex = -1;
+      } else {
+        a.setAttribute('aria-label', g.title + ' - open gallery');
+      }
+
+      const img = document.createElement('img');
+      img.src = thumb(g.id);
+      img.alt = clone ? '' : g.title + ' - Matthew Lehman Media';
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.referrerPolicy = 'no-referrer';
+      img.width = 600;
+      img.height = 400;
+
+      const cap = document.createElement('figcaption');
+      cap.textContent = g.title;
+
+      a.append(img, cap);
+      return a;
+    };
+
+    const frag = document.createDocumentFragment();
+    frames.forEach((g) => frag.append(build(g, false)));
+    frames.forEach((g) => frag.append(build(g, true)));
+    track.append(frag);
+    section.hidden = false;
+
+    // Real numbers for the About section, from the same source.
+    const count = async (path) => {
+      const r = await fetch(cfg.supabaseUrl + '/rest/v1/' + path, {
+        headers: Object.assign({}, headers, { Prefer: 'count=exact', Range: '0-0' }),
+      });
+      const m = /\/(\d+)\s*$/.exec(r.headers.get('content-range') || '');
+      return m ? Number(m[1]) : null;
+    };
+    const [galleries, photos] = await Promise.all([
+      count('galleries?select=id&visibility=eq.public'),
+      count('media?select=id'),
+    ]);
+    const set = (id, v) => {
+      const el = document.getElementById(id);
+      if (el && v != null) el.textContent = v;
+    };
+    set('statGalleries', galleries);
+    set('statPhotos', photos);
+    if (countEl) countEl.textContent = (galleries || frames.length) + ' galleries published';
+  } catch (err) {
+    /* Leave the section hidden - the page is exactly as it was without it. */
+  }
+})();

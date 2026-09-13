@@ -239,6 +239,29 @@
 </div>
 
 <!-- ABOUT -->
+<!-- ══════════════════════════════════════════════════════════════
+     RECENT FRAMES — a live contact sheet.
+
+     Ships hidden. assets/site.js fills it from the same database the
+     gallery page reads and only then reveals it, so a failed fetch
+     leaves the page exactly as it was.
+══════════════════════════════════════════════════════════════ -->
+<section class="reel" id="reel" aria-labelledby="reelTitle" hidden>
+  <div class="reel-head">
+    <p class="reel-eyebrow">— Straight off the sideline</p>
+    <h2 class="reel-title" id="reelTitle">Recent <em>Frames</em></h2>
+  </div>
+
+  <div class="reel-viewport">
+    <div class="reel-track" id="reelTrack"><!-- injected --></div>
+  </div>
+
+  <p class="reel-foot">
+    <span id="reelCount"></span>
+    <a href="/gallery">See every gallery &rarr;</a>
+  </p>
+</section>
+
 <section class="about" id="about" aria-label="About Matthew Lehman Media" itemscope itemtype="https://schema.org/Person">
   <div class="about-vis">
     <div class="ac"></div>
@@ -253,9 +276,9 @@
     <p class="about-p" itemprop="description">I'm <span itemprop="name">Matthew Lehman</span> — the founder of Matthew Lehman Media, a self-employed photographer and student at <span itemprop="affiliation">Logan Hocking School District</span> with a passion for capturing athletes at their finest. Since launching in 2025, my mission has been simple: give athletes the spotlight they deserve through powerful, professional imagery.</p>
     <div class="stats">
       <div class="stat"><div class="stat-n">2025</div><div class="stat-l">Founded</div></div>
-      <div class="stat"><div class="stat-n">100%</div><div class="stat-l">Athlete Focus</div></div>
-      <div class="stat"><div class="stat-n">LH</div><div class="stat-l">Logan Hocking</div></div>
-      <div class="stat"><div class="stat-n">ML</div><div class="stat-l">Independent</div></div>
+      <div class="stat"><div class="stat-n" id="statGalleries">&mdash;</div><div class="stat-l">Galleries published</div></div>
+      <div class="stat"><div class="stat-n" id="statPhotos">&mdash;</div><div class="stat-l">Photos online</div></div>
+      <div class="stat"><div class="stat-n">6</div><div class="stat-l">Sports covered</div></div>
     </div>
   </div>
 </section>
