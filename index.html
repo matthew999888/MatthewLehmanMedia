@@ -159,7 +159,6 @@
 </head>
 <body>
 
-<!-- NAV -->
 <nav class="nav" role="navigation" aria-label="Main navigation">
   <a href="/" class="nav-logo" id="navLogoBtn">MLM</a>
 
@@ -185,7 +184,6 @@
 
 <span id="top"></span>
 
-<!-- HERO -->
 <section class="hero" id="hero-section" aria-label="Hero — Matthew Lehman Media">
   <div class="hero-bg">
     <!--
@@ -203,8 +201,6 @@
     />
     <div class="hero-bg-ov"></div>
   </div>
-  <div class="hero-orb orb-1"></div>
-  <div class="hero-orb orb-2"></div>
   <div class="hero-content">
     <p class="hero-tag">Sports &amp; Athletic Photography</p>
     <h1 class="hero-title">Matthew<br><em>Lehman</em><br>Media</h1>
@@ -219,13 +215,8 @@
     </a>
   </div>
   <div class="hero-scroll"><span class="scroll-line"></span>Scroll to explore</div>
-  <div class="hero-year">2026</div>
 </section>
 
-<!-- MARQUEE -->
-
-
-<!-- ABOUT -->
 <!-- ══════════════════════════════════════════════════════════════
      RECENT FRAMES — a live contact sheet.
 
@@ -251,79 +242,64 @@
 
 <section class="about" id="about" aria-label="About Matthew Lehman Media" itemscope itemtype="https://schema.org/Person">
   <div class="about-vis">
-    <div class="ac"></div>
     <div class="about-frame">
       <img src="https://lh3.googleusercontent.com/pw/AP1GczNCBI9Xt4SfwyHxCe2IRxrUQkYMHvDHwC1mSxoY-sQcwGOk3cb238apbxn7AFhJk1_HDH05ggu0_03qqqwqWbe8ZUoqlBxo4e-9U5-eWh7-Eqxtog=w1200-k-no" referrerpolicy="no-referrer" alt="Matthew Lehman, sports photographer based in Logan, Ohio" itemprop="image" loading="lazy" />
     </div>
-    <div class="acbr"></div>
   </div>
   <div class="about-txt">
     <p class="sec-label">About Me</p>
     <h2 class="about-h">Built for<br><em>the Game</em></h2>
-    <p class="about-p" itemprop="description">I'm <span itemprop="name">Matthew Lehman</span> — the founder of Matthew Lehman Media, a self-employed photographer and student at <span itemprop="affiliation">Logan Hocking School District</span> with a passion for capturing athletes at their finest. Since launching in 2025, my mission has been simple: give athletes the spotlight they deserve through powerful, professional imagery.</p>
-
+    <p class="about-p" itemprop="description">I'm <span itemprop="name">Matthew Lehman</span>. I photograph <span itemprop="affiliation">Logan Hocking</span> athletics — baseball, soccer, volleyball, tennis and the AFJROTC Raider program — and I'm a student there myself, which is how I end up on the sideline for the games nobody else is covering.</p>
+    <p class="about-p">I started Matthew Lehman Media in 2025. Every shoot goes up whole rather than cut down to a few highlights, so an athlete who played the whole game can actually find themselves in it.</p>
+    <p class="about-where">Logan, Ohio</p>
   </div>
 </section>
 
-<!-- SERVICES -->
 <!-- ══════════════════════════════════════════════════════════════
-     THE BURST — contact sheet
+     THE CRAFT
 
-     Enacts the line it sits under. Scrolling fires fifteen frames in
-     from depth into a contact sheet, then the edit happens: fourteen
-     drain of colour and fall back, one keeper lifts forward and comes
-     into focus, and the sentence lands on it.
+     Scroll fires nine frames in from depth into a sheet, detonates it,
+     and leaves one standing for the line to land on.
 
-     Photographs are hard-coded. They are the first frame of fifteen
-     different galleries, so the sheet reads as a season rather than an
-     afternoon. Swapping one is a matter of changing its file id.
+     Nine, not more: the keeper is index 4, the exact middle of a 3x3
+     grid at every breakpoint, so lifting it needs only scale and never
+     a position correction. Bigger tiles also stay legible — at five
+     across, a sports photograph reads as texture.
+
+     Frames are hard-coded, so the section needs no network call of its
+     own and still renders if the script never runs.
 ══════════════════════════════════════════════════════════════ -->
 <section class="burst" id="burst" aria-labelledby="burstTitle">
   <div class="burst-rail">
     <div class="burst-stage">
 
       <div class="burst-sheet" id="burstSheet" role="img"
-           aria-label="Contact sheet of fifteen frames from the 2025–26 season, resolving on one">
-        <figure class="bframe" data-x="-118" data-y="-96" data-r="-17" data-d="3"><img src="https://lh3.googleusercontent.com/d/10h3strQr2KxznOlf52rnlaWNWowIMVPu=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
-        <figure class="bframe" data-x="-46"  data-y="-132" data-r="11"  data-d="2"><img src="https://lh3.googleusercontent.com/d/1-0DURdjHS3lfxEa_dcPQcSZnvkGDEMUV=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
-        <figure class="bframe" data-x="14"   data-y="-150" data-r="-8"  data-d="4"><img src="https://lh3.googleusercontent.com/d/1vf4kiv8jR7dqX4474WCTHL4Wfp77n8RU=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
-        <figure class="bframe" data-x="78"   data-y="-118" data-r="15"  data-d="2"><img src="https://lh3.googleusercontent.com/d/1Sm2Vc7r3tC76Rs1i5u-MZOr_CK4WGYuY=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
-        <figure class="bframe" data-x="132"  data-y="-88"  data-r="-12" data-d="3"><img src="https://lh3.googleusercontent.com/d/1MtKKAEB8X55msOpInO1x28wRv-FX2BVJ=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
+           aria-label="Nine frames from the 2025–26 season, resolving on one">
+        <figure class="bframe" data-x="-120" data-y="-95"  data-r="-16" data-d="3"><img src="https://lh3.googleusercontent.com/d/10h3strQr2KxznOlf52rnlaWNWowIMVPu=w760-rj-l76" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="760" height="507"></figure>
+        <figure class="bframe" data-x="0"    data-y="-140" data-r="10"  data-d="2"><img src="https://lh3.googleusercontent.com/d/1-0DURdjHS3lfxEa_dcPQcSZnvkGDEMUV=w760-rj-l76" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="760" height="507"></figure>
+        <figure class="bframe" data-x="120"  data-y="-95"  data-r="15"  data-d="3"><img src="https://lh3.googleusercontent.com/d/1vf4kiv8jR7dqX4474WCTHL4Wfp77n8RU=w760-rj-l76" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="760" height="507"></figure>
 
-        <figure class="bframe" data-x="-146" data-y="-10"  data-r="9"   data-d="2"><img src="https://lh3.googleusercontent.com/d/1kGUlbwIz6BUaXWrdONJPHwciuVJ4d015=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
-        <figure class="bframe" data-x="-70"  data-y="6"    data-r="-13" data-d="4"><img src="https://lh3.googleusercontent.com/d/1YugkkMsd8_yTEaOcTqGRV-_Tb_QHo7AM=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
+        <figure class="bframe" data-x="-150" data-y="0"    data-r="-12" data-d="2"><img src="https://lh3.googleusercontent.com/d/1Sm2Vc7r3tC76Rs1i5u-MZOr_CK4WGYuY=w760-rj-l76" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="760" height="507"></figure>
 
         <!-- the keeper -->
         <figure class="bframe is-keeper" data-x="0" data-y="0" data-r="0" data-d="0">
-          <img src="https://lh3.googleusercontent.com/d/1k925MCzo7DCmcJp8nB02p-G-fGrSGFw1=w1100-rj-l78"
-               alt="A Logan catcher set behind the plate, glove up, Baseball 2026 Game 4"
-               referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" width="1100" height="733">
+          <img src="https://lh3.googleusercontent.com/d/1k925MCzo7DCmcJp8nB02p-G-fGrSGFw1=w1400-rj-l80"
+               alt="A Logan catcher set behind the plate, glove up"
+               referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" width="1400" height="933">
         </figure>
 
-        <figure class="bframe" data-x="74"   data-y="4"    data-r="12"  data-d="3"><img src="https://lh3.googleusercontent.com/d/1VMV0YA20PmTpuSDEz3zQwXfU7fjQ2h_6=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
-        <figure class="bframe" data-x="150"  data-y="-4"   data-r="-10" data-d="2"><img src="https://lh3.googleusercontent.com/d/1yH0MKxgxaXuWOpgkRnGk1-X6he2911qO=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
+        <figure class="bframe" data-x="150"  data-y="0"    data-r="13"  data-d="2"><img src="https://lh3.googleusercontent.com/d/1kGUlbwIz6BUaXWrdONJPHwciuVJ4d015=w760-rj-l76" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="760" height="507"></figure>
 
-        <figure class="bframe" data-x="-134" data-y="92"   data-r="14"  data-d="3"><img src="https://lh3.googleusercontent.com/d/1WhdaULEUWC1icAopX0LyqQDp6ZZ4qD4V=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
-        <figure class="bframe" data-x="-58"  data-y="124"  data-r="-9"  data-d="2"><img src="https://lh3.googleusercontent.com/d/1NEEivJvpBti17rBFDVyOUiVtYw1tGiuC=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
-        <figure class="bframe" data-x="10"   data-y="146"  data-r="13"  data-d="4"><img src="https://lh3.googleusercontent.com/d/1A5aDw78amGP0bPkq38cpAUAsSM80ADbv=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
-        <figure class="bframe" data-x="86"   data-y="122"  data-r="-15" data-d="3"><img src="https://lh3.googleusercontent.com/d/17qxvrHBAHhHTOZlXYfUECWvGoBUfinH2=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
-        <figure class="bframe" data-x="142"  data-y="94"   data-r="8"   data-d="2"><img src="https://lh3.googleusercontent.com/d/1TRjkG3wck_AMHBzYo2-RsQ22NxEPjyTF=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
+        <figure class="bframe" data-x="-118" data-y="100"  data-r="14"  data-d="3"><img src="https://lh3.googleusercontent.com/d/1YugkkMsd8_yTEaOcTqGRV-_Tb_QHo7AM=w760-rj-l76" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="760" height="507"></figure>
+        <figure class="bframe" data-x="0"    data-y="145"  data-r="-9"  data-d="4"><img src="https://lh3.googleusercontent.com/d/1WhdaULEUWC1icAopX0LyqQDp6ZZ4qD4V=w760-rj-l76" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="760" height="507"></figure>
+        <figure class="bframe" data-x="122"  data-y="98"   data-r="-15" data-d="3"><img src="https://lh3.googleusercontent.com/d/17qxvrHBAHhHTOZlXYfUECWvGoBUfinH2=w760-rj-l76" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="760" height="507"></figure>
       </div>
 
       <div class="burst-scrim" aria-hidden="true"></div>
 
-      <div class="burst-hud" aria-hidden="true">
-        <span class="burst-bracket bk-tl"></span>
-        <span class="burst-bracket bk-tr"></span>
-        <span class="burst-bracket bk-bl"></span>
-        <span class="burst-bracket bk-br"></span>
-        <span class="burst-rec"><i></i><em id="burstPhase">BURST</em></span>
-        <span class="burst-counter" id="burstCounter">00/15</span>
-      </div>
-
       <div class="burst-copy" id="burstCopy">
         <h2 class="burst-title" id="burstTitle">
-          A burst is fifteen frames.
+          A burst fires twenty frames a second.
           <em>One of them is the photograph.</em>
         </h2>
         <p class="burst-sub">
@@ -336,13 +312,11 @@
   </div>
 </section>
 
-<!-- GALLERY -->
 <section class="gallery" id="gallery" aria-label="Matthew Lehman Media photo gallery">
   <div class="gal-head">
     <h2 class="gal-title">The<br><em>Gallery</em></h2>
     <p class="gal-desc">A look at recent shoots — game day, portraits &amp; team sessions.</p>
   </div>
-
 
   <!-- What the galleries actually contain. Real coverage, not filler:
        the list mirrors the published galleries on /gallery. -->
@@ -376,7 +350,6 @@
   </div>
 </section>
 
-<!-- CONTACT -->
 <section class="contact-pg" id="contact" aria-label="Contact Matthew Lehman Media" itemscope itemtype="https://schema.org/ContactPage">
   <div class="c-left">
     <p class="eyebrow">Get In Touch</p>

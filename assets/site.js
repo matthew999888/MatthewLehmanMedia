@@ -25,7 +25,7 @@ document.getElementById('navLogoBtn').addEventListener('click', function(e) {
 const obs = new IntersectionObserver(es => es.forEach(e => {
   if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
 }), { threshold: 0.12 });
-document.querySelectorAll('.about-vis,.about-txt,.svc-graphic').forEach(el => obs.observe(el));
+document.querySelectorAll('.about-vis,.about-txt').forEach(el => obs.observe(el));
 
 /* ── Mobile hamburger nav ── */
 const burger = document.getElementById('navBurger');
@@ -237,29 +237,26 @@ form.addEventListener('submit', async e => {
   }
 })();
 
-/* ── The burst ────────────────────────────────────────────────────────────────
-   Three beats driven by scroll:
+/* ── The craft ────────────────────────────────────────────────────────────────
+   Scroll drives three beats: nine frames hurtle in and land in the sheet; the
+   sheet detonates and eight are thrown back out along the vector they arrived
+   on; one is left standing and the line settles on it.
 
-     BURST  fifteen frames hurtle in and slam into the sheet
-     BLAST  the sheet detonates — fourteen frames are thrown back out along the
-            vector they arrived on, tumbling, growing and gone
-     KEEP   one frame is left standing, and the line settles on it
+   Two things the motion depends on, both learned the hard way:
+     - the debris eases OUT, not in. An explosion is all force at the instant it
+       goes, then decay. Easing in reads as drifting.
+     - the keeper holds its place for the first part of the blast. Lifting it
+       immediately meant it covered the explosion before you could see it.
 
-   The blast is the whole argument. Fading the others to grey said "these are
-   less important"; throwing them off the screen says what the sentence says —
-   a burst is fifteen frames and fourteen of them are not the photograph.
-
-   Photographs are hard-coded in the markup, so there is no fetch here and the
-   section renders even if this never runs. Every per-frame write is transform,
-   opacity or filter; the handler is rAF-throttled and passive.
+   Frames are hard-coded in the markup, so there is no fetch here. Every
+   per-frame write is transform, opacity or filter; the handler is rAF-throttled
+   and passive, and geometry is measured only on resize.
 ─────────────────────────────────────────────────────────────────────────────── */
-(function theBurst() {
+(function theCraft() {
   const section = document.getElementById('burst');
   const rail    = section && section.querySelector('.burst-rail');
   const stage   = section && section.querySelector('.burst-stage');
   const sheet   = document.getElementById('burstSheet');
-  const counter = document.getElementById('burstCounter');
-  const phaseEl = document.getElementById('burstPhase');
   const copy    = document.getElementById('burstCopy');
   if (!section || !rail || !stage || !sheet) return;
 
@@ -267,24 +264,19 @@ form.addEventListener('submit', async e => {
   const keeper = sheet.querySelector('.is-keeper');
   if (!frames.length || !keeper) return;
 
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const pad = (n) => String(n).padStart(2, '0');
   const clamp = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
   const easeOut = (v) => 1 - Math.pow(1 - v, 3);
-  const easeIn  = (v) => v * v * v;          // slow load, then it goes
 
   const ASSEMBLE_ENDS = 0.42;
   const BLAST_ENDS    = 0.78;
   const COPY_ENTERS   = 0.72;
-  const STAGGER       = 0.026;
-  const THROW         = 2.9;   // how far out the debris goes, in scatter units
+  const STAGGER       = 0.04;
+  const THROW         = 2.9;   // how far the debris goes, in scatter units
   const SPIN          = 4.2;   // extra rotation as it tumbles away
 
-  if (reduced) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
     if (copy) copy.classList.add('is-in');
     stage.classList.add('is-resolved');
-    if (counter) counter.textContent = '01/' + pad(frames.length);
-    if (phaseEl) phaseEl.textContent = 'KEEP';
     return;
   }
 
@@ -295,7 +287,6 @@ form.addEventListener('submit', async e => {
     lift = Math.max(1, (stage.clientHeight * 0.78) / (keeper.offsetHeight || 1));
   };
 
-  let lastPhase = '';
   let ticking = false;
 
   const update = () => {
@@ -306,57 +297,44 @@ form.addEventListener('submit', async e => {
 
     const assemble = clamp(p / ASSEMBLE_ENDS);
     const blast = clamp((p - ASSEMBLE_ENDS) / (BLAST_ENDS - ASSEMBLE_ENDS));
-    // easeOut, not easeIn: an explosion is all force at the instant it goes,
-    // then decay. Accelerating slowly outward reads as drifting, not blowing up.
     const boom = easeOut(blast);
-    // The keeper holds its place while the sheet is thrown apart, and only
-    // starts growing once the debris is clear. Lifting it immediately meant
-    // it covered the explosion before you could see it happen.
-    const lifted = easeOut(clamp((blast - 0.38) / 0.62));
-    let landed = 0;
+    // The keeper starts growing while the last debris is still clearing. Waiting
+    // until the frame was empty left a stretch where nothing moved at all.
+    const lifted = easeOut(clamp((blast - 0.2) / 0.8));
 
     for (let i = 0; i < frames.length; i++) {
       const el = frames[i];
-      const delay = Math.min(i * STAGGER, 0.36);
+      const delay = Math.min(i * STAGGER, 0.34);
       const a = easeOut(clamp((assemble - delay) / (1 - delay)));
-      if (a > 0.85) landed++;
-
       const away = 1 - a;
       const sx = Number(el.dataset.x) || 0;
       const sy = Number(el.dataset.y) || 0;
       const sr = Number(el.dataset.r) || 0;
 
       if (el === keeper) {
-        const scale = (1 - away * 0.28) * (1 + (lift - 1) * lifted);
+        const scale = (1 - away * 0.26) * (1 + (lift - 1) * lifted);
         el.style.transform =
           'translate3d(' + sx * unit * away + 'px,' + sy * unit * away + 'px,0)' +
           ' rotate(' + sr * away + 'deg) scale(' + scale.toFixed(4) + ')';
-        el.style.opacity = (0.1 + a * 0.9).toFixed(3);
-        el.style.filter = away > 0.001 ? 'blur(' + (away * 6).toFixed(2) + 'px)' : 'none';
+        el.style.opacity = (0.12 + a * 0.88).toFixed(3);
+        el.style.filter = away > 0.001 ? 'blur(' + (away * 4).toFixed(2) + 'px)' : 'none';
       } else {
-        // Arrives on its vector, then is thrown back out along the same one.
         const travel = away - boom * THROW;
-        const scale = (1 - away * 0.28) * (1 + boom * 1.25);
+        const scale = (1 - away * 0.26) * (1 + boom * 1.25);
+        // Depth blur is light here: at three across the tiles are big enough
+        // that heavy blur reads as mud rather than distance.
+        const blurPx = away * (Number(el.dataset.d) || 0) * 0.9 + boom * 7;
         el.style.transform =
           'translate3d(' + sx * unit * travel + 'px,' + sy * unit * travel + 'px,0)' +
           ' rotate(' + (sr * away + sr * boom * SPIN).toFixed(2) + 'deg)' +
           ' scale(' + scale.toFixed(4) + ')';
-        el.style.opacity = ((0.08 + a * 0.92) * (1 - clamp(boom * 1.35))).toFixed(3);
-        el.style.filter = 'blur(' + (away * 4 + boom * 7).toFixed(2) + 'px)';
+        el.style.opacity = ((0.1 + a * 0.9) * (1 - boom)).toFixed(3);
+        el.style.filter = 'blur(' + blurPx.toFixed(2) + 'px)';
       }
     }
 
     if (copy) copy.classList.toggle('is-in', p > COPY_ENTERS);
     stage.classList.toggle('is-resolved', blast > 0.5);
-
-    const phase = p < ASSEMBLE_ENDS ? 'BURST' : p < BLAST_ENDS ? 'BLAST' : 'KEEP';
-    if (phase !== lastPhase && phaseEl) { phaseEl.textContent = phase; lastPhase = phase; }
-    if (counter) {
-      counter.textContent =
-        phase === 'BURST' ? pad(landed) + '/' + pad(frames.length)
-      : phase === 'BLAST' ? pad(Math.max(1, Math.round(frames.length * (1 - boom)))) + '/' + pad(frames.length)
-      : '01/' + pad(frames.length);
-    }
   };
 
   const onScroll = () => {
