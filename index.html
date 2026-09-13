@@ -267,56 +267,66 @@
 
 <!-- SERVICES -->
 <!-- ══════════════════════════════════════════════════════════════
-     THE CRAFT
+     THE BURST — contact sheet
 
-     Six photographs, full bleed, one at a time. Scroll cross-fades
-     between them while each one pushes slowly in, then the last is
-     held and the line settles on it.
+     Enacts the line it sits under. Scrolling fires fifteen frames in
+     from depth into a contact sheet, then the edit happens: fourteen
+     drain of colour and fall back, one keeper lifts forward and comes
+     into focus, and the sentence lands on it.
 
-     Restraint on purpose: a photographer's section should let the
-     photograph be big. Frames are hard-coded, so this needs no
-     network call of its own and renders without JavaScript.
+     Photographs are hard-coded. They are the first frame of fifteen
+     different galleries, so the sheet reads as a season rather than an
+     afternoon. Swapping one is a matter of changing its file id.
 ══════════════════════════════════════════════════════════════ -->
-<section class="film" id="burst" aria-labelledby="filmTitle">
-  <div class="film-rail">
-    <div class="film-stage">
+<section class="burst" id="burst" aria-labelledby="burstTitle">
+  <div class="burst-rail">
+    <div class="burst-stage">
 
-      <div class="film-plates" id="filmPlates" role="img"
-           aria-label="Six photographs from the 2025–26 Logan Chiefs season">
-        <figure class="plate" data-caption="Baseball 2026 · Game 4">
-          <img src="https://lh3.googleusercontent.com/d/1k925MCzo7DCmcJp8nB02p-G-fGrSGFw1=w1600-rj-l80" alt="A Logan catcher set behind the plate, glove up" referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" width="1600" height="1067">
+      <div class="burst-sheet" id="burstSheet" role="img"
+           aria-label="Contact sheet of fifteen frames from the 2025–26 season, resolving on one">
+        <figure class="bframe" data-x="-118" data-y="-96" data-r="-17" data-d="3"><img src="https://lh3.googleusercontent.com/d/10h3strQr2KxznOlf52rnlaWNWowIMVPu=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
+        <figure class="bframe" data-x="-46"  data-y="-132" data-r="11"  data-d="2"><img src="https://lh3.googleusercontent.com/d/1-0DURdjHS3lfxEa_dcPQcSZnvkGDEMUV=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
+        <figure class="bframe" data-x="14"   data-y="-150" data-r="-8"  data-d="4"><img src="https://lh3.googleusercontent.com/d/1vf4kiv8jR7dqX4474WCTHL4Wfp77n8RU=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
+        <figure class="bframe" data-x="78"   data-y="-118" data-r="15"  data-d="2"><img src="https://lh3.googleusercontent.com/d/1Sm2Vc7r3tC76Rs1i5u-MZOr_CK4WGYuY=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
+        <figure class="bframe" data-x="132"  data-y="-88"  data-r="-12" data-d="3"><img src="https://lh3.googleusercontent.com/d/1MtKKAEB8X55msOpInO1x28wRv-FX2BVJ=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
+
+        <figure class="bframe" data-x="-146" data-y="-10"  data-r="9"   data-d="2"><img src="https://lh3.googleusercontent.com/d/1kGUlbwIz6BUaXWrdONJPHwciuVJ4d015=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
+        <figure class="bframe" data-x="-70"  data-y="6"    data-r="-13" data-d="4"><img src="https://lh3.googleusercontent.com/d/1YugkkMsd8_yTEaOcTqGRV-_Tb_QHo7AM=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
+
+        <!-- the keeper -->
+        <figure class="bframe is-keeper" data-x="0" data-y="0" data-r="0" data-d="0">
+          <img src="https://lh3.googleusercontent.com/d/1k925MCzo7DCmcJp8nB02p-G-fGrSGFw1=w1100-rj-l78"
+               alt="A Logan catcher set behind the plate, glove up, Baseball 2026 Game 4"
+               referrerpolicy="no-referrer" loading="eager" fetchpriority="high" decoding="async" width="1100" height="733">
         </figure>
-        <figure class="plate" data-caption="Fort Knox · 2026">
-          <img src="https://lh3.googleusercontent.com/d/17eRwXQSrHb-OWQZMH_HkBltGue5O_Zns=w1600-rj-l80" alt="Raider team on the course at Fort Knox" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="1600" height="1067">
-        </figure>
-        <figure class="plate" data-caption="Home Raider Meet · 2025">
-          <img src="https://lh3.googleusercontent.com/d/1x_uZw6YzrGp3hAwyBsGhoySCWodQ74WD=w1600-rj-l80" alt="Raider team working an obstacle at the home meet" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="1600" height="1067">
-        </figure>
-        <figure class="plate" data-caption="Baseball 2026 · Game 6">
-          <img src="https://lh3.googleusercontent.com/d/1eIp5egcqBYJNJfyVerbmUuqQ2Xvt7PJ7=w1600-rj-l80" alt="Logan baseball, game six" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="1600" height="1067">
-        </figure>
-        <figure class="plate" data-caption="Live Oaks Raider Meet · 2025">
-          <img src="https://lh3.googleusercontent.com/d/1f_Jl8C6ar1Jcc9T8I2tdStyv9UeXnzIb=w1600-rj-l80" alt="Raider meet at Live Oaks" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="1600" height="1067">
-        </figure>
-        <figure class="plate" data-caption="Open Drill Nationals">
-          <img src="https://lh3.googleusercontent.com/d/1g9-ypwrYZqhKauycFHHDX6D_by84x_uP=w1600-rj-l80" alt="Open Drill Nationals" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="1600" height="1067">
-        </figure>
+
+        <figure class="bframe" data-x="74"   data-y="4"    data-r="12"  data-d="3"><img src="https://lh3.googleusercontent.com/d/1VMV0YA20PmTpuSDEz3zQwXfU7fjQ2h_6=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
+        <figure class="bframe" data-x="150"  data-y="-4"   data-r="-10" data-d="2"><img src="https://lh3.googleusercontent.com/d/1yH0MKxgxaXuWOpgkRnGk1-X6he2911qO=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
+
+        <figure class="bframe" data-x="-134" data-y="92"   data-r="14"  data-d="3"><img src="https://lh3.googleusercontent.com/d/1WhdaULEUWC1icAopX0LyqQDp6ZZ4qD4V=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
+        <figure class="bframe" data-x="-58"  data-y="124"  data-r="-9"  data-d="2"><img src="https://lh3.googleusercontent.com/d/1NEEivJvpBti17rBFDVyOUiVtYw1tGiuC=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
+        <figure class="bframe" data-x="10"   data-y="146"  data-r="13"  data-d="4"><img src="https://lh3.googleusercontent.com/d/1A5aDw78amGP0bPkq38cpAUAsSM80ADbv=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
+        <figure class="bframe" data-x="86"   data-y="122"  data-r="-15" data-d="3"><img src="https://lh3.googleusercontent.com/d/17qxvrHBAHhHTOZlXYfUECWvGoBUfinH2=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
+        <figure class="bframe" data-x="142"  data-y="94"   data-r="8"   data-d="2"><img src="https://lh3.googleusercontent.com/d/1TRjkG3wck_AMHBzYo2-RsQ22NxEPjyTF=w520-rj-l74" alt="" referrerpolicy="no-referrer" loading="lazy" decoding="async" width="520" height="347"></figure>
       </div>
 
-      <div class="film-shade" aria-hidden="true"></div>
+      <div class="burst-scrim" aria-hidden="true"></div>
 
-      <figcaption class="film-meta" aria-hidden="true">
-        <span class="film-caption" id="filmCaption">Baseball 2026 · Game 4</span>
-        <span class="film-index"><em id="filmIndex">01</em><i></i>06</span>
-      </figcaption>
-      <div class="film-progress" aria-hidden="true"><span id="filmBar"></span></div>
+      <div class="burst-hud" aria-hidden="true">
+        <span class="burst-bracket bk-tl"></span>
+        <span class="burst-bracket bk-tr"></span>
+        <span class="burst-bracket bk-bl"></span>
+        <span class="burst-bracket bk-br"></span>
+        <span class="burst-rec"><i></i><em id="burstPhase">BURST</em></span>
+        <span class="burst-counter" id="burstCounter">00/15</span>
+      </div>
 
-      <div class="film-copy" id="filmCopy">
-        <h2 class="film-title" id="filmTitle">
-          A burst is a hundred frames.
+      <div class="burst-copy" id="burstCopy">
+        <h2 class="burst-title" id="burstTitle">
+          A burst is fifteen frames.
           <em>One of them is the photograph.</em>
         </h2>
-        <p class="film-sub">
+        <p class="burst-sub">
           It is why whole games go up here, not a handful of highlights &mdash;
           the frame that matters is rarely the one you expected.
         </p>

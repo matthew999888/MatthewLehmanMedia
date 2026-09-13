@@ -237,94 +237,126 @@ form.addEventListener('submit', async e => {
   }
 })();
 
-/* ── The craft: full-bleed plates ─────────────────────────────────────────────
-   Scroll cross-fades between six photographs while each one pushes slowly in,
-   then the last is held and the line settles on it.
+/* ── The burst ────────────────────────────────────────────────────────────────
+   Three beats driven by scroll:
 
-   Plates overlap rather than cut: at any position two are on screen, one
-   leaving and one arriving, which is what stops it feeling like a slideshow.
-   The push continues through the hand-off — the outgoing plate keeps drifting
-   in while the incoming one settles — so the movement never snaps back.
+     BURST  fifteen frames hurtle in and slam into the sheet
+     BLAST  the sheet detonates — fourteen frames are thrown back out along the
+            vector they arrived on, tumbling, growing and gone
+     KEEP   one frame is left standing, and the line settles on it
 
-   Frames are hard-coded in the markup, so there is no fetch here and the
-   section still renders if this never runs.
+   The blast is the whole argument. Fading the others to grey said "these are
+   less important"; throwing them off the screen says what the sentence says —
+   a burst is fifteen frames and fourteen of them are not the photograph.
+
+   Photographs are hard-coded in the markup, so there is no fetch here and the
+   section renders even if this never runs. Every per-frame write is transform,
+   opacity or filter; the handler is rAF-throttled and passive.
 ─────────────────────────────────────────────────────────────────────────────── */
-(function theCraft() {
+(function theBurst() {
   const section = document.getElementById('burst');
-  const rail    = section && section.querySelector('.film-rail');
-  const stage   = section && section.querySelector('.film-stage');
-  const plates  = section ? [...section.querySelectorAll('.plate')] : [];
-  const capEl   = document.getElementById('filmCaption');
-  const idxEl   = document.getElementById('filmIndex');
-  const barEl   = document.getElementById('filmBar');
-  const copy    = document.getElementById('filmCopy');
-  if (!section || !rail || !stage || plates.length < 2) return;
+  const rail    = section && section.querySelector('.burst-rail');
+  const stage   = section && section.querySelector('.burst-stage');
+  const sheet   = document.getElementById('burstSheet');
+  const counter = document.getElementById('burstCounter');
+  const phaseEl = document.getElementById('burstPhase');
+  const copy    = document.getElementById('burstCopy');
+  if (!section || !rail || !stage || !sheet) return;
+
+  const frames = [...sheet.querySelectorAll('.bframe')];
+  const keeper = sheet.querySelector('.is-keeper');
+  if (!frames.length || !keeper) return;
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const pad = (v) => String(v).padStart(2, '0');
+  const pad = (n) => String(n).padStart(2, '0');
   const clamp = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+  const easeOut = (v) => 1 - Math.pow(1 - v, 3);
+  const easeIn  = (v) => v * v * v;          // slow load, then it goes
+
+  const ASSEMBLE_ENDS = 0.42;
+  const BLAST_ENDS    = 0.78;
+  const COPY_ENTERS   = 0.72;
+  const STAGGER       = 0.026;
+  const THROW         = 2.9;   // how far out the debris goes, in scatter units
+  const SPIN          = 4.2;   // extra rotation as it tumbles away
 
   if (reduced) {
-    plates.forEach((el) => { el.style.opacity = '1'; });
     if (copy) copy.classList.add('is-in');
+    stage.classList.add('is-resolved');
+    if (counter) counter.textContent = '01/' + pad(frames.length);
+    if (phaseEl) phaseEl.textContent = 'KEEP';
     return;
   }
 
-  const HOLD_FROM = 0.84;        // last plate holds while the line arrives
-  const IN_SCALE  = 1.09;        // a plate arrives slightly large ...
-  const OUT_SCALE = 0.95;        // ... and keeps drifting in as it leaves
-  const n = plates.length;
-
-  let shown = -1;
-  let capTimer = 0;
-  let ticking = false;
-
-  const setPlate = (el, opacity, scale) => {
-    el.style.opacity = opacity.toFixed(3);
-    el.firstElementChild.style.transform = 'scale(' + scale.toFixed(4) + ')';
+  let unit = 1;
+  let lift = 1;
+  const measure = () => {
+    unit = stage.clientWidth / 100;
+    lift = Math.max(1, (stage.clientHeight * 0.78) / (keeper.offsetHeight || 1));
   };
+
+  let lastPhase = '';
+  let ticking = false;
 
   const update = () => {
     ticking = false;
     const runway = rail.offsetHeight - stage.offsetHeight;
     if (runway <= 0) return;
-
     const p = clamp(-rail.getBoundingClientRect().top / runway);
-    const t = clamp(p / HOLD_FROM) * (n - 1);
-    const i = Math.min(Math.floor(t), n - 1);
-    const f = t - i;
 
-    for (let k = 0; k < n; k++) {
-      if (k === i) {
-        // Leaving: fades out while continuing to drift inward.
-        setPlate(plates[k], 1 - f, 1 + (OUT_SCALE - 1) * f);
-      } else if (k === i + 1) {
-        // Arriving: fades in from slightly large down to its resting size.
-        setPlate(plates[k], f, IN_SCALE + (1 - IN_SCALE) * f);
+    const assemble = clamp(p / ASSEMBLE_ENDS);
+    const blast = clamp((p - ASSEMBLE_ENDS) / (BLAST_ENDS - ASSEMBLE_ENDS));
+    // easeOut, not easeIn: an explosion is all force at the instant it goes,
+    // then decay. Accelerating slowly outward reads as drifting, not blowing up.
+    const boom = easeOut(blast);
+    // The keeper holds its place while the sheet is thrown apart, and only
+    // starts growing once the debris is clear. Lifting it immediately meant
+    // it covered the explosion before you could see it happen.
+    const lifted = easeOut(clamp((blast - 0.38) / 0.62));
+    let landed = 0;
+
+    for (let i = 0; i < frames.length; i++) {
+      const el = frames[i];
+      const delay = Math.min(i * STAGGER, 0.36);
+      const a = easeOut(clamp((assemble - delay) / (1 - delay)));
+      if (a > 0.85) landed++;
+
+      const away = 1 - a;
+      const sx = Number(el.dataset.x) || 0;
+      const sy = Number(el.dataset.y) || 0;
+      const sr = Number(el.dataset.r) || 0;
+
+      if (el === keeper) {
+        const scale = (1 - away * 0.28) * (1 + (lift - 1) * lifted);
+        el.style.transform =
+          'translate3d(' + sx * unit * away + 'px,' + sy * unit * away + 'px,0)' +
+          ' rotate(' + sr * away + 'deg) scale(' + scale.toFixed(4) + ')';
+        el.style.opacity = (0.1 + a * 0.9).toFixed(3);
+        el.style.filter = away > 0.001 ? 'blur(' + (away * 6).toFixed(2) + 'px)' : 'none';
       } else {
-        setPlate(plates[k], 0, 1);
-      }
-    }
-    // Past the walk the final plate is simply held.
-    if (i >= n - 1) setPlate(plates[n - 1], 1, OUT_SCALE);
-
-    const current = Math.min(Math.round(t), n - 1);
-    if (current !== shown) {
-      shown = current;
-      if (idxEl) idxEl.textContent = pad(current + 1);
-      if (capEl) {
-        const label = plates[current].dataset.caption || '';
-        capEl.style.opacity = '0';
-        clearTimeout(capTimer);
-        capTimer = setTimeout(() => {
-          capEl.textContent = label;
-          capEl.style.opacity = '1';
-        }, 160);
+        // Arrives on its vector, then is thrown back out along the same one.
+        const travel = away - boom * THROW;
+        const scale = (1 - away * 0.28) * (1 + boom * 1.25);
+        el.style.transform =
+          'translate3d(' + sx * unit * travel + 'px,' + sy * unit * travel + 'px,0)' +
+          ' rotate(' + (sr * away + sr * boom * SPIN).toFixed(2) + 'deg)' +
+          ' scale(' + scale.toFixed(4) + ')';
+        el.style.opacity = ((0.08 + a * 0.92) * (1 - clamp(boom * 1.35))).toFixed(3);
+        el.style.filter = 'blur(' + (away * 4 + boom * 7).toFixed(2) + 'px)';
       }
     }
 
-    if (barEl) barEl.style.transform = 'scaleX(' + p.toFixed(4) + ')';
-    if (copy) copy.classList.toggle('is-in', p > HOLD_FROM + 0.03);
+    if (copy) copy.classList.toggle('is-in', p > COPY_ENTERS);
+    stage.classList.toggle('is-resolved', blast > 0.5);
+
+    const phase = p < ASSEMBLE_ENDS ? 'BURST' : p < BLAST_ENDS ? 'BLAST' : 'KEEP';
+    if (phase !== lastPhase && phaseEl) { phaseEl.textContent = phase; lastPhase = phase; }
+    if (counter) {
+      counter.textContent =
+        phase === 'BURST' ? pad(landed) + '/' + pad(frames.length)
+      : phase === 'BLAST' ? pad(Math.max(1, Math.round(frames.length * (1 - boom)))) + '/' + pad(frames.length)
+      : '01/' + pad(frames.length);
+    }
   };
 
   const onScroll = () => {
@@ -332,9 +364,11 @@ form.addEventListener('submit', async e => {
     ticking = true;
     requestAnimationFrame(update);
   };
+  const onResize = () => { measure(); onScroll(); };
 
+  measure();
   addEventListener('scroll', onScroll, { passive: true });
-  addEventListener('resize', onScroll, { passive: true });
-  addEventListener('load', onScroll);
+  addEventListener('resize', onResize, { passive: true });
+  addEventListener('load', onResize);
   update();
 })();
