@@ -541,6 +541,10 @@
   font-family:var(--fb);font-size:.24em;font-weight:600;letter-spacing:0;
   color:var(--light);font-variant-numeric:tabular-nums;top:-1.3em;
 }
+.pl-lede{
+  margin:1.2rem 0 0;font-family:var(--fb);font-size:.9rem;line-height:1.7;
+  color:rgba(245,240,255,.66);max-width:44ch;
+}
 .pl-now{
   margin:1.1rem 0 0;font-family:var(--fb);font-size:.74rem;letter-spacing:.16em;
   text-transform:uppercase;color:rgba(245,240,255,.62);
