@@ -237,113 +237,94 @@ form.addEventListener('submit', async e => {
   }
 })();
 
-/* ── The burst: contact sheet ─────────────────────────────────────────────────
-   Scroll drives three beats. Frames fly in from depth and land in the sheet;
-   then the edit happens — fourteen drain of colour and fall back while the
-   keeper lifts and sharpens; then the line settles on it.
+/* ── The craft: full-bleed plates ─────────────────────────────────────────────
+   Scroll cross-fades between six photographs while each one pushes slowly in,
+   then the last is held and the line settles on it.
 
-   Photographs are hard-coded in the markup, so this runs with no network call
-   of its own and the section renders even if the script never gets to it.
+   Plates overlap rather than cut: at any position two are on screen, one
+   leaving and one arriving, which is what stops it feeling like a slideshow.
+   The push continues through the hand-off — the outgoing plate keeps drifting
+   in while the incoming one settles — so the movement never snaps back.
 
-   Everything written per frame is transform, opacity or filter. The handler is
-   rAF-throttled and passive, and geometry is measured only on resize.
+   Frames are hard-coded in the markup, so there is no fetch here and the
+   section still renders if this never runs.
 ─────────────────────────────────────────────────────────────────────────────── */
-(function theBurst() {
+(function theCraft() {
   const section = document.getElementById('burst');
-  const rail    = section && section.querySelector('.burst-rail');
-  const stage   = section && section.querySelector('.burst-stage');
-  const sheet   = document.getElementById('burstSheet');
-  const counter = document.getElementById('burstCounter');
-  const phaseEl = document.getElementById('burstPhase');
-  const copy    = document.getElementById('burstCopy');
-  if (!section || !rail || !stage || !sheet) return;
-
-  const frames = [...sheet.querySelectorAll('.bframe')];
-  const keeper = sheet.querySelector('.is-keeper');
-  if (!frames.length || !keeper) return;
+  const rail    = section && section.querySelector('.film-rail');
+  const stage   = section && section.querySelector('.film-stage');
+  const plates  = section ? [...section.querySelectorAll('.plate')] : [];
+  const capEl   = document.getElementById('filmCaption');
+  const idxEl   = document.getElementById('filmIndex');
+  const barEl   = document.getElementById('filmBar');
+  const copy    = document.getElementById('filmCopy');
+  if (!section || !rail || !stage || plates.length < 2) return;
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const pad = (n) => String(n).padStart(2, '0');
+  const pad = (v) => String(v).padStart(2, '0');
   const clamp = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
-  const easeOut = (v) => 1 - Math.pow(1 - v, 3);
-  const easeInOut = (v) => (v < 0.5 ? 4 * v * v * v : 1 - Math.pow(-2 * v + 2, 3) / 2);
-
-  const ASSEMBLE_ENDS = 0.5;   // frames have all landed
-  const EDIT_ENDS     = 0.8;   // keeper is fully lifted
-  const COPY_ENTERS   = 0.74;
-  const STAGGER       = 0.028; // per frame, so it reads as a burst firing
 
   if (reduced) {
+    plates.forEach((el) => { el.style.opacity = '1'; });
     if (copy) copy.classList.add('is-in');
-    stage.classList.add('is-resolved');
-    if (counter) counter.textContent = '01/' + pad(frames.length);
-    if (phaseEl) phaseEl.textContent = 'KEEP';
     return;
   }
 
-  let unit = 1;
-  let lift = 1;
-  const measure = () => {
-    unit = stage.clientWidth / 100;
-    const kh = keeper.offsetHeight || 1;
-    lift = Math.max(1, (stage.clientHeight * 0.74) / kh);
-  };
+  const HOLD_FROM = 0.84;        // last plate holds while the line arrives
+  const IN_SCALE  = 1.09;        // a plate arrives slightly large ...
+  const OUT_SCALE = 0.95;        // ... and keeps drifting in as it leaves
+  const n = plates.length;
 
-  let lastPhase = '';
+  let shown = -1;
+  let capTimer = 0;
   let ticking = false;
+
+  const setPlate = (el, opacity, scale) => {
+    el.style.opacity = opacity.toFixed(3);
+    el.firstElementChild.style.transform = 'scale(' + scale.toFixed(4) + ')';
+  };
 
   const update = () => {
     ticking = false;
     const runway = rail.offsetHeight - stage.offsetHeight;
     if (runway <= 0) return;
+
     const p = clamp(-rail.getBoundingClientRect().top / runway);
+    const t = clamp(p / HOLD_FROM) * (n - 1);
+    const i = Math.min(Math.floor(t), n - 1);
+    const f = t - i;
 
-    const assemble = clamp(p / ASSEMBLE_ENDS);
-    const edit = clamp((p - ASSEMBLE_ENDS) / (EDIT_ENDS - ASSEMBLE_ENDS));
-    const eEdit = easeInOut(edit);
-    let landed = 0;
-
-    for (let i = 0; i < frames.length; i++) {
-      const el = frames[i];
-      const delay = Math.min(i * STAGGER, 0.4);
-      const a = easeOut(clamp((assemble - delay) / (1 - delay)));
-      if (a > 0.85) landed++;   // visibly arrived, so the counter climbs with the burst
-
-      const away = 1 - a;                       // 1 = still out there, 0 = landed
-      const x = (Number(el.dataset.x) || 0) * unit * away;
-      const y = (Number(el.dataset.y) || 0) * unit * away;
-      const r = (Number(el.dataset.r) || 0) * away;
-      const depth = Number(el.dataset.d) || 0;
-
-      if (el === keeper) {
-        // Lifts out of the sheet and comes into focus.
-        const s = (1 - away * 0.3) * (1 + (lift - 1) * eEdit);
-        el.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0) rotate(' + r + 'deg) scale(' + s + ')';
-        el.style.opacity = String(0.1 + a * 0.9);
-        el.style.filter = away > 0.001 ? 'blur(' + (away * 6).toFixed(2) + 'px)' : 'none';
+    for (let k = 0; k < n; k++) {
+      if (k === i) {
+        // Leaving: fades out while continuing to drift inward.
+        setPlate(plates[k], 1 - f, 1 + (OUT_SCALE - 1) * f);
+      } else if (k === i + 1) {
+        // Arriving: fades in from slightly large down to its resting size.
+        setPlate(plates[k], f, IN_SCALE + (1 - IN_SCALE) * f);
       } else {
-        // Falls back, drains, and softens so the keeper is the only sharp thing.
-        const s = (1 - away * 0.3) * (1 - eEdit * 0.07);
-        const blur = away * depth * 1.6 + eEdit * 2.4;
-        el.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0) rotate(' + r + 'deg) scale(' + s + ')';
-        el.style.opacity = String((0.08 + a * 0.92) * (1 - eEdit * 0.82));
-        el.style.filter = 'blur(' + blur.toFixed(2) + 'px) grayscale(' + eEdit.toFixed(3) + ')';
+        setPlate(plates[k], 0, 1);
+      }
+    }
+    // Past the walk the final plate is simply held.
+    if (i >= n - 1) setPlate(plates[n - 1], 1, OUT_SCALE);
+
+    const current = Math.min(Math.round(t), n - 1);
+    if (current !== shown) {
+      shown = current;
+      if (idxEl) idxEl.textContent = pad(current + 1);
+      if (capEl) {
+        const label = plates[current].dataset.caption || '';
+        capEl.style.opacity = '0';
+        clearTimeout(capTimer);
+        capTimer = setTimeout(() => {
+          capEl.textContent = label;
+          capEl.style.opacity = '1';
+        }, 160);
       }
     }
 
-    const resolved = p > COPY_ENTERS;
-    if (copy) copy.classList.toggle('is-in', resolved);
-    stage.classList.toggle('is-resolved', edit > 0.55);
-
-    const phase = p < ASSEMBLE_ENDS ? 'BURST' : p < EDIT_ENDS ? 'EDIT' : 'KEEP';
-    if (phase !== lastPhase && phaseEl) { phaseEl.textContent = phase; lastPhase = phase; }
-    if (counter) {
-      counter.textContent = phase === 'BURST'
-        ? pad(landed) + '/' + pad(frames.length)
-        : phase === 'EDIT'
-          ? pad(frames.length) + '/' + pad(frames.length)
-          : '01/' + pad(frames.length);
-    }
+    if (barEl) barEl.style.transform = 'scaleX(' + p.toFixed(4) + ')';
+    if (copy) copy.classList.toggle('is-in', p > HOLD_FROM + 0.03);
   };
 
   const onScroll = () => {
@@ -351,11 +332,9 @@ form.addEventListener('submit', async e => {
     ticking = true;
     requestAnimationFrame(update);
   };
-  const onResize = () => { measure(); onScroll(); };
 
-  measure();
   addEventListener('scroll', onScroll, { passive: true });
-  addEventListener('resize', onResize, { passive: true });
-  addEventListener('load', onResize);
+  addEventListener('resize', onScroll, { passive: true });
+  addEventListener('load', onScroll);
   update();
 })();
