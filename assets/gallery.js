@@ -1,0 +1,1587 @@
+/* ============================================================
+   ======================================
+   EASY EDIT SETTINGS
+   ======================================
+
+   Everything on this page is controlled from this section.
+   You never need to edit any HTML or CSS below this block.
+   ============================================================ */
+
+// ──────────────────────────────────────────────
+// BACKEND CONNECTION (Supabase)
+// Paste your Project URL + anon public key from
+// Supabase → Project Settings → API.
+// Until these are filled in, the page uses the
+// FALLBACK_GALLERIES data below instead — the site
+// keeps working normally either way.
+// Manage galleries/photos from admin.html once connected.
+// ──────────────────────────────────────────────
+// These are filled in at runtime from /api/config, which reads them from the
+// Vercel environment variables. Nothing is hardcoded here on purpose: this
+// file used to carry a project URL that was later deleted, and the page went
+// on pointing at a dead host with no way to correct it short of a code edit
+// in three separate files. Moving a project or rotating a key is now an env
+// var change and a redeploy.
+//
+// If the config call fails — the API is down, or the page is being opened as
+// a plain file — SUPABASE_CONNECTED stays false and the page renders
+// FALLBACK_GALLERIES instead of an empty grid.
+let SUPABASE_URL       = "";
+let SUPABASE_ANON_KEY  = "";
+let SUPABASE_CONNECTED = false;
+
+async function loadRuntimeConfig() {
+  try {
+    const res = await fetch('/api/config', { headers: { Accept: 'application/json' } });
+    if (!res.ok) return false;
+    const cfg = await res.json();
+    if (!cfg || !cfg.supabaseUrl || !cfg.supabaseAnonKey) return false;
+    SUPABASE_URL       = cfg.supabaseUrl;
+    SUPABASE_ANON_KEY  = cfg.supabaseAnonKey;
+    SUPABASE_CONNECTED = true;
+    return true;
+  } catch (err) {
+    console.error('Config load failed — falling back to built-in galleries:', err);
+    return false;
+  }
+}
+
+// ──────────────────────────────────────────────
+// SITE INFO
+// Change these to update text across the page.
+// ──────────────────────────────────────────────
+const SITE_TITLE        = "Matthew Lehman Media";
+const PHOTOGRAPHER_NAME = "Matthew Lehman";
+const BUSINESS_NAME     = "Matthew Lehman Media";
+const LOGO_TEXT         = "MLM";
+const FOOTER_TEXT       = "Matthew Lehman Media";
+const COPYRIGHT_TEXT    = "© 2026 Matthew Lehman Media. All rights reserved.";
+
+// ──────────────────────────────────────────────
+// INSTAGRAM
+// Replace with your Instagram URL and handle.
+// ──────────────────────────────────────────────
+const INSTAGRAM_URL    = "https://www.instagram.com/mlmedia_28/";
+const INSTAGRAM_HANDLE = "@mlmedia_28";
+
+// ──────────────────────────────────────────────
+// SHOP LINK (Pixieset)
+// Paste your full Pixieset shop URL below.
+// Example: "https://matthewlehman.pixieset.com/"
+//
+// This is the site-wide default. Any single gallery can override it
+// with its own Pixieset URL from the admin panel — useful when a
+// particular shoot has its own store. Leave this as the placeholder
+// and the Shop button simply doesn't appear.
+// ──────────────────────────────────────────────
+const SHOP_LINK = "PASTE_PIXIESET_SHOP_LINK_HERE";
+
+function shopLinkFor(gallery) {
+  const perGallery = gallery && gallery.pixiesetUrl;
+  if (perGallery) return perGallery;
+  if (SHOP_LINK && SHOP_LINK !== 'PASTE_PIXIESET_SHOP_LINK_HERE') return SHOP_LINK;
+  return null;
+}
+
+// ──────────────────────────────────────────────
+// GALLERY DIRECTORY SUBTITLE
+// The sentence that appears under the main header.
+// ──────────────────────────────────────────────
+const GALLERY_SUBTITLE = "Browse all sessions below — select any gallery to view the full collection.";
+
+// ──────────────────────────────────────────────
+// GALLERIES
+// ──────────────────────────────────────────────
+// HOW TO ADD A NEW GALLERY:
+//   1. Copy one of the objects below (everything between { and }).
+//   2. Paste it inside the [ ] array, separated by a comma.
+//   3. Fill in the title, description, cover, and photos array.
+//   4. Save the file — the gallery card will appear automatically.
+//
+// HOW TO HIDE A GALLERY (keep it but remove it from the public grid):
+//   Set  visible: false  on the gallery.
+//   The card will disappear from the landing page but the gallery
+//   is still fully accessible to anyone who has the direct link:
+//     gallery.html#gallery-your-gallery-title
+//   (replace spaces with hyphens and use all lowercase)
+//   Example link for "Senior Session" → gallery.html#gallery-senior-session
+//   To show it again, change false back to true (or just delete the line).
+//
+// HOW TO DELETE A GALLERY:
+//   1. Find the gallery object you want to remove in the array below.
+//   2. Delete the entire { ... } block, including the trailing comma.
+//   3. Save the file — the card disappears automatically.
+//
+// HOW TO ADD PHOTOS TO A GALLERY:
+//   1. Find the gallery in the array below.
+//   2. Add photo paths inside the photos: [ ] array, separated by commas.
+//   3. Paths can be:
+//      - Relative: "images/football/photo1.jpg"
+//      - Google Drive: "https://drive.google.com/thumbnail?id=YOUR_FILE_ID&sz=w1200"
+//      - Any public URL: "https://example.com/photo.jpg"
+//
+// HOW TO REPLACE THE COVER PHOTO:
+//   1. Find the gallery object below.
+//   2. Change the value of cover: "..." to your new image path.
+//   3. Same path formats apply (relative, Google Drive, or URL).
+//
+// HOW TO USE GOOGLE DRIVE PHOTOS:
+//   1. Upload photo to Google Drive and set sharing to "Anyone with link".
+//   2. Copy the file ID from the share URL:
+//      https://drive.google.com/file/d/  FILE_ID_IS_HERE  /view
+//   3. Use this format in your photos array:
+//      "https://drive.google.com/thumbnail?id=FILE_ID_HERE&sz=w1200"
+//
+// ──────────────────────────────────────────────
+const FALLBACK_GALLERIES = [
+
+  // ─────────────────────────────
+  // GAME 1
+  // ─────────────────────────────
+  {
+    title: "Baseball 2026 Game 1",
+    description: "2026 baseball",
+    cover: "https://drive.google.com/thumbnail?id=1xWT9-DpGniKjnfl1lPA8A4-aiNvJDejL&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1kiVKuzyQj1gsILlhczQrgCpi43m5c1Ko&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1KPXd-1DjO60bNsRTRWSAW82BMWXssPYp&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1hkGzn2qzXtxJghopmZrZAKnG14GzaVAI&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1489k7FHQvD8hPhHC3GKL-ExB0FALylSK&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1nYZguXJYgY9DSSRB12jKJcjMHb7rp7_Y&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1i5I_ORnI_jkYLbAVfKBLAGnSSkGxNtU7&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1iw_jJO1nWLtqt-vVvKhKr6S6sqoFaQHf&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1LQopYB6xlmVwSzSQYDwlLi_0SyvvOg4f&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1FZDWjZcWm99oYVJHcbWXk3vkdEwyVqMJ&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1PBZVm2TjLzbVk0wKHLLD_gkF_-NeVYHl&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1sbevmThmkHwtGM8alnE_dbgh4i3zWYyD&sz=w1000",
+      "https://drive.google.com/thumbnail?id=10h3strQr2KxznOlf52rnlaWNWowIMVPu&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1bIczFeEKAaibS33pj2ZVyYI5QYbRjMoG&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1i24hZo_PJwSZsszJvz7f1ECmlQ1n8o0-",
+      "https://drive.google.com/thumbnail?id=1BIOznkJbyBZg7pHsnn6Aog3KYSrgvKWI&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // GAME 2
+  // ─────────────────────────────
+  {
+    title: "Baseball 2026 Game 2",
+    description: "2026 baseball",
+    cover: "https://drive.google.com/thumbnail?id=1HJsopvmRg0BxzFi7bi8p98xvH3RJNb56&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1NEEivJvpBti17rBFDVyOUiVtYw1tGiuC&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1BTZES8vL8nY_WWAAHUh1hq6yzWosY_bc&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Al39Kxt9z3SUWJ9s9U3RZ5dMFvgqWjGe&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1lFyYBEtpKO8G8-Z9vhWNkJrXWyf1m-Vd&sz=w1000",
+      "https://drive.google.com/thumbnail?id=17QDeaS-RlRApNge0KwA-d6pordQVe7AG&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1U8VFoWtbiU0GySnT6rXAjmFEd_90K2hz&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1FQCGUBMspuGvcFG7E3RdhBWi9s9ELG2p&sz=w1000",
+      "https://drive.google.com/thumbnail?id=14Ay0xN3B0Cbsri7YnmY49DyE5o6EfUva&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1CIyXoaOrh_rhJ8rlPo_Q9jQ1ek_3gWiW&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1mC-Oj76AlovN5b4X-l9IEfGulIHdRRHC&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // GAME 3
+  // ─────────────────────────────
+  {
+    title: "Baseball 2026 Game 3",
+    description: "2026 baseball",
+    cover: "https://drive.google.com/thumbnail?id=1yEakSyd8vNLlG-VUQl2YKqX6hjKEa3Au&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=18C3CE6xjdacpVe7-C_vIOIxPIKjm59I9&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1c_b89goUYcVESA1ewQIa8u-AuJ-V2hw4&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1fQiJvqy5Yn-JAT3fcX-AEccCiOYvYSIi&sz=w1000",
+      "https://drive.google.com/thumbnail?id=121u_nZcO6Ph_x2z3ftFB9LEqwNWIcSVB&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1nID7TlbBSwor-FHVoFtmt2UKAD8HJkyu&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1_pGudBeRetM1cnfR2hFsZm7cqrf_MZIZ&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1oo9dl-dp9VtMd3MhMP-yGRuPguR4Tv0u&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1IJY4dZDoUNdgmhiMUMZPu7tli4CJiIAH&sz=w1000",
+      "https://drive.google.com/thumbnail?id=16jAI633ItECtvzED_du3akORsIh-q7Pa&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1qvTp_F5NPM8AVj-PsPHftD5ULzlD60WE&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1gYbRkZ0ZWNyZnNV8bWyrluH30K-wvYOC&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // GAME 4
+  // ─────────────────────────────
+  {
+    title: "Baseball 2026 Game 4",
+    description: "2026 baseball",
+    cover: "https://drive.google.com/thumbnail?id=1W2JXr765JocIDiD3v4qOn2Qwridjr9uw&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1Eb3F6fYsdOhAK65oZggFpu6PHRRqg96-&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1g8DbXiNpAUBeIvPx1k_zXKsfzsjV_EKa&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1jcoi93_6Y28PR7DjgZp8DOmBAJwLf6yo&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1UPwtdzNQ7geF1QhbRcJ_QxE3rTBEi59O&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1yifw_Z-njkmjUIJWNOaeWesga3QW6OOu&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1AkVZNvaR6RabVjuWCTE2d77mlloCqzWs&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1oThZd9mNPptU5bsLv_Xu8rSTZYGNDo0J&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Wje1tj3H8aDaC2VjOibnFJSbVqgAJrU4&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1k925MCzo7DCmcJp8nB02p-G-fGrSGFw1&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1yeB5ZrURxlUQ-CyxcFor-3A6j2-Wb6kP&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // GAME 5
+  // ─────────────────────────────
+  {
+    title: "Baseball 2026 Game 5",
+    description: "2026 baseball",
+    cover: "https://drive.google.com/thumbnail?id=1QegK_ZGyjrxED7Ui7nDPkrMJLvUc-Gsl&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1UCeaSLbXPf0doigQiTwmAWzHTlQAqg8o&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1bEVkJf7-8wCp23fEs2ocJZWuebYr_xex&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1wEIIMMp2xZx2sxO_IkgsuZQDS8sTO1lR&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1YpYOrG1sBMMLwNOMzCHx8j42gbQIKmlq&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1WeYYtB5YZpfMbh9Pug2_9FNs84uTEVib&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Q8ljWw3cXywd0PrX-vgNnebHmENJmAd8&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1eK84lomQ7NRtJ367qAG-IMEwOl2k9wUZ&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Q7YcvVdd_Nm55270dfCNkGE42rJdH3TB&sz=w1000",
+      "https://drive.google.com/thumbnail?id=10aPpQfDj7fzrLV21Ad4F3glFxi4VWjQZ&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // GAME 6
+  // ─────────────────────────────
+  {
+    title: "Baseball 2026 Game 6",
+    description: "2026 baseball",
+    cover: "https://drive.google.com/thumbnail?id=1O-XNhZfzJ1AxiLZ_vII7JoYnBEAO-ETy&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1rRwvbnGrw8K0sFEy3ST5w_xWapWjHlam&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1-WvflieiUgmvHtpAam7DhC4HL1z6CNN6&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1FOn3ePB-m54ntK0QH3GXMErS-Q6GUS4b&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1QP2V4DQPf3q2IaQxM00nNmq5eFQZ4R9H&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1T8LxXJx59vPzQLTebRKFUAT-J42-AISZ&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1GJL8Nv986v8g2omwzlj0csUuO0tV7VfR&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1eIp5egcqBYJNJfyVerbmUuqQ2Xvt7PJ7&sz=w1000",
+      "https://drive.google.com/thumbnail?id=10oz0078Wor8asQpIfgVTXbpDKQ0iBvut&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1cScCXfoWSRICJFTDl3GPWmr5Hka7H_8N&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1jytitTMXd5bwzfzEc3aDo9LX6U355Luy&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1rG3vpBweGe1DY7BryVWa1opsMIwFvywk&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Jp7cmGnp2f61hO2Z7chVsdULbJtSJLSe&sz=w1000",
+      "https://drive.google.com/thumbnail?id=18HUx8YdooSIMUoKW9o5rlingbqB_rpar&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1DMUK_W3UlnBhWZQfCHKqZ0u-y3B6pxFR&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1MtKKAEB8X55msOpInO1x28wRv-FX2BVJ&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1UuPHWOfsRbyaiTamhzrD231-Ap42QhH2&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // LIVE OAKS RAIDER MEET 2025
+  // ─────────────────────────────
+  {
+    title: "Live Oaks Raider Meet 2025",
+    description: "OH-20221 At live Oaks Raider meet",
+    cover: "https://drive.google.com/thumbnail?id=1I3xV_mlhfGmxx9jNPIB61gOUz9UuL8oU&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1JBJ2X9K9N_7tixxuuuqvPZMo9P-ow2n0&sz=w1000",
+      "https://drive.google.com/thumbnail?id=18uBRBgjuMcyNxrw1pwWRRWzh5c1GB3az&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1I3xV_mlhfGmxx9jNPIB61gOUz9UuL8oU&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1E7LkCYZ6eZjP8ZHSe6Rb6BXV087paabe&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1-0DURdjHS3lfxEa_dcPQcSZnvkGDEMUV&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1f_Jl8C6ar1Jcc9T8I2tdStyv9UeXnzIb&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1V3vTguWtlivrB2zDDVUW8LT5vwmpKx5W&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1U84Mjrj4-aDQ3IcUaMZ_j1DftKHLJll4&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1UdKy0lpNAjIEArykzP8Eku68FDE9ugwn&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1I3tzGlBJkQ9SQeqZFhXnpmAfvCsUBMLB&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1IkIV85InODCLqY4h3BGDkvKKxrdNPzH9&sz=w1000",
+      "https://drive.google.com/thumbnail?id=18y2yEo2SNs5QZOVTQgQRV__uMI22cqDu&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1178cTzmQviYP_OFitIdEO4ZVFEphOc8e&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1-4q0l_TDyKpY48EW7XpCL4-1YdM0EEJh&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1oZhdxcYj3Rh3vnHFk_IkankheYa5dyxY&sz=w1000",
+      "https://drive.google.com/thumbnail?id=17MMiFYG1TxMpDV7b-EvzwXXdal9001o2&sz=w1000",
+      "https://drive.google.com/thumbnail?id=16SZqQQejx1qk4M5OH0kMdAHPLg0EdI-0&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1L6y1FD7VxjoLAMnqcWoD8xPMCSotTwR0&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // HOME RAIDER MEET 2025
+  // ─────────────────────────────
+  {
+    title: "Home Raider Meet 2025",
+    description: "The Logan home raider meet",
+    cover: "https://drive.google.com/thumbnail?id=1KFLCTt9-IpCPlINTRFqrPY5GDhn0brDW&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1R5WT7ke_NxMcHhpH6IUqzO2QyDeByWtH&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1KFLCTt9-IpCPlINTRFqrPY5GDhn0brDW&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Jx3cLXnz67Tl29eo9QN21c0ibU86PhkX&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1fRDCX3eiNcl7pehrKcpQrCBbnbDk6th3&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1WyEVC2h_5y4UZ6I0Bs2xXGwXSIIcypjx&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1ac1qDTN63kG5EdNydUCdGJ4Nlon-gD0x&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1aZ2BkUrWgMM57wjGuDnQcW1t_QzC617o&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1MHeI3SmLVmChUwQhtIoaq-2GxL4HTkN1&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1pS9J66oGG9ANTfnfbxGJnzHY4etEXdu6&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1HAh43TWvsg_BJ0WzcqFnSk3Gn3A7yRWD&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1x_uZw6YzrGp3hAwyBsGhoySCWodQ74WD&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1JUh60ykOr8RvalwRgM6Eb4wg_MIJQ2BI&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1i7kG10VoxBHpt7t5HYRE0FrwnUGe60ga&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1GYs_2z6HAZCsBOjUpgiaZdKwpAXee3RY&sz=w1000",
+      "https://drive.google.com/thumbnail?id=17omDGBC_bhz2htkOQwd2zIckrv1x7fl3&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1F3x6jDe7HwybeAM7WMmqNBpp8AW0XjT9&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1h5OHSc2OSxVxrwLLpuQWXW8LMnywGoGI&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1SEchYCCJkiur_fwMrIG2-XKMqWJt-wHd&sz=w1000",
+      "https://drive.google.com/thumbnail?id=14-n1YEG9Yt-8tXbmIRMJFv-hIr_TPOAe&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1hUoqwburE7MDLVSE1n4_UjqoBvH8GEx2&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1xyoiRdNRQzA3KZ4GhRyr8d5mosqMMaBz&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1kGUlbwIz6BUaXWrdONJPHwciuVJ4d015&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // RAIDER PRACTICE 2025
+  // ─────────────────────────────
+  {
+    title: "Raider Practice 2025",
+    description: "All pictures from Raider practice 2025",
+    cover: "https://drive.google.com/thumbnail?id=1j8chrXjf5gSsyqo_JuORVv7qdq0UJZ11&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=15QB5IOvJy1TVMgO6TVXke43Pyk3TnGUR&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1rYEFgRUPEXAxPL6IDHHD9dajiiM8eAmG&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1f_KEweRicFqrruGFwBe2rSuaH5bXRF0a&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1NvHB3NlvuqndxfNJXkUY1UKlE7ROZOf5&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1_TJemYN322kOk_FSnRdEOvPVCRGdV45A&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1oPiYTlboWnZy5ggiFWXt8MaIc-oluEfU&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1xX7ikXXlwcKU60IAzhfWwHRxJpbUWp67&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1PZe-SSz5AzjvZWgi08feA8Ls5MZHcNe-&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1A5aDw78amGP0bPkq38cpAUAsSM80ADbv&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1j8chrXjf5gSsyqo_JuORVv7qdq0UJZ11&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1mIFYP72PW9R05LY9SvXe5Ixj_pUuu_M9&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1vqqI5Ad3egLsKDSTMyWHcO11J_vsUY8C&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1DlKDWGo4d9KjibfpghQk_XNRY6KPMUdq&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1ByomuPJD-anJTZ7WiBcct-b33ouw2-xe&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1i6eDMfGCqdgIrL3rXDAdMoa33J4k9xv9&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1bQDcPWXGYeyei8PQdA0cqqU1TzT4hCsi&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1hO3d5JQDnke8B_gGF8KnGKM_OA144CV9&sz=w1000",
+      "https://drive.google.com/thumbnail?id=13ZtgVT2UBeFuudevW083MFucdytKX8Em&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1SxxHntRQ1TG9-IEYRezSssItPW0QjDvC&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1-ApCRtr2LXFXUz_Nh7Zt0IrfgtrTFDfb&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1fS704vu2tcEmE-lECjDsZ0ewF2y_-9bU&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1aTVNb6mLvqZfqrpaVv_exvKs0AXVRoSg&sz=w1000",
+      "https://drive.google.com/thumbnail?id=17irlTiYGhugYzBZxjEAbp54VsJOb_12z&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Zn58ws2Fm6sntJC7-LnQXSHeWkHWl6l9&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1rmoD9W_cHCkfHtw5HHRb0kE6c7GKkFkq&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1VMV0YA20PmTpuSDEz3zQwXfU7fjQ2h_6&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1DhOk3ejqaYR22ThFaEa4G2FK6QM_lV9q&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Si_dekrEOEUfX2jMp552TU1aUHpzs_9V&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1h4_EZxBNN1d6vO0_7M9F_4wtN9ULnJSG&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // EXTRAS
+  // ─────────────────────────────
+  {
+    title: "Extras 2026",
+    description: "extra media",
+    cover: "https://drive.google.com/thumbnail?id=1mhecpH2BghXLeGh4qXMtF8Oa5Eb4LARt&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1DTA9kCLDYnlFsQ6VX_KevUzBzGYuH5Iv&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1-lVlMo8BKRxZEvr-tfJbNlY7YSvrnAzR&sz=w1000",
+      "https://drive.google.com/thumbnail?id=17XSPyKlADJtpPdqamEyI_I2kcPtGXtuO&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1mhecpH2BghXLeGh4qXMtF8Oa5Eb4LARt&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1vByxM0dAJ27FJZXRXLkBMR0qEPiyXuYc&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // TENNIS
+  // ─────────────────────────────
+  {
+    title: "Tennis Pictures 2026",
+    description: "All Tennis pictures from 2026 season",
+    cover: "https://drive.google.com/thumbnail?id=1Q7Ywx16Fsrz-gLo9VlDCAr8M_XePZ6Nw&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1NNFvqhCwu7iLQAnQSpby0urD97hIgVXb&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1Su0W0-hWnvM7ifwwR5igjNmfWZZd8n4k&sz=w1000",
+      "https://drive.google.com/thumbnail?id=19ucXyD77JtecCJ2aHa_uU5oYbbDPA6-R&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1ew-2s3c5W-wfAsrRgVg_N2D1yVZYAdoS&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1hLPMR7oayPLnZQBZlXlj10f4QHi2tg-1&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // AFJROTC COLUMBUS CREW GAME
+  // ─────────────────────────────
+  {
+    title: "AFJROTC Columbus Crew Game",
+    description: "crew game 2025",
+    cover: "https://drive.google.com/thumbnail?id=1miiuDhiY69q3SyCR4m-6UKyJS42aUxHv&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=1zpffe-xCc5YUAOC_hok6XpiwIPVqYMFc&sz=w1000",
+      "https://drive.google.com/thumbnail?id=14WObNrOB2SzYK9kft91ZJaVY-KqPTqnG&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1JiW6b5Mw4ZawKBbtGp-TyLQ8fipLVeuV&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1qNF7qP0XMhPdPe1gmiDNgMsxGQqpeToX&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1miiuDhiY69q3SyCR4m-6UKyJS42aUxHv&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1JFfGAbEC2GQAmqE2wzr0IScPt7r382TB&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1WhdaULEUWC1icAopX0LyqQDp6ZZ4qD4V&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1C5D5N65LlaVCn5P4736bnV2rIZ8cyBfK&sz=w1000"
+    ]
+  },
+
+  // ─────────────────────────────
+  // FORT KNOX
+  // ─────────────────────────────
+  {
+    title: "Fort Knox Photos 2025/2026",
+    description: "Fort Knox Photos from 2025/2026 comp",
+    cover: "https://drive.google.com/thumbnail?id=1etjM9wsan-DJYQ_ekxw1e4orGjH2VORC&sz=w1000",
+    visible: true,
+    photos: [
+      "https://drive.google.com/thumbnail?id=15CYnWpP4bAv465qL-H4pQgp3B9IHUXU_&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1WtR5ZGl51Cn66N4vpDzBoP0d3mehIdYD&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1aW2MJor1BHo21WOdRnJeFtxsZJ_-N7I9&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1vWdI7tBJ-W7g5Exf2BIAnwFQvBbsRRhu&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1etjM9wsan-DJYQ_ekxw1e4orGjH2VORC&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1-8NPL4L21YLXksD3dzfE_NBq21Wj0MPS&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1-Ycc2avwdXxoBfTL9uaJ6JKU2tPHLBrJ&sz=w1000",
+      "https://drive.google.com/thumbnail?id=1dZ-spEMN-jw4ovFftuVmk1zykB62ReZb&sz=w1000"
+    ]
+  }
+
+  // ─────────────────────────────────────────
+  // ADD MORE GALLERIES HERE — copy the block above
+  // ─────────────────────────────────────────
+];
+/* ============================================================
+   END OF EASY EDIT SETTINGS
+   ============================================================ */
+
+/* ────────────────────────────────────────────────────────────
+   DATA SOURCE
+   `galleries` starts out as the fallback array above so the
+   site always has something to show. If Supabase is connected,
+   loadGalleriesFromSupabase() replaces it with live data.
+
+   There are no viewer accounts on this site at all — the only
+   sign-in anywhere is the admin dashboard (admin.html). Privacy
+   for a gallery works like an unlisted video:
+     - The landing grid only ever asks Supabase for galleries
+       where visibility = 'public', so private galleries never
+       show up there and are never even downloaded by a normal
+       visit to this page.
+     - A private gallery is still fully viewable by anyone who
+       has its direct link (gallery.html#g-<id>), which admins
+       can copy from admin.html. Knowing the link is what makes
+       it viewable — there's no login wall on top of that.
+──────────────────────────────────────────────────────────── */
+let galleries      = [];     // public galleries shown on the landing grid
+let myGalleries    = [];     // private galleries granted to the signed-in account
+let currentGallery = null;   // the gallery currently on screen
+let currentSecret  = null;   // the /g/<secret> slug, when we arrived that way
+
+// Created by init() once loadRuntimeConfig() has the URL and key — not at
+// parse time, since the values arrive over the network.
+let supa = null;
+function initSupabaseClient() {
+  if (!SUPABASE_CONNECTED || typeof window.supabase === 'undefined') return;
+  supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+/* ────────────────────────────────────────────────────────────
+   GOOGLE DRIVE URLS
+   Photos and videos are Drive files. Everything downstream works
+   from the bare file id — this mirrors api/_lib/drive.js, which
+   does the same job on the server.
+──────────────────────────────────────────────────────────── */
+function parseDriveId(url) {
+  if (!url) return null;
+  const s = String(url).trim();
+  const m = s.match(/\/file\/d\/([A-Za-z0-9_-]{10,})/)
+         || s.match(/[?&]id=([A-Za-z0-9_-]{10,})/)
+         || s.match(/\/d\/([A-Za-z0-9_-]{10,})/);
+  return m ? m[1] : null;
+}
+// IMPORTANT: every <img> built from these URLs must carry
+// referrerpolicy="no-referrer". Google throttles hotlinked Drive images by
+// referrer — send one and the whole gallery comes back as HTTP 429 instead of
+// pictures. attachDriveImage() below is the one place that gets this right.
+//
+// We also point straight at lh3.googleusercontent.com, the host that
+// drive.google.com/thumbnail just redirects to: one less round trip per image,
+// and no Google auth cookies set on the visitor.
+//
+// The `-rj-l<quality>` suffix forces JPEG. It is not optional: these Drive
+// files are PNGs, and without it Drive resizes but keeps the format — 2.65 MB
+// for a 1000px tile, 9.1 MB for a 1920px one. A single gallery ran to ~40 MB
+// and never finished loading. As JPEG the same tile is ~198 KB.
+function driveThumb(id, w, q) {
+  return 'https://lh3.googleusercontent.com/d/' + encodeURIComponent(id) +
+         '=w' + (w || 1000) + '-rj-l' + (q || 80);
+}
+function driveThumbFallback(id, w) {
+  return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(id) + '&sz=w' + (w || 1000);
+}
+
+/**
+ * Wire up an <img> for a Drive-hosted photo.
+ *
+ * Handlers are attached before src is assigned — the other way round, a
+ * cached image can finish loading before onload exists and stay invisible.
+ */
+function attachDriveImage(img, src, fallbackSrc, onFail) {
+  img.referrerPolicy = 'no-referrer';
+  img.onload = function() { this.classList.add('loaded'); };
+  img.onerror = function() {
+    if (fallbackSrc && this.src !== fallbackSrc) { this.src = fallbackSrc; return; }
+    if (onFail) onFail.call(this);
+  };
+  img.src = src;
+}
+function drivePreview(id) {
+  return 'https://drive.google.com/file/d/' + encodeURIComponent(id) + '/preview';
+}
+
+/* ────────────────────────────────────────────────────────────
+   ROW → VIEW MODEL
+   One shape for a gallery no matter where it came from: the
+   database, the /api secret-link route, or FALLBACK_GALLERIES.
+──────────────────────────────────────────────────────────── */
+// Files uploaded through the admin panel rather than pasted from Drive.
+// The bucket is public, so this is just URL construction.
+function storageUrl(path) {
+  if (!path) return '';
+  return SUPABASE_URL + '/storage/v1/object/public/gallery-photos/' +
+    path.split('/').map(encodeURIComponent).join('/');
+}
+
+function mapMediaRow(m) {
+  const id = m.drive_file_id || null;
+  const stored = m.storage_path ? storageUrl(m.storage_path) : '';
+  return {
+    id: m.id,
+    kind: m.kind || 'photo',
+    caption: m.caption || '',
+    thumb: id ? driveThumb(id, 1000) : (stored || m.thumb_url || m.url || ''),
+    thumbFallback: id ? driveThumbFallback(id, 1000) : '',
+    full:  id ? driveThumb(id, 1920, 85) : (stored || m.thumb_url || m.url || ''),
+    embed: (m.kind === 'video' && id) ? drivePreview(id) : null,
+    download: m.id ? ('/api/download?m=' + encodeURIComponent(m.id)) : (stored || m.url || '')
+  };
+}
+
+function mapGalleryRow(g) {
+  const media = (g.media || [])
+    .slice()
+    .sort(function(a, b) { return (a.sort_order || 0) - (b.sort_order || 0); })
+    .map(mapMediaRow)
+    .filter(function(m) { return m.thumb; });
+
+  const coverId = parseDriveId(g.cover_url);
+  const cover = coverId ? driveThumb(coverId, 1000)
+              : (g.cover_url || (media.length ? media[0].thumb : ''));
+
+  return {
+    coverFallback: coverId ? driveThumbFallback(coverId, 1000) : '',
+    id: g.id,
+    slug: g.slug,
+    title: g.title,
+    description: g.description || '',
+    cover: cover,
+    visible: true,
+    private: g.visibility === 'private',
+    downloadsEnabled: g.downloads_enabled !== false,
+    pixiesetUrl: g.pixieset_url || null,
+    categoryIds: (g.gallery_categories || []).map(function(gc) { return gc.category_id; }),
+    media: media
+  };
+}
+
+// The /api routes already return this shape — just fill in the couple of
+// fields the page names differently.
+function mapApiGallery(g) {
+  return {
+    id: g.id,
+    slug: g.slug,
+    title: g.title,
+    description: g.description || '',
+    cover: g.cover,
+    coverFallback: '',
+    visible: true,
+    private: g.isPrivate,
+    downloadsEnabled: g.downloadsEnabled !== false,
+    pixiesetUrl: g.pixiesetUrl || null,
+    categoryIds: g.categoryIds || [],
+    media: (g.media || []).map(function(m) {
+      return {
+        id: m.id, kind: m.kind, caption: m.caption,
+        thumb: m.thumb, thumbFallback: m.thumbFallback || '', full: m.full, embed: m.embed,
+        download: m.download + (currentSecret ? '&s=' + encodeURIComponent(currentSecret) : '')
+      };
+    })
+  };
+}
+
+// FALLBACK_GALLERIES stores plain URL strings. Lift them into the same shape
+// so the rest of the page never has to care which source it's rendering.
+// The URLs in FALLBACK_GALLERIES are the old `drive.google.com/thumbnail?id=…`
+// shape. Those must be converted to the lh3 form rather than used as-is:
+// drive.google.com ignores the sz= parameter and hands back the full-resolution
+// original — 2.6 MB a photo, so a 15-photo gallery pulls ~40 MB — behind an
+// extra redirect that also sets Google auth cookies. Pull the file id out and
+// rebuild through the same helpers every other path uses.
+function mapFallbackGallery(g) {
+  const coverId = parseDriveId(g.cover);
+
+  return {
+    id: null,
+    slug: slugify(g.title),
+    title: g.title,
+    description: g.description || '',
+    cover: coverId ? driveThumb(coverId, 1000) : (g.cover || ''),
+    coverFallback: coverId ? driveThumbFallback(coverId, 1000) : '',
+    visible: g.visible !== false,
+    private: false,
+    downloadsEnabled: true,
+    pixiesetUrl: null,
+    categoryIds: [],
+    media: (g.photos || []).filter(Boolean).map(function(src) {
+      const id = parseDriveId(src);
+      return {
+        id: null,
+        kind: 'photo',
+        caption: '',
+        thumb: id ? driveThumb(id, 1000) : src,
+        thumbFallback: id ? driveThumbFallback(id, 1000) : '',
+        full: id ? driveThumb(id, 1920, 85) : src,
+        embed: null,
+        // No /api/download here — there's no media row to authorise against,
+        // so link straight at Drive for the full-resolution original.
+        download: id ? ('https://drive.google.com/uc?export=download&id=' + encodeURIComponent(id)) : src
+      };
+    })
+  };
+}
+
+let allCategories = []; // [{id, name}] — filter pills
+
+async function loadCategoriesFromSupabase() {
+  if (!supa) return;
+  try {
+    const { data, error } = await supa
+      .from('categories')
+      .select('id, name, sort_order')
+      .order('sort_order', { ascending: true });
+    if (!error && data) allCategories = data;
+  } catch (err) {
+    console.error('Category load failed:', err);
+  }
+}
+
+const GALLERY_COLUMNS =
+  'id, slug, title, description, cover_url, visibility, downloads_enabled, pixieset_url, sort_order, ' +
+  'media(id, kind, drive_file_id, url, thumb_url, storage_path, caption, sort_order), ' +
+  'gallery_categories(category_id)';
+
+/**
+ * One query does both lists.
+ *
+ * Row-level security decides what comes back: everyone sees the public
+ * galleries, and a signed-in visitor additionally sees the private ones
+ * granted to them. A signed-out visitor cannot retrieve a private gallery
+ * here at all — those only open through the secret link, which is served
+ * by /api/galleries/secret.
+ */
+async function loadGalleriesFromSupabase() {
+  if (!supa) return false;
+  try {
+    await loadCategoriesFromSupabase();
+    const { data, error } = await supa
+      .from('galleries')
+      .select(GALLERY_COLUMNS)
+      .order('sort_order', { ascending: true });
+
+    if (error) { console.error('Supabase load error:', error.message); return false; }
+    if (!data) return false;
+
+    const mapped = data.map(mapGalleryRow);
+    galleries   = mapped.filter(function(g) { return !g.private; });
+    myGalleries = mapped.filter(function(g) { return g.private; });
+    return true;
+  } catch (err) {
+    console.error('Supabase load failed:', err);
+    return false;
+  }
+}
+
+// Opens a gallery from its secret link. Served by the API using the service
+// role, because holding the secret is the authorisation and that can't be
+// expressed as a row-level policy.
+async function loadGalleryBySecret(secret) {
+  try {
+    const res = await fetch('/api/galleries/secret?s=' + encodeURIComponent(secret), {
+      headers: await authHeaders()
+    });
+    const body = await res.json().catch(function() { return {}; });
+    if (!res.ok || !body.gallery) {
+      return { error: body.error || 'That gallery link is no longer valid.', requiresLogin: body.requiresLogin };
+    }
+    return { gallery: mapApiGallery(body.gallery) };
+  } catch (err) {
+    console.error('Secret gallery load failed:', err);
+    return { error: 'Could not reach the server. Please try again.' };
+  }
+}
+
+/* ────────────────────────────────────────────────────────────
+   SESSION
+──────────────────────────────────────────────────────────── */
+let currentUser = null;
+
+async function loadSession() {
+  if (!supa) return null;
+  try {
+    const { data } = await supa.auth.getSession();
+    currentUser = (data && data.session) ? data.session.user : null;
+  } catch (err) {
+    currentUser = null;
+  }
+  return currentUser;
+}
+
+async function authHeaders() {
+  if (!supa) return {};
+  try {
+    const { data } = await supa.auth.getSession();
+    const token = data && data.session && data.session.access_token;
+    return token ? { Authorization: 'Bearer ' + token } : {};
+  } catch (err) {
+    return {};
+  }
+}
+
+function renderAuthNav() {
+  const link = document.getElementById('navAuthLink');
+  const drawerLink = document.getElementById('drawerAuthLink');
+  const label = currentUser ? 'My Account' : 'Sign In';
+  if (link) {
+    link.textContent = label;
+    link.classList.toggle('signed-in', Boolean(currentUser));
+    if (currentUser) link.title = currentUser.email || '';
+  }
+  if (drawerLink) drawerLink.textContent = label;
+}
+
+
+/* ────────────────────────────────────────────────────────────
+   APPLY SETTINGS TO STATIC ELEMENTS
+──────────────────────────────────────────────────────────── */
+document.querySelector('.nav-logo').textContent   = LOGO_TEXT;
+document.getElementById('footerLogo').textContent = FOOTER_TEXT;
+document.getElementById('footerCopy').textContent = COPYRIGHT_TEXT;
+document.getElementById('gallerySubtitle').textContent = GALLERY_SUBTITLE;
+document.getElementById('footerIg').querySelector('svg').insertAdjacentText('afterend', ' ' + INSTAGRAM_HANDLE);
+document.getElementById('footerIg').href = INSTAGRAM_URL;
+// Fix: update footer Instagram text properly
+(function(){
+  const a = document.getElementById('footerIg');
+  // clear and rebuild
+  const svg = a.querySelector('svg').cloneNode(true);
+  a.innerHTML = '';
+  a.appendChild(svg);
+  a.appendChild(document.createTextNode(' ' + INSTAGRAM_HANDLE));
+})();
+
+// Update document title
+document.title = 'Photo Galleries | ' + BUSINESS_NAME;
+
+// Shop link
+const shopEl = document.getElementById('shopBtn');
+if (SHOP_LINK && SHOP_LINK !== 'PASTE_PIXIESET_SHOP_LINK_HERE') {
+  shopEl.href = SHOP_LINK;
+} else {
+  shopEl.style.display = 'none';
+}
+
+/* ────────────────────────────────────────────────────────────
+   NAV — hamburger
+──────────────────────────────────────────────────────────── */
+const burger = document.getElementById('navBurger');
+const drawer = document.getElementById('navDrawer');
+burger.addEventListener('click', function() {
+  const isOpen = drawer.classList.toggle('open');
+  burger.classList.toggle('open', isOpen);
+  burger.setAttribute('aria-expanded', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+});
+drawer.querySelectorAll('a').forEach(function(link) {
+  link.addEventListener('click', function() {
+    drawer.classList.remove('open');
+    burger.classList.remove('open');
+    burger.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  });
+});
+document.getElementById('navLogoBtn').addEventListener('click', function(e) {
+  // Goes to main site
+});
+
+
+/* ════════════════════════════════════════════════════════════
+   ROUTER — landing ↔ gallery view
+   Uses history.pushState so browser back/forward button works.
+════════════════════════════════════════════════════════════ */
+const pageLanding     = document.getElementById('page-landing');
+const pageGalleryView = document.getElementById('page-gallery-view');
+
+function showLanding() {
+  pageGalleryView.classList.remove('active');
+  pageGalleryView.style.display = 'none';
+  pageLanding.classList.remove('hidden');
+  pageLanding.style.display = '';
+  pageLanding.classList.add('page-enter');
+  setTimeout(() => pageLanding.classList.remove('page-enter'), 500);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.title = 'Photo Galleries | ' + BUSINESS_NAME;
+}
+
+function showGalleryView(idx) {
+  pageLanding.classList.add('hidden');
+  pageLanding.style.display = 'none';
+  pageGalleryView.style.display = 'block';
+  pageGalleryView.classList.add('active', 'page-enter');
+  setTimeout(() => pageGalleryView.classList.remove('page-enter'), 500);
+  buildGalleryView(idx);
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+// Handle back button
+window.addEventListener('popstate', function(e) {
+  if (e.state && e.state.secret) {
+    openSecretGallery(e.state.secret, false);
+  } else if (e.state && e.state.mineSlug) {
+    const g = myGalleries.find(function(x) { return x.slug === e.state.mineSlug; });
+    if (g) showGalleryView(g); else showLanding();
+  } else if (e.state && typeof e.state.galleryIdx === 'number') {
+    showGalleryView(e.state.galleryIdx);
+  } else {
+    showLanding();
+  }
+});
+
+/**
+ * Open a gallery from its secret link — the /g/<secret> URL you email out.
+ * No sign-in required: holding the link is the permission.
+ */
+async function openSecretGallery(secret, pushHistory) {
+  currentSecret = secret;
+
+  const grid = document.getElementById('masonryGrid');
+  if (grid) grid.innerHTML = '<p class="gal-loading">Opening your gallery…</p>';
+
+  const result = await loadGalleryBySecret(secret);
+
+  if (result.error) {
+    currentSecret = null;
+    showSecretError(result.error, result.requiresLogin);
+    return;
+  }
+
+  if (pushHistory) history.pushState({ secret: secret }, '', '/g/' + secret);
+  showGalleryView(result.gallery);
+}
+
+// A dead or revoked link shouldn't dump the visitor on the public grid with
+// no explanation.
+function showSecretError(message, requiresLogin) {
+  pageLanding.classList.remove('hidden');
+  pageLanding.style.display = '';
+  pageGalleryView.style.display = 'none';
+  pageGalleryView.classList.remove('active');
+
+  const grid = document.getElementById('galleryGrid');
+  const mine = document.getElementById('mineSection');
+  const divider = document.getElementById('mineDivider');
+  if (mine) mine.hidden = true;
+  if (divider) divider.hidden = true;
+
+  if (grid) {
+    grid.innerHTML =
+      '<div class="empty-state">' + escapeHtmlGal(message) +
+      ' Ask Matthew to send you a fresh link.' +
+      '</div>';
+  }
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   GALLERY LANDING — build cards
+════════════════════════════════════════════════════════════ */
+/**
+ * Build one gallery card. Shared by the public grid and by "Your Galleries",
+ * so both look and behave identically.
+ */
+function createGalleryCard(g, onOpen) {
+  const photoCount = g.media.filter(function(m) { return m.kind !== 'video'; }).length;
+  const videoCount = g.media.filter(function(m) { return m.kind === 'video'; }).length;
+
+  const card = document.createElement('article');
+  card.className = 'gal-card';
+  card.setAttribute('aria-label', g.title + ' gallery');
+  card.setAttribute('tabindex', '0');
+  card.dataset.searchText = ((g.title || '') + ' ' + (g.description || '')).toLowerCase();
+  card.dataset.categories = (g.categoryIds || []).join(',');
+
+  // Cover section
+  const coverDiv = document.createElement('div');
+  coverDiv.className = 'card-cover';
+
+  // Placeholder text (first letter)
+  const ph = document.createElement('div');
+  ph.className = 'card-cover-placeholder';
+  ph.innerHTML = '<span>' + (g.title ? g.title.charAt(0).toUpperCase() : 'G') + '</span>';
+  coverDiv.appendChild(ph);
+
+  // Cover image (if provided)
+  if (g.cover) {
+    const img = document.createElement('img');
+    img.alt = g.title + ' cover photo — ' + BUSINESS_NAME;
+    img.loading = 'lazy';
+    attachDriveImage(img, g.cover, g.coverFallback, function() {
+      // Both hosts failed — fall back to the big first-letter placeholder.
+      this.style.display = 'none';
+    });
+    coverDiv.appendChild(img);
+  }
+
+  // Overlay gradient
+  const ov = document.createElement('div');
+  ov.className = 'card-cover-ov';
+
+  if (g.private) {
+    const priv = document.createElement('span');
+    priv.className = 'card-private-badge';
+    priv.textContent = 'Private';
+    coverDiv.appendChild(priv);
+  }
+  coverDiv.appendChild(ov);
+
+  // A gallery holding video gets a play glyph so it reads as watchable.
+  if (videoCount) {
+    const play = document.createElement('span');
+    play.className = 'card-play';
+    play.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+    coverDiv.appendChild(play);
+  }
+
+  // Count badge — photos, videos, or both
+  const badge = document.createElement('span');
+  badge.className = 'card-badge';
+  const parts = [];
+  if (photoCount) parts.push(photoCount + ' Photo' + (photoCount !== 1 ? 's' : ''));
+  if (videoCount) parts.push(videoCount + ' Video' + (videoCount !== 1 ? 's' : ''));
+  badge.textContent = parts.length ? parts.join(' · ') : 'Empty';
+  coverDiv.appendChild(badge);
+
+  // Card info
+  const info = document.createElement('div');
+  info.className = 'card-info';
+
+  const name = document.createElement('h2');
+  name.className = 'card-name';
+  name.textContent = g.title || 'Gallery';
+
+  const desc = document.createElement('p');
+  desc.className = 'card-desc';
+  desc.textContent = g.description || '';
+
+  // Actions row
+  const actions = document.createElement('div');
+  actions.className = 'card-actions';
+
+  const viewBtn = document.createElement('button');
+  viewBtn.className = 'btn-view';
+  viewBtn.textContent = 'View Gallery';
+  viewBtn.setAttribute('aria-label', 'View ' + g.title + ' gallery');
+  // Navigation is handled by the card-level click listener below;
+  // this button still works for click/keyboard since its click bubbles up.
+
+  actions.appendChild(viewBtn);
+
+  const shopHref = shopLinkFor(g);
+  if (shopHref) {
+    const shopCard = document.createElement('a');
+    shopCard.className = 'btn-shop';
+    shopCard.href = shopHref;
+    shopCard.target = '_blank';
+    shopCard.rel = 'noopener noreferrer';
+    shopCard.setAttribute('aria-label', 'Shop prints — opens in new tab');
+    shopCard.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h-2L3 2H1v2h2l3.6 7.59L5.25 14A2 2 0 007 17h12v-2H7.42a.25.25 0 01-.25-.25l.03-.12.9-1.63H19a2 2 0 001.76-1.06L23 6H5.21l-.94-2zm0 13a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4z"/></svg>Shop';
+    // Don't let clicking "Shop" also trigger the card's gallery navigation
+    shopCard.addEventListener('click', function(e) { e.stopPropagation(); });
+    actions.appendChild(shopCard);
+  }
+
+  info.appendChild(name);
+  info.appendChild(desc);
+  info.appendChild(actions);
+
+  card.appendChild(coverDiv);
+  card.appendChild(info);
+
+  card.addEventListener('click', onOpen);
+  card.addEventListener('keydown', function(e) {
+    if (e.target !== card) return; // let buttons/links handle their own Enter/Space
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onOpen();
+    }
+  });
+
+  // Stagger reveal
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      card.classList.add('visible');
+    });
+  });
+
+  return card;
+}
+
+function buildLanding() {
+  const grid = document.getElementById('galleryGrid');
+  grid.innerHTML = '';
+
+  buildMineGrid();
+
+  // Only count galleries that are visible (visible: false hides from landing but not from links)
+  const visibleGalleries = galleries.filter(function(g) { return g.visible !== false; });
+
+  if (!visibleGalleries.length) {
+    grid.innerHTML = '<div class="empty-state">No public galleries yet — add one from the admin panel.</div>';
+    setupSearchAndFilters();
+    return;
+  }
+
+  // Iterate the FULL array so idx matches the real gallery index (needed for direct-link routing)
+  galleries.forEach(function(g, idx) {
+    // Skip hidden galleries — they're still accessible via direct link, just not shown here
+    if (g.visible === false) return;
+
+    grid.appendChild(createGalleryCard(g, function() {
+      history.pushState({ galleryIdx: idx }, '', '#gallery-' + slugify(g.title));
+      showGalleryView(idx);
+    }));
+  });
+
+  setupSearchAndFilters();
+}
+
+/**
+ * "Your Galleries" — the private galleries granted to this account.
+ *
+ * Hidden entirely when signed out or when nothing has been shared, so a
+ * visitor with no private galleries sees exactly the page they saw before.
+ */
+function buildMineGrid() {
+  const section = document.getElementById('mineSection');
+  const divider = document.getElementById('mineDivider');
+  const grid    = document.getElementById('mineGrid');
+  if (!section || !grid) return;
+
+  const show = Boolean(currentUser) && myGalleries.length > 0;
+  section.hidden = !show;
+  divider.hidden = !show;
+  if (!show) return;
+
+  const sub = document.getElementById('mineSub');
+  if (sub) {
+    sub.textContent = myGalleries.length === 1
+      ? 'One private gallery has been shared with your account.'
+      : myGalleries.length + ' private galleries have been shared with your account.';
+  }
+
+  grid.innerHTML = '';
+  myGalleries.forEach(function(g) {
+    grid.appendChild(createGalleryCard(g, function() {
+      history.pushState({ mineSlug: g.slug }, '', '#gallery-' + (g.slug || slugify(g.title)));
+      showGalleryView(g);
+    }));
+  });
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   SEARCH + CATEGORY FILTER (client-side, over already-loaded cards)
+════════════════════════════════════════════════════════════ */
+let activeCategoryId = null; // null = "All"
+
+function setupSearchAndFilters() {
+  renderCategoryPills();
+  applyGalleryFilters();
+}
+
+function renderCategoryPills() {
+  const wrap = document.getElementById('galCatFilters');
+  if (!wrap) return;
+
+  // Only show categories actually used by a currently-visible gallery
+  const usedIds = new Set();
+  document.querySelectorAll('#galleryGrid .gal-card').forEach(function(card) {
+    (card.dataset.categories || '').split(',').filter(Boolean).forEach(function(id) { usedIds.add(id); });
+  });
+  const usedCategories = allCategories.filter(function(c) { return usedIds.has(c.id); });
+
+  if (!usedCategories.length) {
+    wrap.innerHTML = '';
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = '';
+
+  let html = '<button type="button" class="cat-pill' + (activeCategoryId === null ? ' active' : '') + '" data-cat="">All</button>';
+  html += usedCategories.map(function(c) {
+    return '<button type="button" class="cat-pill' + (activeCategoryId === c.id ? ' active' : '') + '" data-cat="' + c.id + '">' + escapeHtmlGal(c.name) + '</button>';
+  }).join('');
+  wrap.innerHTML = html;
+
+  wrap.querySelectorAll('.cat-pill').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      activeCategoryId = btn.getAttribute('data-cat') || null;
+      wrap.querySelectorAll('.cat-pill').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      applyGalleryFilters();
+    });
+  });
+}
+
+function escapeHtmlGal(str) {
+  return (str || '').replace(/[&<>"']/g, function(c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function applyGalleryFilters() {
+  const input = document.getElementById('gallerySearchInput');
+  const query = input ? input.value.trim().toLowerCase() : '';
+  const cards = document.querySelectorAll('#galleryGrid .gal-card');
+  let visibleCount = 0;
+
+  cards.forEach(function(card) {
+    const matchesSearch = !query || card.dataset.searchText.indexOf(query) !== -1;
+    const cats = (card.dataset.categories || '').split(',').filter(Boolean);
+    const matchesCategory = !activeCategoryId || cats.indexOf(activeCategoryId) !== -1;
+    const show = matchesSearch && matchesCategory;
+    card.style.display = show ? '' : 'none';
+    if (show) visibleCount++;
+  });
+
+  const noResults = document.getElementById('galNoResults');
+  if (noResults) noResults.style.display = visibleCount === 0 ? '' : 'none';
+}
+
+const gallerySearchInput = document.getElementById('gallerySearchInput');
+if (gallerySearchInput) {
+  gallerySearchInput.addEventListener('input', applyGalleryFilters);
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   GALLERY VIEW — build individual gallery
+════════════════════════════════════════════════════════════ */
+let currentPhotos  = [];   // the current gallery's media, in display order
+let currentGalName = '';
+
+function buildGalleryView(ref) {
+  const g = (typeof ref === 'number') ? galleries[ref] : ref;
+  if (!g) { showLanding(); return; }
+
+  currentGallery = g;
+  currentPhotos  = g.media || [];
+  currentGalName = g.title || 'Gallery';
+
+  const photoCount = currentPhotos.filter(function(m) { return m.kind !== 'video'; }).length;
+  const videoCount = currentPhotos.filter(function(m) { return m.kind === 'video'; }).length;
+
+  // Update header
+  document.getElementById('vhTitle').innerHTML = g.title
+    ? g.title.replace(/(\S+)\s*$/, '<em>$1</em>')
+    : 'Gallery';
+  document.getElementById('vhDesc').textContent = g.description || '';
+
+  const countParts = [];
+  if (photoCount) countParts.push(photoCount + ' Photo' + (photoCount !== 1 ? 's' : ''));
+  if (videoCount) countParts.push(videoCount + ' Video' + (videoCount !== 1 ? 's' : ''));
+  document.getElementById('vhCount').textContent = countParts.join('  ·  ');
+  document.title = g.title + ' | ' + BUSINESS_NAME;
+
+  // A visitor who arrived on a secret link should be told the link is private,
+  // so they know not to forward it around.
+  renderSecretNote(Boolean(currentSecret));
+
+  // Update shop button — per-gallery Pixieset URL wins over the site default
+  const sBtn = document.getElementById('shopBtn');
+  const shopHref = shopLinkFor(g);
+  if (shopHref) {
+    sBtn.href = shopHref;
+    sBtn.style.display = '';
+  } else {
+    sBtn.style.display = 'none';
+  }
+
+  // Download-all
+  const dlAll = document.getElementById('downloadAllBtn');
+  if (dlAll) {
+    const downloadable = currentPhotos.filter(function(m) { return m.download; });
+    dlAll.style.display = (g.downloadsEnabled && downloadable.length) ? '' : 'none';
+    dlAll.disabled = false;
+    document.getElementById('downloadAllLabel').textContent = 'Download All';
+  }
+
+  // Build masonry
+  buildMasonry(currentPhotos, currentGalName);
+}
+
+function renderSecretNote(show) {
+  const host = document.querySelector('.vh-left');
+  if (!host) return;
+  let note = document.getElementById('secretNote');
+  if (!show) { if (note) note.remove(); return; }
+  if (note) return;
+
+  note = document.createElement('div');
+  note.className = 'secret-note';
+  note.id = 'secretNote';
+  note.innerHTML =
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8h-1V6a5 5 0 00-10 0v2H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2zM9 6a3 3 0 016 0v2H9V6zm3 12a2 2 0 110-4 2 2 0 010 4z"/></svg>' +
+    '<span>Private link — please don’t share it</span>';
+  host.appendChild(note);
+}
+
+function buildMasonry(items, galName) {
+  const grid = document.getElementById('masonryGrid');
+  grid.innerHTML = '';
+
+  if (!items.length) {
+    const empty = document.createElement('p');
+    empty.style.cssText = 'text-align:center;padding:4rem;font-family:var(--fs);font-style:italic;color:var(--muted);font-size:1.05rem;';
+    empty.textContent = 'Nothing in this gallery yet — check back soon.';
+    grid.appendChild(empty);
+    return;
+  }
+
+  const allowDownloads = !currentGallery || currentGallery.downloadsEnabled !== false;
+
+  items.forEach(function(m, i) {
+    const item = document.createElement('div');
+    item.className = 'masonry-item';
+
+    const img = document.createElement('img');
+    img.loading = 'lazy';
+    img.alt = BUSINESS_NAME + ' — ' + galName + ' ' +
+      (m.kind === 'video' ? 'video ' : 'photo ') + (i + 1) +
+      (m.caption ? ': ' + m.caption : '');
+    attachDriveImage(img, m.thumb, m.thumbFallback, function() {
+      this.style.opacity = '.15';
+      this.classList.add('loaded');
+      // Set a placeholder height so item isn't invisible
+      this.style.height = '200px';
+      this.style.background = 'rgba(22,13,46,.5)';
+    });
+    item.appendChild(img);
+
+    // Video tiles show Drive's poster frame with a play glyph over it.
+    if (m.kind === 'video') {
+      const play = document.createElement('span');
+      play.className = 'mi-play';
+      play.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+      item.appendChild(play);
+    }
+
+    // Hover overlay: centered "View" label + save button
+    const ov = document.createElement('div');
+    ov.className = 'mi-overlay';
+
+    const viewLabel = document.createElement('span');
+    viewLabel.className = 'mi-view';
+    viewLabel.innerHTML = m.kind === 'video'
+      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Play'
+      : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z"/></svg>View';
+    ov.appendChild(viewLabel);
+
+    if (allowDownloads && m.download) {
+      const dlBtn = document.createElement('a');
+      dlBtn.className = 'mi-dl';
+      dlBtn.href = m.download;
+      // The API sets Content-Disposition, so the browser saves with a proper
+      // name. The attribute is a hint for the fallback (non-API) case.
+      dlBtn.setAttribute('download', '');
+      dlBtn.rel = 'noopener noreferrer';
+      dlBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>Save';
+      dlBtn.addEventListener('click', function(e) { e.stopPropagation(); });
+      ov.appendChild(dlBtn);
+    }
+
+    item.appendChild(ov);
+    item.addEventListener('click', function() { openLb(items, i); });
+
+    grid.appendChild(item);
+  });
+}
+
+/* ────────────────────────────────────────────────────────────
+   DOWNLOAD ALL
+   Sequential, with a small gap — browsers block a burst of
+   simultaneous downloads, and Drive rate-limits them anyway.
+──────────────────────────────────────────────────────────── */
+const downloadAllBtn = document.getElementById('downloadAllBtn');
+if (downloadAllBtn) {
+  downloadAllBtn.addEventListener('click', async function() {
+    const items = currentPhotos.filter(function(m) { return m.download; });
+    if (!items.length) return;
+
+    const label = document.getElementById('downloadAllLabel');
+    downloadAllBtn.disabled = true;
+
+    for (let i = 0; i < items.length; i++) {
+      label.textContent = 'Downloading ' + (i + 1) + ' / ' + items.length;
+      const a = document.createElement('a');
+      a.href = items[i].download;
+      a.setAttribute('download', '');
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      await new Promise(function(r) { setTimeout(r, 700); });
+    }
+
+    label.textContent = 'Done';
+    setTimeout(function() {
+      label.textContent = 'Download All';
+      downloadAllBtn.disabled = false;
+    }, 2500);
+  });
+}
+
+// Back button
+document.getElementById('backBtn').addEventListener('click', function() {
+  // Leaving a secret-link gallery drops back to the ordinary public grid.
+  currentSecret = null;
+  history.pushState(null, '', '/gallery');
+  showLanding();
+});
+
+
+/* ════════════════════════════════════════════════════════════
+   LIGHTBOX
+════════════════════════════════════════════════════════════ */
+let lbPhotos  = [];
+let lbIdx     = 0;
+const lb      = document.getElementById('lightbox');
+const lbImg   = document.getElementById('lbImg');
+const lbVideo = document.getElementById('lbVideo');
+const lbCount = document.getElementById('lbCounter');
+const lbDl    = document.getElementById('lbDownload');
+
+function openLb(photos, idx) {
+  lbPhotos = photos;
+  lbIdx    = idx;
+  lb.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  renderLb();
+}
+
+function closeLb() {
+  lb.classList.remove('show');
+  document.body.style.overflow = '';
+  lbImg.src = '';
+  // Clearing the iframe is what actually stops playback.
+  lbVideo.innerHTML = '';
+  lbVideo.hidden = true;
+}
+
+function renderLb() {
+  const m = lbPhotos[lbIdx];
+  if (!m) return;
+
+  const isVideo = m.kind === 'video' && m.embed;
+
+  // Swap the image and the player rather than stacking them, so only one
+  // thing is ever loaded.
+  lbImg.hidden = isVideo;
+  lbImg.style.display = isVideo ? 'none' : '';
+  lbVideo.hidden = !isVideo;
+
+  if (isVideo) {
+    lbImg.src = '';
+    lbVideo.innerHTML =
+      '<iframe src="' + m.embed + '" allow="autoplay; fullscreen" allowfullscreen ' +
+      'title="' + escapeHtmlGal(currentGalName + ' video ' + (lbIdx + 1)) + '"></iframe>';
+  } else {
+    lbVideo.innerHTML = '';
+    lbImg.style.opacity = '0';
+    lbImg.referrerPolicy = 'no-referrer';
+    lbImg.onload = function() { lbImg.style.opacity = '1'; };
+    // Full size can 429 where the smaller grid render succeeded; drop back to
+    // the thumbnail rather than showing an empty lightbox.
+    lbImg.onerror = function() {
+      if (m.thumb && lbImg.src !== m.thumb) { lbImg.src = m.thumb; return; }
+      lbImg.style.opacity = '1';
+    };
+    lbImg.src = m.full || m.thumb;
+    lbImg.alt = BUSINESS_NAME + ' — ' + currentGalName + ' (' + (lbIdx + 1) + ' of ' + lbPhotos.length + ')' +
+      (m.caption ? ': ' + m.caption : '');
+  }
+
+  lbCount.textContent = (lbIdx + 1) + ' / ' + lbPhotos.length;
+
+  const allowDownloads = !currentGallery || currentGallery.downloadsEnabled !== false;
+  if (allowDownloads && m.download) {
+    lbDl.style.display = '';
+    lbDl.href = m.download;
+    lbDl.setAttribute('download', '');
+  } else {
+    lbDl.style.display = 'none';
+  }
+}
+
+function lbGo(dir) {
+  lbIdx = (lbIdx + dir + lbPhotos.length) % lbPhotos.length;
+  renderLb();
+}
+
+document.getElementById('lbClose').addEventListener('click', closeLb);
+document.getElementById('lbPrev').addEventListener('click', function() { lbGo(-1); });
+document.getElementById('lbNext').addEventListener('click', function() { lbGo(1); });
+
+lb.addEventListener('click', function(e) {
+  if (e.target === lb) closeLb();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (!lb.classList.contains('show')) return;
+  if (e.key === 'Escape')     closeLb();
+  if (e.key === 'ArrowLeft')  lbGo(-1);
+  if (e.key === 'ArrowRight') lbGo(1);
+});
+
+// Touch / swipe
+let lbTouchX = null;
+lb.addEventListener('touchstart', function(e) { lbTouchX = e.touches[0].clientX; }, { passive: true });
+lb.addEventListener('touchend', function(e) {
+  if (lbTouchX === null) return;
+  const dx = e.changedTouches[0].clientX - lbTouchX;
+  if (Math.abs(dx) > 50) lbGo(dx < 0 ? 1 : -1);
+  lbTouchX = null;
+});
+
+
+/* ════════════════════════════════════════════════════════════
+   SCROLL REVEAL for gallery cards
+════════════════════════════════════════════════════════════ */
+const revealObs = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      revealObs.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.08 });
+
+function observeCards() {
+  document.querySelectorAll('.gal-card').forEach(function(card) {
+    revealObs.observe(card);
+  });
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   UTILITY
+════════════════════════════════════════════════════════════ */
+function slugify(str) {
+  return (str || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════════════ */
+(async function init() {
+  await loadRuntimeConfig();
+  initSupabaseClient();
+
+  await loadSession();
+  renderAuthNav();
+
+  // A secret link — /g/<secret> — is the whole point of a private gallery:
+  // it opens for whoever holds it, signed in or not. vercel.json rewrites the
+  // path here, so the URL bar keeps the pretty form.
+  const secretMatch = window.location.pathname.match(/^\/g\/([^/?#]+)/);
+  if (secretMatch) {
+    // Load the public list quietly in the background so "All Galleries" works
+    // if they click it, but don't make them wait on it.
+    loadGalleriesFromSupabase().then(function() {
+      buildLanding();
+      observeCards();
+    });
+    await openSecretGallery(decodeURIComponent(secretMatch[1]), false);
+    return;
+  }
+
+  const loaded = await loadGalleriesFromSupabase();
+  if (!loaded) {
+    // Supabase unreachable — fall back to the copy baked into this file so the
+    // page still shows something rather than an empty grid.
+    galleries = FALLBACK_GALLERIES.map(mapFallbackGallery);
+    myGalleries = [];
+  }
+
+  buildLanding();
+  observeCards();
+
+  // Keep the nav in step if the session changes in another tab.
+  if (supa) {
+    supa.auth.onAuthStateChange(async function(_event, session) {
+      const wasSignedIn = Boolean(currentUser);
+      currentUser = session ? session.user : null;
+      renderAuthNav();
+      if (wasSignedIn !== Boolean(currentUser)) {
+        await loadGalleriesFromSupabase();
+        buildLanding();
+        observeCards();
+      }
+    });
+  }
+
+  const hash = window.location.hash;
+
+  // Bookmark-friendly link by title slug. Matches the public galleries and,
+  // when signed in, the private ones shared with this account.
+  if (hash && hash.startsWith('#gallery-')) {
+    const slug  = hash.slice('#gallery-'.length);
+    const found = galleries.findIndex(function(g) { return (g.slug || slugify(g.title)) === slug; });
+    if (found >= 0) { showGalleryView(found); return; }
+
+    const mine = myGalleries.find(function(g) { return (g.slug || slugify(g.title)) === slug; });
+    if (mine) { showGalleryView(mine); return; }
+  }
+
+  // Legacy #g-<id> links from the previous version of the site. The ids came
+  // from a different database and no longer resolve, so send them to the grid
+  // rather than leaving a blank page.
+  if (hash && hash.startsWith('#g-')) {
+    history.replaceState(null, '', 'gallery.html');
+  }
+
+  // Default: show landing
+  showLanding();
+})();

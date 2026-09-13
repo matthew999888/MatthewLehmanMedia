@@ -232,3 +232,31 @@ adding to the CSP there or the browser will block it.
   unreachable, the page still shows those galleries instead of an empty grid.
 - Every admin action is written to the `audit_log` table, and every email sent
   to `email_log`.
+
+---
+
+## Known issues
+
+**Lighthouse Best Practices sits around 77 — third-party cookies.** The hero and
+about images are served from `drive.google.com` / `lh3.googleusercontent.com`,
+which set Google auth cookies on every page load. It cannot be fixed in the HTML;
+the images have to move off Google Drive. Uploading those two to any plain image
+host (or the `gallery-photos` Supabase bucket) and swapping the `src` and preload
+URLs in `index.html` clears it. The gallery photos themselves are a separate
+matter — they are Drive files by design.
+
+`og:image` and `twitter:image` already point at the self-hosted
+`/android-chrome-512x512.png`. Swap them for a proper 1200×630 image when there
+is one.
+
+## Assets
+
+`index.html` and `gallery.html` load their CSS and JS from `/assets/` rather than
+inlining it. Editing behaviour means editing `assets/gallery.js` or
+`assets/site.js`, not the HTML. This was done for page weight: `gallery.html` was
+118KB, of which 104KB was inline CSS and JS, which left almost no crawlable text
+in the document and made every visit re-download the whole thing.
+
+Filenames are not content-hashed, so `vercel.json` serves `/assets/*` with
+`max-age=0, must-revalidate` — ETags make that a 304 rather than a re-download,
+and a deploy is picked up immediately.

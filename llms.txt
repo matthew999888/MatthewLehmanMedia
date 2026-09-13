@@ -1,0 +1,31 @@
+# Matthew Lehman Media
+
+> Sports and athletic photography in Logan, Ohio, covering Logan Hocking School
+> District athletics and AFJROTC events. Founded 2025 by Matthew Lehman, a
+> self-employed photographer and student.
+
+Game-day action, recruiting portraits and full team sessions. Finished galleries
+are published on this site; clients receive private galleries by link.
+
+## Pages
+
+- [Home](https://www.matthewlehmanmedia.com/): who I am, what I shoot, packages, and the contact form.
+- [Galleries](https://www.matthewlehmanmedia.com/gallery): every public gallery, searchable and filtered by sport.
+
+## What is covered
+
+- Baseball — full 2026 season, game by game
+- Soccer and volleyball — 2026-2027 season
+- Tennis — 2026 matches
+- AFJROTC and Raider Challenge — meets, drill competitions, Fort Knox, Columbus Crew game
+
+## Contact
+
+Enquiries go through the contact form on the home page. Based in Logan, Ohio.
+
+## Notes for crawlers
+
+- Gallery pages are rendered client-side from a database; individual galleries
+  are fragments (`/gallery#gallery-<slug>`) rather than separate URLs.
+- `/admin`, `/login`, and private gallery links (`/g/<secret>`) are not public
+  and are excluded in robots.txt.

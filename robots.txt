@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /g/
+Disallow: /api/
 
 Sitemap: https://www.matthewlehmanmedia.com/sitemap.xml
